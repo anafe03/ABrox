@@ -126,17 +126,22 @@ class ModelCollection(list):
         model_sizes = [model.accepted for model in self]
         nModels = len(model_sizes)
         tril = [b / a for a, b in list(itertools.combinations(model_sizes, 2))]
-        triu = [1 / t for t in tril]
+
+        triu = []
+        for t in tril:
+            try:
+                inverse = 1 / t
+                triu.append(inverse)
+            except ZeroDivisionError:
+                triu.append(np.inf)
+
+        # triu = [1 / t for t in tril]
 
         bfMatrix = np.ones((nModels, nModels))
 
         bfMatrix[np.tril_indices(nModels, -1)] = tril
         bfMatrix[np.triu_indices(nModels, 1)] = triu
 
-        try:
-            bf = model_sizes[0] / model_sizes[1]
-        except ZeroDivisionError:
-            bf = np.inf
         return bfMatrix
 
     def descriptives(self, postMatrix):

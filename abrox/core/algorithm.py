@@ -21,11 +21,12 @@ class Abc:
     """The ABC algorithm."""
 
     def __init__(self, configFile):
-        self.checker(configFile)
-        self.setModelList(configFile)
-        self.setSettings(configFile)
-        self.observedData(configFile)
+        self.configFile = configFile
         self.jobs = 1
+        self.checker()
+        self.setModelList()
+        self.setSettings()
+        self.observedData()
 
     def checker(self, configFile):
         """ Checks the configFile for errors """
