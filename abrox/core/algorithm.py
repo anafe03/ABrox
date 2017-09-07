@@ -28,88 +28,88 @@ class Abc:
         self.setSettings()
         self.observedData()
 
-    def checker(self, configFile):
+    def checker(self):
         """ Checks the configFile for errors """
 
         # check if the main parts are set
         names = {'data', 'models', 'summary', 'distance', 'settings'}
-        if names != set(configFile.keys()):
+        if names != set(self.configFile.keys()):
             raise ConfigurationError('The configuration file should contain the following keys: \n' +
                                      ','.join(names))
 
         # check if each model contains the necessary information
-        for i, modelDict in enumerate(configFile['models']):
+        for i, modelDict in enumerate(self.configFile['models']):
             if set(modelDict.keys()) != {'name', 'priors', 'simulate'}:
                 raise ConfigurationError(
                     "A model needs to be provided with three keys: 'name', 'priors', and 'simulate'")
 
         # check if dataset is available, if not modeltest has to be True
-        if not configFile['data'] and not configFile['settings']['modeltest']:
+        if not self.configFile['data'] and not self.configFile['settings']['modeltest']:
             raise ConfigurationError(
                 'Either provide a dataset to be imported or run a model test by setting modeltest to True.')
 
-    def setModelList(self, configFile):
+    def setModelList(self):
         """ Store instances of basemodels in list for further processing """
         self.models = []
-        for i, modelDict in enumerate(configFile['models']):
+        for i, modelDict in enumerate(self.configFile['models']):
             print(modelDict)
             self.models.append(Model(**modelDict))
 
         for model in self.models:
-            model.summary = configFile['summary']
-            if configFile['settings']['distance_metric'] == "custom":
-                if not configFile['distance']:
+            model.summary = self.configFile['summary']
+            if self.configFile['settings']['distance_metric'] == "custom":
+                if not self.configFile['distance']:
                     raise ConfigurationError(
                         "If 'distance_metric' is set to 'custom', you have to provide your own distance function")
                 else:
-                    model.distance = configFile['distance']
+                    model.distance = self.configFile['distance']
             else:
                 model.distance_metric = "euclidean"
 
-    def setSettings(self, configFile):
+    def setSettings(self):
         """ Store settings from configFile in members of class """
-        self.nparticle = configFile['settings']['particles']
+        self.nparticle = self.configFile['settings']['particles']
 
         # check if threshold should be computed
-        if configFile['settings']['threshold'] == -1:
+        if self.configFile['settings']['threshold'] == -1:
             self.threshold = []
         else:
-            self.threshold = configFile['settings']['threshold']
+            self.threshold = self.configFile['settings']['threshold']
 
-        self.percentile = configFile['settings']['percentile']
+        self.percentile = self.configFile['settings']['percentile']
 
-        self.objective = configFile['settings']['objective']
+        self.objective = self.configFile['settings']['objective']
 
         # check if a method for model comparison is set
-        if self.objective == "comparison" and not configFile['settings']['method']:
+        if self.objective == "comparison" and not self.configFile['settings']['method']:
             raise ConfigurationError(
                 "You need to provide a method for BF approximation. Either 'rejection' or 'logistic'")
-        elif self.objective == "inference" and not configFile['settings']['method']:
+        elif self.objective == "inference" and not self.configFile['settings']['method']:
             raise ConfigurationError('Do not specify a method when interested in inference')
 
-        self.method = configFile['settings']['method']
+        self.method = self.configFile['settings']['method']
 
-    def observedData(self, configFile):
+    def observedData(self):
         """ Loads observed data or generates pseudo-observed data from model """
-        if configFile['data'] and not configFile['settings']['modeltest']:
+        if self.configFile['data'] and not self.configFile['settings']['modeltest']:
             # import observed data
-            self.observed_data = self.loadData(configFile)
+            self.observed_data = self.loadData(self.configFile)
         else:
             flag = True
             for i, model in enumerate(self.models):
-                if model.name == configFile['settings']['modeltest']:
-                    params = configFile['settings']['fixedparameters']
+                if model.name == self.configFile['settings']['modeltest']:
+                    params = self.configFile['settings']['fixedparameters']
                     self.observed_data = model.simulate(params)
                     flag = False
             if flag:
                 raise ConfigurationError("Did you provide the correct model name in 'modeltest'?")
 
-    def loadData(self, configFile):
+    def loadData(self):
         try:
-            self.data = np.loadtxt(configFile['data'])  # pandas
+            self.data = np.loadtxt(self.configFile['data'])  # pandas
         except:
             raise ImportError('The data file located at ' +
-                              configFile[0] + ' could not be imported')
+                              self.configFile[0] + ' could not be imported')
 
     def create_particle(self, model_index=None):
         """Generate particle"""
