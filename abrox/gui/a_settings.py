@@ -418,6 +418,15 @@ class AScriptCreator:
         return " " * (s*4)
 
 
+class AProcessManager:
+
+    def __init__(self, internalModel, console):
+
+        self._internalModel = internalModel
+
+
+
+
 
 
 

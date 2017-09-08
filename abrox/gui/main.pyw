@@ -10,7 +10,7 @@ from a_main_window import AMainWindow
 
 __version__ = "1.0.1"
 
-if __name__ == "__main__":
+def __main__():
     # =============================================================== #
     #               SET APP ID SO ICON IS VISIBLE                     #
     # =============================================================== #
