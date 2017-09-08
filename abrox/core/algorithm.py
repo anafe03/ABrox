@@ -1,8 +1,7 @@
-import itertools
 from multiprocessing import Pool
 from time import time
-from tqdm import tqdm
 import numpy as np
+import pandas as pd
 
 # import classes from files
 from basemodel import Model
@@ -20,8 +19,8 @@ from customException import SimulateFunctionError, MismatchError, ConfigurationE
 class Abc:
     """The ABC algorithm."""
 
-    def __init__(self, configFile):
-        self.configFile = configFile
+    def __init__(self, config):
+        self.config = config
         self.jobs = 1
         self.checker()
         self.setModelList()
@@ -29,76 +28,76 @@ class Abc:
         self.observedData()
 
     def checker(self):
-        """ Checks the configFile for errors """
+        """ Checks the config for errors """
 
         # check if the main parts are set
         names = {'data', 'models', 'summary', 'distance', 'settings'}
-        if names != set(self.configFile.keys()):
+        if names != set(self.config.keys()):
             raise ConfigurationError('The configuration file should contain the following keys: \n' +
                                      ','.join(names))
 
         # check if each model contains the necessary information
-        for i, modelDict in enumerate(self.configFile['models']):
+        for i, modelDict in enumerate(self.config['models']):
             if set(modelDict.keys()) != {'name', 'priors', 'simulate'}:
                 raise ConfigurationError(
                     "A model needs to be provided with three keys: 'name', 'priors', and 'simulate'")
 
         # check if dataset is available, if not modeltest has to be True
-        if not self.configFile['data'] and not self.configFile['settings']['modeltest']:
+        if not self.config['data'] and not self.config['settings']['modeltest']:
             raise ConfigurationError(
                 'Either provide a dataset to be imported or run a model test by setting modeltest to True.')
 
     def setModelList(self):
         """ Store instances of basemodels in list for further processing """
         self.models = []
-        for i, modelDict in enumerate(self.configFile['models']):
+        for i, modelDict in enumerate(self.config['models']):
             print(modelDict)
             self.models.append(Model(**modelDict))
 
         for model in self.models:
-            model.summary = self.configFile['summary']
-            if self.configFile['settings']['distance_metric'] == "custom":
-                if not self.configFile['distance']:
+            model.summary = self.config['summary']
+            if self.config['settings']['distance_metric'] == "custom":
+                if not self.config['distance']:
                     raise ConfigurationError(
                         "If 'distance_metric' is set to 'custom', you have to provide your own distance function")
                 else:
-                    model.distance = self.configFile['distance']
+                    model.distance = self.config['distance']
             else:
                 model.distance_metric = "euclidean"
 
     def setSettings(self):
-        """ Store settings from configFile in members of class """
-        self.nparticle = self.configFile['settings']['particles']
+        """ Store settings from config in members of class """
+        self.nparticle = self.config['settings']['particles']
 
         # check if threshold should be computed
-        if self.configFile['settings']['threshold'] == -1:
+        if self.config['settings']['threshold'] == -1:
             self.threshold = []
         else:
-            self.threshold = self.configFile['settings']['threshold']
+            self.threshold = self.config['settings']['threshold']
 
-        self.percentile = self.configFile['settings']['percentile']
+        self.percentile = self.config['settings']['percentile']
 
-        self.objective = self.configFile['settings']['objective']
+        self.objective = self.config['settings']['objective']
 
         # check if a method for model comparison is set
-        if self.objective == "comparison" and not self.configFile['settings']['method']:
+        if self.objective == "comparison" and not self.config['settings']['method']:
             raise ConfigurationError(
                 "You need to provide a method for BF approximation. Either 'rejection' or 'logistic'")
-        elif self.objective == "inference" and not self.configFile['settings']['method']:
+        elif self.objective == "inference" and not self.config['settings']['method']:
             raise ConfigurationError('Do not specify a method when interested in inference')
 
-        self.method = self.configFile['settings']['method']
+        self.method = self.config['settings']['method']
 
     def observedData(self):
         """ Loads observed data or generates pseudo-observed data from model """
-        if self.configFile['data'] and not self.configFile['settings']['modeltest']:
+        if self.config['data'] and not self.config['settings']['modeltest']:
             # import observed data
-            self.observed_data = self.loadData(self.configFile)
+            self.observed_data = self.loadData(self.config)
         else:
             flag = True
             for i, model in enumerate(self.models):
-                if model.name == self.configFile['settings']['modeltest']:
-                    params = self.configFile['settings']['fixedparameters']
+                if model.name == self.config['settings']['modeltest']:
+                    params = self.config['settings']['fixedparameters']
                     self.observed_data = model.simulate(params)
                     flag = False
             if flag:
@@ -106,10 +105,8 @@ class Abc:
 
     def loadData(self):
         try:
-            self.data = np.loadtxt(self.configFile['data'])  # pandas
-        except:
-            raise ImportError('The data file located at ' +
-                              self.configFile[0] + ' could not be imported')
+            self.data = self.config['data']['datafile'].as_matrix()
+        except ImportError('Imported data could not be stored')
 
     def create_particle(self, model_index=None):
         """Generate particle"""
