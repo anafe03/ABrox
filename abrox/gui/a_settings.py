@@ -1,9 +1,9 @@
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import Qt, QEvent
-from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 import datetime
 import pprint
-
+from a_process_manager import AProcessManager
 
 class ASettingsWindow(QFrame):
     """Main container for the output settings and run."""
@@ -176,6 +176,7 @@ class AModelTestFrame(QFrame):
 
         self._internalModel = internalModel
         self._console = console
+        self._processManager = AProcessManager(self._internalModel, self._console)
 
         self._configureLayout(QVBoxLayout())
 
@@ -199,9 +200,13 @@ class AModelTestFrame(QFrame):
         button = QPushButton('CREATE SCRIPT')
         button.clicked.connect(self._onCreateScript)
 
+        button2 = QPushButton('STOP SCRIPT')
+        button2.clicked.connect(self._onStop)
+
         groupBoxLayout.addWidget(self._modelTest)
         groupBoxLayout.addWidget(self._combo)
         groupBoxLayout.addWidget(button)
+        groupBoxLayout.addWidget(button2)
 
         groupBox.setLayout(groupBoxLayout)
         layout.addWidget(groupBox)
@@ -221,8 +226,15 @@ class AModelTestFrame(QFrame):
 
         # TODO - use specified by user
         HARDCODED_FILE_NAME = "test_script.py"
-        scriptCreator = AScriptCreator(self._internalModel)
-        scriptCreator.createScript(HARDCODED_FILE_NAME)
+        # scriptCreator = AScriptCreator(self._internalModel)
+        # scriptCreator.createScript(HARDCODED_FILE_NAME)
+
+        self._processManager.startAbc(HARDCODED_FILE_NAME)
+
+    def _onStop(self):
+        """Kill python thread and subprocess inside."""
+
+        self._processManager.stopAll()
 
 
 class AModelComboBox(QComboBox):
@@ -289,22 +301,24 @@ class AScriptCreator:
         """Creates an abs runnable script with the specified fileName."""
 
         # Get a dictionary of modelName: sim function code
-        simulateDict = self._internalModel.simulate()
+        # simulateDict = self._internalModel.simulate()
+        #
+        # # Get project dict and remove project name, since
+        # # config file does not need a project name
+        # projectDict = self._internalModel.toDict()
+        # projectDict = {k: v for value in projectDict.values()
+        #                for k, v in value.items()}
+        #
+        # # Open file and write components
+        # with open(fileName, 'w') as outfile:
+        #     self._writeHeader(outfile)
+        #     self._writeImports(outfile)
+        #     self._writeSummaryAndDistFunc(outfile)
+        #     self._writeSimulateFuncs(outfile, simulateDict)
+        #     self._writeConfig(outfile, projectDict, simulateDict)
+        #     self._writeAlgorithmCall(outfile)
 
-        # Get project dict and remove project name, since
-        # config file does not need a project name
-        projectDict = self._internalModel.toDict()
-        projectDict = {k: v for value in projectDict.values()
-                       for k, v in value.items()}
-
-        # Open file and write components
-        with open(fileName, 'w') as outfile:
-            self._writeHeader(outfile)
-            self._writeImports(outfile)
-            self._writeSummaryAndDistFunc(outfile)
-            self._writeSimulateFuncs(outfile, simulateDict)
-            self._writeConfig(outfile, projectDict, simulateDict)
-            self._writeAlgorithmCall(outfile)
+        # Run script (DEBUG)
 
     def _writeHeader(self, outfile):
         """Write header with info and date."""
@@ -321,7 +335,7 @@ class AScriptCreator:
         imports = '# Required imports\n' \
                   'import numpy as np\n' \
                   'from scipy import stats\n' \
-                  'from abrox.algorithm import Abc\n\n'
+                  'from abrox.core.algorithm import Abc\n\n'
 
         outfile.write(imports)
 
@@ -416,13 +430,6 @@ class AScriptCreator:
         """Returns a string containing 4*s whitespaces."""
 
         return " " * (s*4)
-
-
-class AProcessManager:
-
-    def __init__(self, internalModel, console):
-
-        self._internalModel = internalModel
 
 
 
