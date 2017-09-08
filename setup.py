@@ -14,8 +14,9 @@ setup(
     install_requires=['numpy',
                       'scipy',
                       'statsmodels',
-                      'tqdm',
-                      'pyqt5'
+                      'pandas',
+                      'pyqt5',
+                      'ipython'
                       ],
     classifiers=[],
 )
