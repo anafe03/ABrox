@@ -10,12 +10,14 @@ from a_main_window import AMainWindow
 
 __version__ = "1.0.1"
 
+
 def __main__():
     # =============================================================== #
     #               SET APP ID SO ICON IS VISIBLE                     #
     # =============================================================== #
-    myappid = "heidelberg.university.bprox.0.0.1"
-    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+    if sys.platform == "win32":
+        myappid = "heidelberg.university.bprox.0.0.1"
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
     # =============================================================== #
     #                   CHANGE LOCALE SETTINGS                        #
@@ -26,7 +28,7 @@ def __main__():
     #                   SET APP GLOBAL INFORMATION                    #
     # =============================================================== #
     app = QApplication(sys.argv)
-    app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
+    # app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
     app.setOrganizationName("Heidelberg University")
     app.setApplicationName("bprox")
     # =============================================================== #
@@ -45,7 +47,5 @@ def __main__():
     # =============================================================== #
     mainWindow = AMainWindow()
     mainWindow.showMaximized()
-    #splash.finish(mainWindow)
+    # splash.finish(mainWindow)
     sys.exit(app.exec_())
-
-

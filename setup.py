@@ -17,6 +17,7 @@ setup(
                       'statsmodels',
                       'pandas',
                       'pyqt5',
+                      'qdarkstyle',
                       'ipython'
                       ],
     classifiers=[],
