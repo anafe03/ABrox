@@ -11,7 +11,7 @@ from a_main_window import AMainWindow
 __version__ = "1.0.1"
 
 
-def __main__():
+def main():
     # =============================================================== #
     #               SET APP ID SO ICON IS VISIBLE                     #
     # =============================================================== #
@@ -49,3 +49,7 @@ def __main__():
     mainWindow.showMaximized()
     # splash.finish(mainWindow)
     sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+    main()
