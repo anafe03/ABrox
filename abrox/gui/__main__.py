@@ -1,23 +1,17 @@
-import platform
-import os
-import sys
-import ctypes
-import qdarkstyle
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import QLocale
 from a_main_window import AMainWindow
+import sys
+import ctypes
+import qdarkstyle
 
 
 __version__ = "1.0.1"
 
 
-<<<<<<< HEAD:abrox/gui/main.pyw
-def __main__():
-=======
 def main(args=None):
     if args is None:
         args = sys.argv[1:]
->>>>>>> 61aa3635c72084d8417960194b7f3380b9864651:abrox/gui/__main__.py
     # =============================================================== #
     #               SET APP ID SO ICON IS VISIBLE                     #
     # =============================================================== #
@@ -34,13 +28,13 @@ def main(args=None):
     #                   SET APP GLOBAL INFORMATION                    #
     # =============================================================== #
     app = QApplication(sys.argv)
-    # app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
+    app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
     app.setOrganizationName("Heidelberg University")
     app.setApplicationName("bprox")
+
     # =============================================================== #
     #                       CREATE SPLASH SCREEN                      #
     # =============================================================== #
-
     # splash = QSplashScreen()
     # splash.setPixmap(QPixmap('./icons/fast_ic.png'))
     # splash.setEnabled(False)
