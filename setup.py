@@ -2,7 +2,8 @@ from setuptools import setup, find_packages
 setup(
     name='abrox',
     packages=find_packages(),
-    version='0.2',
+    include_package_data=True,
+    version='0.0.1',
     license='MIT',
     description='A GUI for Approximate Bayesian Computation',
     long_description=open('README.md').read(),
