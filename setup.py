@@ -3,7 +3,7 @@ setup(
     name='abrox',
     packages=find_packages(),
     include_package_data=True,
-    version='0.0.1',
+    version='0.0.4',
     license='MIT',
     description='A GUI for Approximate Bayesian Computation',
     long_description=open('README.md').read(),

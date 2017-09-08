@@ -11,7 +11,9 @@ from a_main_window import AMainWindow
 __version__ = "1.0.1"
 
 
-def main():
+def main(args=None):
+    if args is None:
+        args = sys.argv[1:]
     # =============================================================== #
     #               SET APP ID SO ICON IS VISIBLE                     #
     # =============================================================== #
