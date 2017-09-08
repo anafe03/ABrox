@@ -1,7 +1,7 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 setup(
     name='abrox',
-    packages=['abrox'],  # this must be the same as the name above
+    packages=find_packages(),
     version='0.1',
     license='MIT',
     description='A GUI for Approximate Bayesian Computation',
