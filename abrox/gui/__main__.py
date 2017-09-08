@@ -11,7 +11,13 @@ from a_main_window import AMainWindow
 __version__ = "1.0.1"
 
 
+<<<<<<< HEAD:abrox/gui/main.pyw
 def __main__():
+=======
+def main(args=None):
+    if args is None:
+        args = sys.argv[1:]
+>>>>>>> 61aa3635c72084d8417960194b7f3380b9864651:abrox/gui/__main__.py
     # =============================================================== #
     #               SET APP ID SO ICON IS VISIBLE                     #
     # =============================================================== #
@@ -28,7 +34,7 @@ def __main__():
     #                   SET APP GLOBAL INFORMATION                    #
     # =============================================================== #
     app = QApplication(sys.argv)
-    app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
+    # app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
     app.setOrganizationName("Heidelberg University")
     app.setApplicationName("bprox")
     # =============================================================== #
@@ -47,7 +53,9 @@ def __main__():
     # =============================================================== #
     mainWindow = AMainWindow()
     mainWindow.showMaximized()
-    #splash.finish(mainWindow)
+    # splash.finish(mainWindow)
     sys.exit(app.exec_())
 
 
+if __name__ == "__main__":
+    main()
