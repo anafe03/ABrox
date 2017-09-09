@@ -11,7 +11,7 @@ setup(
     author_email='mertens.ulf@gmail.com',
     entry_points={
         'gui_scripts': [
-            'abrox-gui = abrox.__main__:main'
+            'abrox-gui = abrox.gui.__main__:main'
         ]
     },
     url='https://github.com/mertensu/ABrox',  # use the URL to the github repo
