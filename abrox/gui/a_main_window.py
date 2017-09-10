@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import json
+from collections import OrderedDict
 import tracksave
 import time
 from a_tree import AModelTree
@@ -149,16 +150,29 @@ class AMainWindow(QMainWindow):
     def _loadSession(self):
         """Load a previously saved session."""
 
+        # Create a dialog
         loadName = QFileDialog.getOpenFileName(self, 'Select a project file to open...',
                                                      "", "bprox File (*.bprox)")
         # Check if something loaded
         if loadName[0]:
+
+            # Ask for save of current, if something loaded
+            if not tracksave.saved:
+                # Create a dialog
+                dialog = QMessageBox()
+                # Ask if user sure
+                choice = dialog.question(self, 'Loading a new project...',
+                                         'Do you want to save your current project?',
+                                         QMessageBox.Cancel | QMessageBox.No | QMessageBox.Yes)
+                if choice == QMessageBox.Yes:
+                    self._saveSession()
+
             # Check header
             with open(loadName[0], 'r') as infile:
                 # Check first line for header
                 if '[ABrox Project File]' in infile.readline():
                     # Load with json
-                    newProject = json.load(infile)
+                    newProject = json.load(infile, object_pairs_hook=OrderedDict)
                     # Overwrite internal model
                     self._internalModel.overwrite(newProject)
                     # Update tree

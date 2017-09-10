@@ -1,6 +1,6 @@
 import copy
 import re
-import pprint
+from collections import OrderedDict
 
 
 class AInternalModel:
@@ -8,29 +8,32 @@ class AInternalModel:
     def __init__(self):
 
         # Create an analysis skeleton as a dict
-        self._project = {'Analysis': {
-                            'data': {
-                                'datafile': None
-                            },
-                            'models': [
-                                AModel('Model1')
-                            ],
-                            'summary': "",
-                            'distance': "",
-                            'settings': {
-                                'outputdir': "",
-                                'distance_metric': "default",
-                                'particles': 1000,
-                                'threshold': -1,
-                                'percentile': 0.05,
-                                'objective': 'comparison',
-                                'method': 'logistic',
-                                'modeltest': False,
-                                'fixedparameters': [
-
-                                ]
-                            }
-                        }}
+        self._project = OrderedDict([
+            ('Analysis',
+                OrderedDict([
+                    ('data', {'datafile': None}),
+                    ('models', [
+                        AModel('Model1'),
+                    ]),
+                    ('summary', ""),
+                    ('distance', ""),
+                    ('settings', {
+                        'outputdir': "",
+                        'distance_metric': "default",
+                        'particles': 1000,
+                        'threshold': -1,
+                        'percentile': 0.05,
+                        'objective': 'comparison',
+                        'method': 'logistic',
+                        'modeltest': False,
+                        'fixedparameters': list()
+                    }
+                    )
+                    ]
+                )
+             )
+            ]
+        )
 
     def deleteModel(self, nameToRemove):
         """Interface function to remove a model."""

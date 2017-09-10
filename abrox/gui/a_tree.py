@@ -167,6 +167,7 @@ class AModelTree(QTreeWidget):
         """
 
         self._populate()
+        self._mdiArea.closeAllSubWindows()
 
     def contextMenuEvent(self, event):
         """Re-implements the right-click, menu-pop-up event."""
