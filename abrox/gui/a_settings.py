@@ -5,6 +5,7 @@ import datetime
 import pprint
 from a_process_manager import AProcessManager
 
+
 class ASettingsWindow(QFrame):
     """Main container for the output settings and run."""
     def __init__(self, internalModel, console, parent=None):
@@ -65,7 +66,12 @@ class AComputationSettingsFrame(QFrame):
             containerLayout.addWidget(QLabel(labelName, self), idx, 0, 1, 1)
             containerLayout.addWidget(ASettingEntry(self._internalModel, key), idx, 1, 1, 1)
 
-        containerLayout.addWidget(AObjectiveChoiceBox(self._internalModel), idx+1, 0, 1, 2)
+        # Create objective and method choice widgets
+        methodChoiceWidget = AMethodChoiceBox(self._internalModel)
+        objectiveChoiceWidget = AObjectiveChoiceBox(self._internalModel, methodChoiceWidget)
+
+        containerLayout.addWidget(objectiveChoiceWidget, idx+1, 0, 1, 2)
+        containerLayout.addWidget(methodChoiceWidget, idx+2, 0, 1, 2)
         # Lay out container
         container.setLayout(containerLayout)
 
@@ -191,22 +197,45 @@ class AModelTestFrame(QFrame):
 
         # Create a checkbox
         self._modelTest = QCheckBox()
+        self._modelTest.clicked.connect(self._onModelTest)
         self._modelTest.setText('Model Test')
 
-        # Create a combo
+        # Create a combo in its own widget
+        self._comboWidget = QWidget()
+        comboWidgetLayout = QHBoxLayout()
+        comboWidgetLayout.setContentsMargins(0, 0, 0, 0)
         self._combo = AModelComboBox(self._internalModel)
+        self._combo.setCurrentText('Pick a Model')
         self._combo.installEventFilter(self)
+        configButton = self._createButton('Set Parameter', './icons/config',
+                                          self._onSetParameter, Qt.NoFocus, True)
+        comboWidgetLayout.addWidget(self._combo)
+        comboWidgetLayout.addWidget(configButton)
+        comboWidgetLayout.setStretchFactor(self._combo, 5)
+        comboWidgetLayout.setStretchFactor(configButton, 1)
+        self._comboWidget.setLayout(comboWidgetLayout)
+        self._comboWidget.setEnabled(False)
 
-        button = QPushButton('CREATE SCRIPT')
-        button.clicked.connect(self._onCreateScript)
+        # Create run abd stop
+        self._run = self._createButton('Run', './icons/run', self._onRun,
+                                       Qt.NoFocus, True)
+        self._stop = self._createButton('Stop', './icons/stop', self._onStop,
+                                        Qt.NoFocus, False)
+        # Create progress bar
+        self._progress = QProgressBar()
+        self._progress.setOrientation(Qt.Horizontal)
 
-        button2 = QPushButton('STOP SCRIPT')
-        button2.clicked.connect(self._onStop)
+        buttonsWidget = QWidget()
+        buttonsWidgetLayout = QHBoxLayout()
+        buttonsWidgetLayout.setContentsMargins(0, 0, 0, 0)
+        buttonsWidgetLayout.addWidget(self._run)
+        buttonsWidgetLayout.addWidget(self._stop)
+        buttonsWidgetLayout.addWidget(self._progress)
+        buttonsWidget.setLayout(buttonsWidgetLayout)
 
         groupBoxLayout.addWidget(self._modelTest)
-        groupBoxLayout.addWidget(self._combo)
-        groupBoxLayout.addWidget(button)
-        groupBoxLayout.addWidget(button2)
+        groupBoxLayout.addWidget(self._comboWidget)
+        groupBoxLayout.addWidget(buttonsWidget)
 
         groupBox.setLayout(groupBoxLayout)
         layout.addWidget(groupBox)
@@ -221,20 +250,40 @@ class AModelTestFrame(QFrame):
                 self._combo.addItems([model.name for model in self._internalModel['models']])
         return False
 
-    def _onCreateScript(self):
+    def _createButton(self, label, iconPath, func, focusPolicy, enabled):
+        """Utility to save typing"""
+
+        button = QPushButton(label)
+        button.setIcon(QIcon(iconPath))
+        button.clicked.connect(func)
+        button.setFocusPolicy(focusPolicy)
+        button.setEnabled(enabled)
+        return button
+
+    def _onModelTest(self, checked):
+        """Controls the appearance of the model test frame."""
+
+        if checked:
+            self._comboWidget.setEnabled(True)
+        else:
+            self._comboWidget.setEnabled(False)
+
+    def _onRun(self):
         """For debugging."""
 
-        # TODO - use specified by user
         HARDCODED_FILE_NAME = "test_script.py"
-        # scriptCreator = AScriptCreator(self._internalModel)
-        # scriptCreator.createScript(HARDCODED_FILE_NAME)
-
-        self._processManager.startAbc(HARDCODED_FILE_NAME)
+        scriptCreator = AScriptCreator(self._internalModel)
+        scriptCreator.createScript(HARDCODED_FILE_NAME)
+        #
+        # self._processManager.startAbc(HARDCODED_FILE_NAME)
 
     def _onStop(self):
         """Kill python thread and subprocess inside."""
 
         self._processManager.stopAll()
+
+    def _onSetParameter(self):
+        pass
 
 
 class AModelComboBox(QComboBox):
@@ -246,10 +295,11 @@ class AModelComboBox(QComboBox):
 
 
 class AObjectiveChoiceBox(QWidget):
-    def __init__(self, internalModel, parent=None):
+    def __init__(self, internalModel, methodChoiceWidget, parent=None):
         super(AObjectiveChoiceBox, self).__init__(parent)
 
         self._internalModel = internalModel
+        self._methodChoiceWidget = methodChoiceWidget
         self._configureLayout(QHBoxLayout())
 
     def _configureLayout(self, layout):
@@ -258,32 +308,82 @@ class AObjectiveChoiceBox(QWidget):
         # Create an exclusive checkbox group
         self.checkGroup = QButtonGroup()
         self.checkGroup.setExclusive(True)
-        self.checkGroup.buttonToggled.connect(self._onToggle)
         firstCheck = ACheckBox('inference')
         firstCheck.setText('Inference')
         secondCheck = ACheckBox('comparison')
         secondCheck.setText('Comparison')
+        secondCheck.setChecked(True)
         self.checkGroup.addButton(firstCheck)
         self.checkGroup.addButton(secondCheck)
+        self.checkGroup.buttonClicked.connect(self._onToggle)
 
         layout.addWidget(QLabel('Objective:'))
         layout.addWidget(firstCheck)
         layout.addWidget(secondCheck)
         layout.addStretch(3)
 
+        layout.setContentsMargins(0, 0, 0, 0)
+
         self.setLayout(layout)
 
-    def _onToggle(self, button):
+    def _onToggle(self, check):
         """Activated when pne of the buttons in the group toggled."""
 
-        print(button)
+        self._internalModel.addObjective(check.value)
+
+        # Control appearance of method checkbox
+        if check.value == 'inference':
+            self._methodChoiceWidget.setEnabled(True)
+        else:
+            self._methodChoiceWidget.setEnabled(False)
+
+
+class AMethodChoiceBox(QWidget):
+    def __init__(self, internalModel, parent=None):
+        super(AMethodChoiceBox, self).__init__(parent)
+
+        self._internalModel = internalModel
+        self._configureLayout(QHBoxLayout())
+
+        if self._internalModel.objective() == "comparison":
+            self.setEnabled(False)
+        else:
+            self.setEnabled(True)
+
+    def _configureLayout(self, layout):
+        """Lays out the main components."""
+
+        # Create an exclusive checkbox group
+        self.checkGroup = QButtonGroup()
+        self.checkGroup.setExclusive(True)
+        firstCheck = ACheckBox('rejection')
+        firstCheck.setText('Rejection')
+        secondCheck = ACheckBox('logistic')
+        secondCheck.setText('Logistic')
+        secondCheck.setChecked(True)
+        self.checkGroup.addButton(firstCheck)
+        self.checkGroup.addButton(secondCheck)
+        self.checkGroup.buttonClicked.connect(self._onToggle)
+
+        layout.addWidget(QLabel('Method:'))
+        layout.addWidget(firstCheck)
+        layout.addWidget(secondCheck)
+        layout.addStretch(3)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        self.setLayout(layout)
+
+    def _onToggle(self, check):
+        """Activated when pne of the buttons in the group toggled."""
+
+        self._internalModel.addMethod(check.value)
 
 
 class ACheckBox(QCheckBox):
     def __init__(self, value, parent=None):
         super(ACheckBox, self).__init__(parent)
 
-        self._value = value
+        self.value = value
 
 
 class AScriptCreator:
@@ -301,24 +401,23 @@ class AScriptCreator:
         """Creates an abs runnable script with the specified fileName."""
 
         # Get a dictionary of modelName: sim function code
-        # simulateDict = self._internalModel.simulate()
-        #
-        # # Get project dict and remove project name, since
-        # # config file does not need a project name
-        # projectDict = self._internalModel.toDict()
-        # projectDict = {k: v for value in projectDict.values()
-        #                for k, v in value.items()}
-        #
-        # # Open file and write components
-        # with open(fileName, 'w') as outfile:
-        #     self._writeHeader(outfile)
-        #     self._writeImports(outfile)
-        #     self._writeSummaryAndDistFunc(outfile)
-        #     self._writeSimulateFuncs(outfile, simulateDict)
-        #     self._writeConfig(outfile, projectDict, simulateDict)
-        #     self._writeAlgorithmCall(outfile)
+        simulateDict = self._internalModel.simulate()
 
-        # Run script (DEBUG)
+        # Get project dict and remove project name, since
+        # config file does not need a project name
+        projectDict = self._internalModel.toDict()
+        projectDict = {k: v for value in projectDict.values()
+                       for k, v in value.items()}
+
+        # Open file and write components
+        with open(fileName, 'w') as outfile:
+            self._writeHeader(outfile)
+            self._writeImports(outfile)
+            self._writeSummaryAndDistFunc(outfile)
+            self._writeSimulateFuncs(outfile, simulateDict)
+            self._writeConfig(outfile, projectDict, simulateDict)
+            self._writeAlgorithmCall(outfile)
+
 
     def _writeHeader(self, outfile):
         """Write header with info and date."""
@@ -335,7 +434,7 @@ class AScriptCreator:
         imports = '# Required imports\n' \
                   'import numpy as np\n' \
                   'from scipy import stats\n' \
-                  'from abrox.core.algorithm import Abc\n\n'
+                  'from abrox.core.algorithm import Abc\n\n\n'
 
         outfile.write(imports)
 
@@ -344,12 +443,12 @@ class AScriptCreator:
 
         # Write summary
         outfile.write(self._internalModel.summary())
-        outfile.write('\n\n')
+        outfile.write('\n\n\n')
 
         # Write distance
         if self._internalModel.distance() is not None:
             outfile.write(self._internalModel.distance())
-            outfile.write('\n\n')
+            outfile.write('\n\n\n')
 
     def _writeSimulateFuncs(self, outfile, simulateDict):
         """Write simulate functions code."""
@@ -357,7 +456,7 @@ class AScriptCreator:
         for key in simulateDict:
             # The value of simulateDict is a 2-tuple (0 - code, 1 - name)
             outfile.write(simulateDict[key][0])
-            outfile.write('\n\n')
+            outfile.write('\n\n\n')
 
     def _writeConfig(self, outfile, projectDict, simulateDict):
             """Creates the config file in a nice format. Pretty nasty."""
@@ -414,7 +513,7 @@ class AScriptCreator:
             # Close settings dict
             outfile.write('\n{}}}\n'.format(self.tab()))
             # Close config dict
-            outfile.write('}\n')
+            outfile.write('}\n\n\n')
 
     def _writeAlgorithmCall(self, outfile):
         """Writes the algorithm call enclosed in an if __name__ == ..."""

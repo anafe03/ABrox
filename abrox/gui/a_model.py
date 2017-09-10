@@ -77,6 +77,12 @@ class AInternalModel:
     def addDistance(self, distanceCode):
         self._project['Analysis']['distance'] = distanceCode
 
+    def addObjective(self, objective):
+        self._project['Analysis']['settings']['objective'] = objective
+
+    def addMethod(self, method):
+        self._project['Analysis']['settings']['method'] = method
+
     def summary(self):
         """Returns the summary function code as a string."""
 
@@ -105,6 +111,9 @@ class AInternalModel:
             simulateCode = model.simulate.replace(funcName, funcName + '_' + model.name)
             simulateCodes[model.name] = (simulateCode, funcName + '_' + model.name)
         return simulateCodes
+
+    def objective(self):
+        return self._project['Analysis']['settings']['objective']
 
     def deletePriorFromModel(self, idx, modelName):
         """Interface function to delete a prior fom a given model's priors list."""
