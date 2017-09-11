@@ -1,6 +1,6 @@
 """
 This is an automatically generated script by ABrox GUI.
-Created on 2017-09-10 22:04:33.532291.
+Created on 2017-09-11 14:32:55.149241.
 """
 
 # Required imports
@@ -12,6 +12,7 @@ from abrox.core.algorithm import Abc
 def summary(params):
     # write your code here
     pass
+
 
 def simulate_Model1(params):
     # write your code here
@@ -26,6 +27,7 @@ CONFIG = {
         {
         "name": "Model1",
         "priors": [
+            {"a": stats.norm(loc=0.0, scale=1.0)},
         ],
         "simulate": simulate_Model1
         },
@@ -35,12 +37,12 @@ CONFIG = {
     "settings": {
         'distance_metric': 'default',
          'fixedparameters': [],
-         'method': 'logistic',
+         'method': 'rejection',
          'modeltest': False,
-         'objective': 'comparison',
+         'objective': 'inference',
          'particles': 1000,
          'percentile': 0.05,
-         'threshold': -1
+         'threshold': 0.0
     }
 }
 
