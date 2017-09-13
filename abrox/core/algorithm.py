@@ -49,6 +49,10 @@ class Abc:
 
     def setModelList(self):
         """ Store instances of basemodels in list for further processing """
+
+        if not self.config['models']:
+            raise ConfigurationError('No models defined.')
+
         self.models = []
         for i, modelDict in enumerate(self.config['models']):
             print(modelDict)
@@ -80,6 +84,9 @@ class Abc:
         self.objective = self.config['settings']['objective']
 
         # check if a method for model comparison is set
+        if self.objective == "comparison" and len(self.config['models']) < 2:
+            raise ConfigurationError('Define at least two models for comparison.')
+
         if self.objective == "comparison" and not self.config['settings']['method']:
             raise ConfigurationError(
                 "You need to provide a method for BF approximation. Either 'rejection' or 'logistic'")
@@ -90,18 +97,18 @@ class Abc:
 
     def observedData(self):
         """ Loads observed data or generates pseudo-observed data from model """
-        if self.config['data'] and not self.config['settings']['modeltest']:
+        if self.config['data']['datafile'] and self.config['settings']['modeltest'] is False:
             # import observed data
             self.observed_data = self.loadData(self.config)
         else:
             flag = True
             for i, model in enumerate(self.models):
-                if model.name == self.config['settings']['modeltest']:
+                if i == self.config['settings']['modeltest']:
                     params = self.config['settings']['fixedparameters']
                     self.observed_data = model.simulate(params)
                     flag = False
             if flag:
-                raise ConfigurationError("Did you provide the correct model name in 'modeltest'?")
+                raise ConfigurationError("Did you provide the correct model index?")
 
     def loadData(self):
         try:
