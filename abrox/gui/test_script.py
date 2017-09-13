@@ -25,24 +25,24 @@ CONFIG = {
     },
     "models": [
         {
-        "name": "Model1",
-        "priors": [
-            {"a": stats.norm(loc=0.0, scale=1.0)},
-        ],
-        "simulate": simulate_Model1
+            "name": "Model1",
+            "priors": [
+                {"a": stats.norm(loc=0.0, scale=1.0)},
+            ],
+            "simulate": simulate_Model1
         },
     ],
     "summary": summary,
     "distance": None,
     "settings": {
         'distance_metric': 'default',
-         'fixedparameters': [],
-         'method': 'rejection',
-         'modeltest': False,
-         'objective': 'inference',
-         'particles': 1000,
-         'percentile': 0.05,
-         'threshold': 0.0
+        'fixedparameters': [],
+        'method': 'rejection',
+        'modeltest': False,
+        'objective': 'inference',
+        'particles': 1000,
+        'percentile': 0.05,
+        'threshold': 0.0
     }
 }
 
