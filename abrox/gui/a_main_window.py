@@ -36,7 +36,7 @@ class AMainWindow(QMainWindow):
 
         self.statusBar()
         self.setWindowIcon(QIcon('./icons/icon.ico'))
-        self.setWindowTitle('ABrox - An approximate Bayes factor calculation tool')
+        self.setWindowTitle('ABrox - A tool for Approximate Bayesian Computation')
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setDockOptions(QMainWindow.AnimatedDocks |
                             QMainWindow.AllowNestedDocks |
@@ -62,7 +62,7 @@ class AMainWindow(QMainWindow):
         tabbedAction = createAction('Tabbed View', callback=self._tabbed, parent=_mdiView,
                                     tip='Organize workfiles as separate tabs', checkable=True)
         stackedAction = createAction('Stacked View', callback=self._stacked, parent=_mdiView,
-                                    tip='Organize workfiles as floating windows', checkable=True)
+                                     tip='Organize workfiles as floating windows', checkable=True)
         tabbedAction.setChecked(True)
         group.addAction(stackedAction)
         group.addAction(tabbedAction)
@@ -70,11 +70,11 @@ class AMainWindow(QMainWindow):
 
         # Create actions for file menu
         loadData = createAction('&Load Data...', callback=self._loadData, parent=fileMenu,
-                                      tip="Load data file(s)...", icon='open')
+                                tip="Load data file(s)...", icon='open')
         loadSession = createAction('&Load Project...', callback=self._loadSession, parent=fileMenu,
-                                         tip='Load project...', icon='loadsession')
+                                   tip='Load project...', icon='loadsession')
         saveSession = createAction('&Save Project', callback=self._saveSession, parent=fileMenu,
-                                         tip='Save current project...', icon='save')
+                                   tip='Save current project...', icon='save')
         exitAction = createAction('&Exit', callback=self.close, tip='Quit ABrox', parent=fileMenu,)
 
         # Add actions to file menu
@@ -88,9 +88,9 @@ class AMainWindow(QMainWindow):
         toolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
 
         loadSession = createAction('&Load Project', callback=self._loadSession, parent=self,
-                                         tip='Load project...', icon='loadsession')
+                                   tip='Load project...', icon='loadsession')
         saveSession = createAction('&Save Project', callback=self._saveSession, parent=self,
-                                         tip='Save current project...', icon='savesession')
+                                   tip='Save current project...', icon='savesession')
         # Add actions to toolbar
         addActionsToMenu(toolbar, (loadSession, saveSession))
 

@@ -32,14 +32,18 @@ class Logistic:
 
         Y = np.repeat(model_indices, N)
 
+        # X = np.zeroes(shape=(Y.shape[0], len(self.model_collection)))
+
+        # for i, model in enumerate(self.model_collection):
+        #     X[:, i] = model.scaled_simsum
+
+        print("Scaled simsum shape: {}".format(self.model_collection[0].shape))
+
         X = np.append(self.model_collection[0].scaled_simsum,
                       self.model_collection[1].scaled_simsum)
 
         dat = np.column_stack((X, Y))
         dat = dat[weights > 0, :]
-
-        np.savetxt("test.csv", dat)
-        print(np.sum(dat[:, 1]))
 
         lreg = linear_model.LogisticRegression(solver="lbfgs")
 

@@ -1,6 +1,6 @@
 """
 This is an automatically generated script by ABrox GUI.
-Created on 2017-09-11 09:42:19.464644.
+Created on 2017-09-10 22:04:33.532291.
 """
 
 # Required imports
@@ -9,39 +9,25 @@ from scipy import stats
 from abrox.core.algorithm import Abc
 
 
-def function():
-    print('dsdsds')
-    
-
+def summary(params):
+    # write your code here
+    pass
 
 def simulate_Model1(params):
     # write your code here
-    print('I am model 1 function')
-
-
-
-def simulate_Model2(params):
-    # write your code here
-    
+    pass
 
 
 CONFIG = {
     "data": {
-        "datafile": "C:/Users/Developer/Desktop/Projects/ApproxBayes/test_data.csv"
+        "datafile": "None"
     },
     "models": [
         {
         "name": "Model1",
         "priors": [
-            {"dsds": stats.norm(loc=1.0, scale=1.0)},
         ],
         "simulate": simulate_Model1
-        },
-        {
-        "name": "Model2",
-        "priors": [
-        ],
-        "simulate": simulate_Model2
         },
     ],
     "summary": summary,
