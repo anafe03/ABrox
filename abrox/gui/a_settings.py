@@ -333,9 +333,9 @@ class AObjectiveChoiceBox(QWidget):
 
         # Control appearance of method checkbox
         if check.value == 'inference':
-            self._methodChoiceWidget.setEnabled(True)
-        else:
             self._methodChoiceWidget.setEnabled(False)
+        else:
+            self._methodChoiceWidget.setEnabled(True)
 
 
 class AMethodChoiceBox(QWidget):
@@ -417,7 +417,6 @@ class AScriptCreator:
             self._writeSimulateFuncs(outfile, simulateDict)
             self._writeConfig(outfile, projectDict, simulateDict)
             self._writeAlgorithmCall(outfile)
-
 
     def _writeHeader(self, outfile):
         """Write header with info and date."""
