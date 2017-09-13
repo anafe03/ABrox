@@ -75,10 +75,7 @@ class APriorSpecifier(QFrame):
         ('Geometric', {
                     'params': OrderedDict([('p', -1), ('loc', 0)]),
                     'func': 'stats.geom'
-                    }),
-        ('Point', {
-                    'params': {'p': 0},
-                    'func': 'Point'})
+                    })
         ])
 
     def __init__(self, internalModel, model, plotter, parent=None):
@@ -207,15 +204,17 @@ class APriorList(QListWidget):
         super(APriorList, self).__init__(parent)
 
         # Set reference to internal model and plotter
-        self._model = internalModel
+        self._internalModel = internalModel
         self.modelName = model.name
         self._plotter = plotter
 
         # Configure list properties
         self.setSelectionMode(QListWidget.ExtendedSelection)
+        self.setMouseTracking(True)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._onContext)
         self.clicked.connect(self._onItemClick)
+        self.itemEntered.connect(self._onItemEnter)
 
         # Fill list, or add dummy if empty
         self._dummy = False
@@ -257,11 +256,12 @@ class APriorList(QListWidget):
         for i, item in enumerate(items):
             idx = self.indexFromItem(item)
             self.takeItem(idx.row())
-            self._model.deletePriorFromModel(idx.row(), self.modelName)
+            self._internalModel.deletePriorFromModel(idx.row(), self.modelName)
 
         # Check if any items left
         if self.count() == 0:
             self.addItem(ADummyItem('No priors defined...'))
+            self._plotter.clearPlot()
             self._dummy = True
 
         tracksave.saved = False
@@ -296,6 +296,15 @@ class APriorList(QListWidget):
                 tracksave.saved = False
 
         QListWidget.keyPressEvent(self, event)
+
+    def _onItemEnter(self, item):
+
+        if not self._dummy:
+            self.setCursor(Qt.PointingHandCursor)
+
+    def leaveEvent(self, leave):
+
+        self.setCursor(Qt.ArrowCursor)
 
 
 class APriorSpinBox(QDoubleSpinBox):
@@ -360,6 +369,7 @@ class APriorSelector(QWidget):
         self._entries[1].setValue(1.0)
         self._entries[2].setDisabled(True)
         self._define = QPushButton('Define')
+        self._define.setIcon(QIcon('./icons/define.png'))
         self._define.clicked.connect(self._onDefine)
         # Define labels
         self._labels = [QLabel('Parameter Name', self),
@@ -397,14 +407,6 @@ class APriorSelector(QWidget):
         if len(current['params'].keys()) < 3:
             self._labels[4].setText('')
             self._entries[2].setDisabled(True)
-
-        # Check for point
-        if len(current['params'].keys()) < 2:
-            self._labels[3].setText('')
-            self._entries[1].setDisabled(True)
-
-        # Clear name field
-        self._name.setText('')
 
     def _onDefine(self):
         """Activated when user pressed define parameter button."""

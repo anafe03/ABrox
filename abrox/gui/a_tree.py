@@ -243,6 +243,7 @@ class ADataNode(ABaseNode):
 
         self._internalModel = internalModel
         self._dataViewer = ADataViewer(internalModel, console)
+        self.setIcon(0, QIcon('./icons/data.png'))
 
     def display(self, mdiArea):
         """Displays the data editor table."""
@@ -251,6 +252,7 @@ class ADataNode(ABaseNode):
             self.subWindow.show()
         else:
             self.subWindow = AMdiWindow()
+            self.subWindow.setWindowIcon(self.icon(0))
             self.subWindow.setWindowTitle('Data Viewer')
             self.subWindow.setWidget(self._dataViewer)
             mdiArea.addSubWindow(self.subWindow)
@@ -266,6 +268,7 @@ class AModelNode(ABaseNode):
         # Customize behavior
         self._internalModel = internalModel
         self.setFlags(self.flags() | Qt.ItemIsEditable)
+        self.setIcon(0, QIcon('./icons/model.png'))
 
         # Store a flag to old name, updated when model changes name
         self.oldName = model.name
@@ -323,6 +326,7 @@ class APriorsNode(ABaseNode):
 
         self._internalModel = internalModel
         self.priorsWindow = APriorsWindow(internalModel, model)
+        self.setIcon(0, QIcon('./icons/priors.png'))
 
     def display(self, mdiArea):
 
@@ -331,6 +335,7 @@ class APriorsNode(ABaseNode):
             self.subWindow.show()
         else:
             self.subWindow = AMdiWindow()
+            self.subWindow.setWindowIcon(self.icon(0))
             self.subWindow.setWindowTitle(self.parent().text(0) + ' Priors')
             self.subWindow.setWidget(self.priorsWindow)
             mdiArea.addSubWindow(self.subWindow)
@@ -353,6 +358,7 @@ class ASimulateNode(ABaseNode):
 
         self.modelName = modelName
         self._editor = APythonTextEditor(internalModel, code, text, modelName)
+        self.setIcon(0, QIcon('./icons/function.png'))
 
     def display(self, mdiArea):
         """Displays the simulate function editor."""
@@ -362,6 +368,7 @@ class ASimulateNode(ABaseNode):
             self.subWindow.show()
         else:
             self.subWindow = AMdiWindow()
+            self.subWindow.setWindowIcon(self.icon(0))
             self.subWindow.setWindowTitle(self.parent().text(0) + ' Simulate Function')
             self.subWindow.setWidget(self._editor)
             mdiArea.addSubWindow(self.subWindow)
@@ -393,6 +400,7 @@ class ASummaryNode(ABaseNode):
         super(ASummaryNode, self).__init__(text)
 
         self._editor = APythonTextEditor(internalModel, code, text)
+        self.setIcon(0, QIcon('./icons/function.png'))
 
     def display(self, mdiArea):
 
@@ -401,6 +409,7 @@ class ASummaryNode(ABaseNode):
             self.subWindow.show()
         else:
             self.subWindow = AMdiWindow()
+            self.subWindow.setWindowIcon(self.icon(0))
             self.subWindow.setWindowTitle(self.text(0) + ' Function')
             self.subWindow.setWidget(self._editor)
             mdiArea.addSubWindow(self.subWindow)
@@ -425,6 +434,7 @@ class ADistanceNode(ABaseNode):
         super(ADistanceNode, self).__init__(text)
 
         self._editor = APythonTextEditor(internalModel, code, text)
+        self.setIcon(0, QIcon('./icons/function.png'))
 
     def display(self, mdiArea):
 
@@ -433,6 +443,7 @@ class ADistanceNode(ABaseNode):
             self.subWindow.show()
         else:
             self.subWindow = AMdiWindow()
+            self.subWindow.setWindowIcon(self.icon(0))
             self.subWindow.setWindowTitle(self.text(0) + ' Function')
             self.subWindow.setWidget(self._editor)
             mdiArea.addSubWindow(self.subWindow)
@@ -456,6 +467,7 @@ class ASettingsNode(ABaseNode):
         super(ASettingsNode, self).__init__(text)
 
         self._settingsWindow = ASettingsWindow(internalModel, console)
+        self.setIcon(0, QIcon('./icons/settings.png'))
 
     def display(self, mdiArea):
 
@@ -464,6 +476,7 @@ class ASettingsNode(ABaseNode):
             self.subWindow.show()
         else:
             self.subWindow = AMdiWindow()
+            self.subWindow.setWindowIcon(self.icon(0))
             self.subWindow.setWindowTitle(self.text(0))
             self.subWindow.setWidget(self._settingsWindow)
             mdiArea.addSubWindow(self.subWindow)
