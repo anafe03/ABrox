@@ -169,6 +169,30 @@ class AModelTree(QTreeWidget):
         self._populate()
         self._mdiArea.closeAllSubWindows()
 
+    def currentEditorFont(self):
+        """Returns the font of the current editor."""
+
+        # Iterate until finding a widget with an editor
+        iterator = QTreeWidgetItemIterator(self)
+        while iterator.value():
+            if type(iterator.value()) is ASimulateNode or type(iterator.value()) is ASummaryNode:
+                return iterator.value().editorFont()
+            iterator += 1
+
+    def changeEditorFont(self, font):
+        """Called from main window when user changed another font."""
+
+        # Iterate until finding a widget with an editor
+        iterator = QTreeWidgetItemIterator(self)
+        while iterator.value():
+            node = iterator.value()
+            # Id node has an editor, change font
+            if type(node) is ASimulateNode or \
+               type(node) is ASummaryNode or \
+               type(node) is ADistanceNode:
+                node.setEditorFont(font)
+            iterator += 1
+
     def contextMenuEvent(self, event):
         """Re-implements the right-click, menu-pop-up event."""
 
@@ -343,6 +367,12 @@ class ASimulateNode(ABaseNode):
             mdiArea.addSubWindow(self.subWindow)
             self.subWindow.show()
 
+    def editorFont(self):
+        return self._editor.font()
+
+    def setEditorFont(self, font):
+        self._editor.setFont(font)
+
     def changeModelName(self, text):
         """Called from AModelNode on name change."""
 
@@ -376,6 +406,12 @@ class ASummaryNode(ABaseNode):
             mdiArea.addSubWindow(self.subWindow)
             self.subWindow.show()
 
+    def editorFont(self):
+        return self._editor.font()
+
+    def setEditorFont(self, font):
+        self._editor.setFont(font)
+
     def getCodeFromEditor(self):
         """Returns the text from the editor."""
 
@@ -401,6 +437,12 @@ class ADistanceNode(ABaseNode):
             self.subWindow.setWidget(self._editor)
             mdiArea.addSubWindow(self.subWindow)
             self.subWindow.show()
+
+    def editorFont(self):
+        return self._editor.font()
+
+    def setEditorFont(self, font):
+        self._editor.setFont(font)
 
     def getCodeFromEditor(self):
         """Returns the text from the editor."""

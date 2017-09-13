@@ -53,7 +53,6 @@ class AMainWindow(QMainWindow):
 
         # Create submenu for toggling panes
         self._paneViewMenu = viewMenu.addMenu('Toggle Panes')
-        viewMenu.addSeparator()
 
         # Create submenu for changing display of MDI area
         _mdiView = viewMenu.addMenu('Workspace View')
@@ -63,10 +62,15 @@ class AMainWindow(QMainWindow):
                                     tip='Organize workfiles as separate tabs', checkable=True)
         stackedAction = createAction('Stacked View', callback=self._stacked, parent=_mdiView,
                                      tip='Organize workfiles as floating windows', checkable=True)
+
         tabbedAction.setChecked(True)
         group.addAction(stackedAction)
         group.addAction(tabbedAction)
         addActionsToMenu(_mdiView, (stackedAction, tabbedAction))
+
+        fontAction = createAction('Editor Font...', callback=self._openFontDialog, parent=self,
+                                  tip='Configure editor font', checkable=False)
+        addActionsToMenu(viewMenu, (fontAction, ))
 
         # Create actions for file menu
         loadData = createAction('&Load Data...', callback=self._loadData, parent=fileMenu,
@@ -79,6 +83,8 @@ class AMainWindow(QMainWindow):
 
         # Add actions to file menu
         addActionsToMenu(fileMenu, (loadData, loadSession, saveSession, None, exitAction))
+
+        # Add actions to view menu
 
     def _configureToolbar(self):
         """Sets up toolbar for helper methods."""
@@ -214,6 +220,19 @@ class AMainWindow(QMainWindow):
     def _tabbed(self):
         """Activated when user clicks the tabbed view menu button."""
         self._mdiArea.setViewMode(QMdiArea.TabbedView)
+
+    def _openFontDialog(self):
+        """Opens a font menu and changes the font of all editors on select."""
+
+        currentFont = self._tree.currentEditorFont()
+        print(currentFont.family())
+
+        font, valid = QFontDialog.getFont(currentFont, self, 'Select Font for Editor')
+        if valid:
+            #font.setFixedPitch(True)
+            #font = QFont('Monospaced', 12)
+            font.setFixedPitch(True)
+            self._tree.changeEditorFont(font)
 
     def closeEvent(self, event):
         """Override close event so a dialog can be displayed before closing."""

@@ -43,9 +43,9 @@ class APythonTextEditor(QPlainTextEdit):
         self.lineNumberArea = ALineNumberArea(self)
 
         # Create font and set it as default
-        self.font = QFont(fontFamily, fontSize)
-        self.font.setFixedPitch(True)
-        self.setFont(self.font)
+        font = QFont(fontFamily, fontSize)
+        font.setFixedPitch(True)
+        self.setFont(font)
 
         # Connect callbacks for line-numbers update
         self.blockCountChanged.connect(self.updateLineNumberAreaWidth)
@@ -123,7 +123,7 @@ class APythonTextEditor(QPlainTextEdit):
                 number = str(blockNumber + 1)
                 pen = QPen(ALineNumberArea.FOREGROUND)
                 painter.setPen(pen)
-                painter.setFont(self.font)
+                painter.setFont(self.font())
                 painter.drawText(5, top, self.lineNumberArea.width(), height,
                                  Qt.AlignLeft, number)
 
@@ -171,6 +171,13 @@ class APythonTextEditor(QPlainTextEdit):
                 cursor.insertText("    ")
                 return True
         return QPlainTextEdit.event(self, event)
+
+    def wheelEvent(self, event):
+        if event.modifiers() == Qt.ControlModifier:
+            if event.angleDelta().y() > 0:
+                self.zoomIn(2)
+            else:
+                self.zoomOut(2)
 
     def resizeEvent(self, event):
         """Re-implements the resize signal."""
