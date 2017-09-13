@@ -130,6 +130,7 @@ class AOuputDir(QWidget):
         # Create edit for path
         self._path = QLineEdit()
         self._path.setPlaceholderText('Output location...')
+        self._path.setText(self._internalModel.outputDir())
         self._path.textChanged.connect(self._onEdit)
 
         # Create button for dir
@@ -165,11 +166,6 @@ class AOuputDir(QWidget):
         """Triggered when user types into dir edit."""
 
         self._internalModel.addOutputDir(text)
-
-    def updateDirName(self):
-        """Called externally to update dir name from model."""
-
-        self._path.setText(self._internalModel.outputDir())
 
 
 class AModelTestFrame(QFrame):
@@ -227,6 +223,7 @@ class AModelTestFrame(QFrame):
         buttonsWidgetLayout.setContentsMargins(0, 0, 0, 0)
         buttonsWidgetLayout.addWidget(self._run)
         buttonsWidgetLayout.addWidget(self._stop)
+        buttonsWidgetLayout.addStretch(0)
         buttonsWidgetLayout.addWidget(self._progress)
         buttonsWidget.setLayout(buttonsWidgetLayout)
 
@@ -537,12 +534,11 @@ class AScriptCreator:
             # Write settings
             outfile.write('{}"settings": {{\n'.format(self.tab()))
             # Format settings dict using pprint
-            settings = pprint.pformat(projectDict['settings']) \
+            settings = pprint.pformat(dict(projectDict['settings'])) \
                 .replace('{', "") \
                 .replace("}", "")
             # Indent output of pprint with 8 spaces
-            settings = ''.join(['{}{}'.format(self.tab(2), l) for l in settings.splitlines(True)
-                                                              if "outputdir" not in l])
+            settings = ''.join(['{}{}'.format(self.tab(2), l) for l in settings.splitlines(True)])
             outfile.write(settings)
             # Close settings dict
             outfile.write('\n{}}}\n'.format(self.tab()))

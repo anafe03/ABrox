@@ -90,9 +90,19 @@ class APythonTextEditor(QPlainTextEdit):
         if code:
             self.insertPlainText(code)
         else:
-            self.insertPlainText('def {}(params):\n'
+            if name.lower() == 'simulate':
+                param = 'params'
+            elif name.lower() == 'summary':
+                param = 'data'
+            elif name.lower() == 'distance':
+                param = 'simSummary, obsSummary'
+            else:
+                # Just to make sure that param is defined
+                param = ''
+
+            self.insertPlainText('def {}({}):\n'
                                  '    # write your code here\n'
-                                 '    pass'.format(name.lower()))
+                                 '    pass'.format(name.lower(), param))
 
     def lineNumberAreaPaintEvent(self, event):
         """Called when line-numbers widget calls its paint event"""
