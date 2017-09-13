@@ -28,7 +28,7 @@ class AInternalModel:
                         'objective': 'comparison',
                         'method': 'logistic',
                         'modeltest': False,
-                        'fixedparameters': list()
+                        'fixedparameters': OrderedDict()
                     }
                     )
                     ]
@@ -92,9 +92,24 @@ class AInternalModel:
     def addOutputDir(self, dirPath):
         self._project['Analysis']['settings']['outputdir'] = dirPath
 
-    def toggleModelTest(self, flag):
+    def addModelIndexForTest(self, idx):
+        self._project['Analysis']['settings']['modeltest'] = idx
 
-        self._project['Analysis']['settings']['modeltest'] = flag
+    def addFixedParameters(self, listOfTuples):
+
+        self._project['Analysis']['settings']['fixedparameters'] = OrderedDict(listOfTuples)
+
+    def selectedModelForTest(self):
+
+        # Make sure a model is selected
+        if self._project['Analysis']['settings']['modeltest'] is False or \
+                                                              not self.selectedModelIndexValid():
+            raise IndexError('No valid model selected for test!')
+        idx = self._project['Analysis']['settings']['modeltest']
+        return self._project['Analysis']['models'][idx]
+
+    def selectedModelIndexValid(self):
+        return False if self._project['Analysis']['settings']['modeltest'] < 0 else True
 
     def dataFile(self):
 
@@ -139,6 +154,9 @@ class AInternalModel:
         """Returns the model list."""
 
         return self._project['Analysis']['models']
+
+    def fixedParameters(self):
+        return self._project['Analysis']['settings']['fixedparameters']
 
     def fileWithPathName(self):
         """
@@ -205,7 +223,7 @@ class AInternalModel:
         # ===== Check if any models specified ===== #
         if not self._project['Analysis']['models']:
 
-            text = 'No models defined. Your project should have at least one model.'
+            text = 'No models defined. Your project should contain at least one model.'
             msg.critical(parent, errorTitle, text)
             return False
 
@@ -213,7 +231,8 @@ class AInternalModel:
         if not self._project['Analysis']['settings']['modeltest'] and \
            not self._project['Analysis']['data']['datafile']:
 
-            text = 'Since you are not doing a model test, you a need to load a data file.'
+            text = 'Since you are not performing a model test, ' \
+                   'you a need to load a data file.'
             msg.critical(parent, errorTitle, text)
             return False
 
@@ -282,11 +301,11 @@ class AModel:
         return any(self._priors)
 
     def toDict(self):
-        """Returns a dict representation of itself."""
+        """Returns an ordered dict representation of itself."""
 
-        return {'name': self.name,
-                'priors': self._priors,
-                'simulate': self.simulate}
+        return OrderedDict([('name', self.name),
+                            ('priors', self._priors),
+                            ('simulate', self.simulate)])
 
     def __repr__(self):
 

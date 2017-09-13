@@ -4,6 +4,7 @@ from PyQt5.QtGui import *
 import datetime
 import pprint
 from a_process_manager import AProcessManager
+from a_dialogs import ASetParameterDialog
 import tracksave
 
 
@@ -135,6 +136,7 @@ class AOuputDir(QWidget):
 
         # Create button for dir
         self._button = QToolButton()
+        self._button.setFocusPolicy(Qt.NoFocus)
         self._button.setIcon(QIcon('./icons/load.png'))
         self._button.setToolTip('Select output directory...')
         self._button.setStatusTip('Select output directory...')
@@ -176,6 +178,7 @@ class AModelTestFrame(QFrame):
         self._internalModel = internalModel
         self._console = console
         self._processManager = AProcessManager(self, self._internalModel, self._console)
+        self._comboWidget = QWidget()
 
         self._configureLayout(QVBoxLayout())
 
@@ -184,9 +187,12 @@ class AModelTestFrame(QFrame):
 
         self.setFrameStyle(QFrame.Panel)
 
-        # Create a group box
+        # Create group boxes
         groupBox = QGroupBox('Model Test Settings')
         groupBoxLayout = QVBoxLayout()
+
+        runGroupBox = QGroupBox('Computation')
+        runGroupBoxLayout = QHBoxLayout()
 
         # Create a checkbox
         self._modelTest = QCheckBox()
@@ -194,16 +200,17 @@ class AModelTestFrame(QFrame):
         self._modelTest.setText('Model Test')
 
         # Create a combo in its own widget
-        self._comboWidget = QWidget()
+
         comboWidgetLayout = QHBoxLayout()
         comboWidgetLayout.setContentsMargins(0, 0, 0, 0)
         self._combo = AModelComboBox(self._internalModel)
-        self._combo.setCurrentText('Pick a Model')
         self._combo.installEventFilter(self)
         configButton = self._createButton('Set Parameter', './icons/config',
-                                          self._onSetParameter, Qt.NoFocus, True)
+                                          self._onFixParameter, Qt.NoFocus, True)
+        comboWidgetLayout.addWidget(QLabel('Pick a model:'))
         comboWidgetLayout.addWidget(self._combo)
         comboWidgetLayout.addWidget(configButton)
+        comboWidgetLayout.addStretch(3)
         comboWidgetLayout.setStretchFactor(self._combo, 5)
         comboWidgetLayout.setStretchFactor(configButton, 1)
         self._comboWidget.setLayout(comboWidgetLayout)
@@ -218,30 +225,32 @@ class AModelTestFrame(QFrame):
         self._progress = QProgressBar()
         self._progress.setOrientation(Qt.Horizontal)
 
-        buttonsWidget = QWidget()
-        buttonsWidgetLayout = QHBoxLayout()
-        buttonsWidgetLayout.setContentsMargins(0, 0, 0, 0)
-        buttonsWidgetLayout.addWidget(self._run)
-        buttonsWidgetLayout.addWidget(self._stop)
-        buttonsWidgetLayout.addStretch(0)
-        buttonsWidgetLayout.addWidget(self._progress)
-        buttonsWidget.setLayout(buttonsWidgetLayout)
+        # Add all buttons to runbox layout
+
+        runGroupBoxLayout.addWidget(self._run)
+        runGroupBoxLayout.addWidget(self._stop)
+        runGroupBoxLayout.addStretch(0)
+        runGroupBoxLayout.addWidget(self._progress)
+        runGroupBoxLayout.setStretchFactor(self._progress, 3)
+        runGroupBox.setLayout(runGroupBoxLayout)
 
         groupBoxLayout.addWidget(self._modelTest)
         groupBoxLayout.addWidget(self._comboWidget)
-        groupBoxLayout.addWidget(buttonsWidget)
 
         groupBox.setLayout(groupBoxLayout)
         layout.addWidget(groupBox)
+        layout.addWidget(runGroupBox)
         layout.addStretch(1)
         self.setLayout(layout)
 
     def eventFilter(self, qobject, event):
-
+        """
+        Adds an event poller to the frame,
+        update combobox when mouse pressed.
+        """
         if type(qobject) is AModelComboBox:
             if event.type() == QEvent.MouseButtonPress:
-                self._combo.clear()
-                self._combo.addItems([model.name for model in self._internalModel['models']])
+                self._combo.updateItems()
         return False
 
     def _createButton(self, label, iconPath, func, focusPolicy, enabled):
@@ -258,16 +267,20 @@ class AModelTestFrame(QFrame):
         """Controls the appearance of the model test frame."""
 
         if checked:
+            # Enable selector pane
             self._comboWidget.setEnabled(True)
-            self._internalModel.toggleModelTest(True)
+            # Update list with models
+            self._combo.updateItems()
+            # Add current first model to model test
+            self._internalModel.addModelIndexForTest(self._combo.currentIndex())
         else:
             self._comboWidget.setEnabled(False)
-            self._internalModel.toggleModelTest(False)
+            self._internalModel.addModelIndexForTest(False)
 
     def _onRun(self):
         """For debugging."""
 
-        if self._internalModel.sanityCheckPassed(self):
+        if self._internalModel.sanityCheckPassed(self.nativeParentWidget()):
 
             # Create an executable python script in the output dir
             scriptCreator = AScriptCreator(self._internalModel)
@@ -303,8 +316,17 @@ class AModelTestFrame(QFrame):
         # Hide progress
         self._progress.hide()
 
-    def _onSetParameter(self):
-        pass
+    def _onFixParameter(self):
+        """Invoke a dialog for settings parameters."""
+
+        # Do some error checks
+        if not self._internalModel.models():
+            msg = QMessageBox()
+            text = 'Project should contain at least one model.'
+            msg.critical(self, 'Error loading data file...', text)
+        else:
+            dialog = ASetParameterDialog(self._internalModel, self.nativeParentWidget())
+            dialog.exec_()
 
 
 class AModelComboBox(QComboBox):
@@ -313,6 +335,19 @@ class AModelComboBox(QComboBox):
         super(AModelComboBox, self).__init__(parent)
 
         self._internalModel = internalModel
+        self.currentIndexChanged.connect(self._onIndexChange)
+
+    def _onIndexChange(self, idx):
+        """Update internal model with model index."""
+        if idx >= 0:
+            self._internalModel.addModelIndexForTest(idx)
+
+    def updateItems(self):
+        """Clear items and add new (need to do dynamically.)"""
+        self.clear()
+        for idx, model in enumerate(self._internalModel['models']):
+            self.addItem(model.name)
+            self.setItemIcon(idx, QIcon('./icons/model.png'))
 
 
 class AObjectiveChoiceBox(QWidget):
@@ -427,8 +462,6 @@ class AScriptCreator:
 
         fileName = self._internalModel.fileWithPathName()
 
-        print('Filename returned: ', fileName)
-
         # Get a dictionary of modelName: sim function code
         simulateDict = self._internalModel.simulate()
 
@@ -534,6 +567,8 @@ class AScriptCreator:
             # Write settings
             outfile.write('{}"settings": {{\n'.format(self.tab()))
             # Format settings dict using pprint
+            # Convert ordered dicts to dicts for nice representation
+            projectDict['settings']['fixedparameters'] = dict(projectDict['settings']['fixedparameters'])
             settings = pprint.pformat(dict(projectDict['settings'])) \
                 .replace('{', "") \
                 .replace("}", "")
@@ -559,22 +594,3 @@ class AScriptCreator:
         """Returns a string containing 4*s whitespaces."""
 
         return " " * (s*4)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -170,14 +170,13 @@ class APythonTextEditor(QPlainTextEdit):
                 cursor = self.textCursor()
                 cursor.insertText("    ")
                 return True
+        if event.type() == QEvent.Wheel:
+            if event.modifiers() == Qt.ControlModifier:
+                if event.angleDelta().y() > 0:
+                    self.zoomIn(2)
+                else:
+                    self.zoomOut(2)
         return QPlainTextEdit.event(self, event)
-
-    def wheelEvent(self, event):
-        if event.modifiers() == Qt.ControlModifier:
-            if event.angleDelta().y() > 0:
-                self.zoomIn(2)
-            else:
-                self.zoomOut(2)
 
     def resizeEvent(self, event):
         """Re-implements the resize signal."""
