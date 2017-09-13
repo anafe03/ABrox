@@ -4,6 +4,7 @@ from PyQt5.QtGui import *
 import datetime
 import pprint
 from a_process_manager import AProcessManager
+import tracksave
 
 
 class ASettingsWindow(QFrame):
@@ -131,12 +132,6 @@ class AOuputDir(QWidget):
         self._path.setPlaceholderText('Output location...')
         self._path.textChanged.connect(self._onEdit)
 
-        # Create edit for dir name (session name)
-        self._fileName = QLineEdit()
-        self._fileName.setPlaceholderText('Script name...')
-        self._fileName.textChanged.connect(self._onName)
-        self._fileName.setMaximumSize(self._fileName.sizeHint())
-
         # Create button for dir
         self._button = QToolButton()
         self._button.setIcon(QIcon('./icons/load.png'))
@@ -147,7 +142,6 @@ class AOuputDir(QWidget):
         # Add widgets to layout
         layout.addWidget(self._button)
         layout.addWidget(self._path)
-        layout.addWidget(self._fileName)
         layout.setSpacing(0)
 
         self.setLayout(layout)
@@ -159,20 +153,23 @@ class AOuputDir(QWidget):
         dirPath = QFileDialog.getExistingDirectory(self, 'Select an Empty Output Directory...',
                                                    '', QFileDialog.ShowDirsOnly)
 
+        # If user has selected something
+        if dirPath:
+            # Update entry
+            self._path.setText(dirPath)
+            self._internalModel.addOutputDir(dirPath)
+            # Modify save flag
+            tracksave.saved = False
+
     def _onEdit(self, text):
         """Triggered when user types into dir edit."""
 
-        pass
+        self._internalModel.addOutputDir(text)
 
-    def _onName(self, text):
-        """Triggered when user types into session edit."""
-
-        pass
-
-    def updateDirName(self, newSession):
+    def updateDirName(self):
         """Called externally to update dir name from model."""
 
-        pass
+        self._path.setText(self._internalModel.outputDir())
 
 
 class AModelTestFrame(QFrame):
@@ -182,7 +179,7 @@ class AModelTestFrame(QFrame):
 
         self._internalModel = internalModel
         self._console = console
-        self._processManager = AProcessManager(self._internalModel, self._console)
+        self._processManager = AProcessManager(self, self._internalModel, self._console)
 
         self._configureLayout(QVBoxLayout())
 
@@ -265,22 +262,49 @@ class AModelTestFrame(QFrame):
 
         if checked:
             self._comboWidget.setEnabled(True)
+            self._internalModel.toggleModelTest(True)
         else:
             self._comboWidget.setEnabled(False)
+            self._internalModel.toggleModelTest(False)
 
     def _onRun(self):
         """For debugging."""
 
-        HARDCODED_FILE_NAME = "test_script.py"
-        scriptCreator = AScriptCreator(self._internalModel)
-        scriptCreator.createScript(HARDCODED_FILE_NAME)
-        #
-        # self._processManager.startAbc(HARDCODED_FILE_NAME)
+        if self._internalModel.sanityCheckPassed(self):
+
+            # Create an executable python script in the output dir
+            scriptCreator = AScriptCreator(self._internalModel)
+            scriptName = scriptCreator.createScript()
+
+            # Start a python process in e separate thread
+            self._processManager.startAbc(scriptName)
 
     def _onStop(self):
         """Kill python thread and subprocess inside."""
 
         self._processManager.stopAll()
+
+    def signalAbcStarted(self):
+        """Signaled from the process manager."""
+
+        # Start progress bar
+        self._progress.setMinimum(0)
+        self._progress.setMaximum(0)
+        self._progress.show()
+
+        # Disable run button, enable stop
+        self._run.setEnabled(False)
+        self._stop.setEnabled(True)
+
+    def signalAbcFinished(self):
+        """Signaled from the process manager."""
+
+        # Disable stop button, enable run
+        self._run.setEnabled(True)
+        self._stop.setEnabled(False)
+
+        # Hide progress
+        self._progress.hide()
 
     def _onSetParameter(self):
         pass
@@ -346,9 +370,9 @@ class AMethodChoiceBox(QWidget):
         self._configureLayout(QHBoxLayout())
 
         if self._internalModel.objective() == "comparison":
-            self.setEnabled(False)
-        else:
             self.setEnabled(True)
+        else:
+            self.setEnabled(False)
 
     def _configureLayout(self, layout):
         """Lays out the main components."""
@@ -396,9 +420,17 @@ class AScriptCreator:
     def __init__(self, internalModel):
 
         self._internalModel = internalModel
+        self.scriptName = None
 
-    def createScript(self, fileName):
-        """Creates an abs runnable script with the specified fileName."""
+    def createScript(self):
+        """
+        Creates an abs runnable script with the file name provided by model.
+        Assumes that model sanity checks have been passed!
+        """
+
+        fileName = self._internalModel.fileWithPathName()
+
+        print('Filename returned: ', fileName)
 
         # Get a dictionary of modelName: sim function code
         simulateDict = self._internalModel.simulate()
@@ -417,6 +449,9 @@ class AScriptCreator:
             self._writeSimulateFuncs(outfile, simulateDict)
             self._writeConfig(outfile, projectDict, simulateDict)
             self._writeAlgorithmCall(outfile)
+
+        # Return filename for process manager
+        return fileName
 
     def _writeHeader(self, outfile):
         """Write header with info and date."""

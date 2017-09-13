@@ -11,9 +11,10 @@ class AProcessManager:
     that scripName is the absolute path of a runnable python script.
     Uses a QProcess instance to manage the process.
     """
-    def __init__(self, internalModel, console):
+    def __init__(self, parent, internalModel, console):
 
         # Create instances
+        self._parent = parent
         self._internalModel = internalModel
         self._console = console
         self._flag = {"run": False}
@@ -32,7 +33,6 @@ class AProcessManager:
         # method of the thread, otherwise it never returns!
         self._abcProcess.abcFinished.connect(self._runThread.quit)
         # Connect run handler signal to thread methods
-        self._abcProcess.progressUpdate.connect(self._updateProgress)
         self._abcProcess.abcStarted.connect(self._onAbcStarted)
         # Connect thread signals to run handler methods
         self._runThread.started.connect(self._abcProcess.run)
@@ -51,22 +51,20 @@ class AProcessManager:
         """
         self._abcProcess.killProcess()
 
-    def _updateProgress(self, p):
-        pass
-
     def _onAbcStarted(self):
 
+        self._parent.signalAbcStarted()
         print('From manager: Starting abc')
 
     def _onAbcFinished(self):
 
+        self._parent.signalAbcFinished()
         print('From manager: Finished abc')
 
 
 class APythonAbcProcess(QObject):
     abcFinished = pyqtSignal()
     abcStarted = pyqtSignal()
-    progressUpdate = pyqtSignal(int)
 
     def __init__(self, flag):
         """
@@ -88,6 +86,7 @@ class APythonAbcProcess(QObject):
         self.abcFinished.emit()
 
     def addScriptName(self, name):
+        """Update script name for executing the right one."""
 
         self._scriptName = name
 

@@ -1,5 +1,7 @@
+from PyQt5.QtWidgets import QMessageBox
 import copy
 import re
+import os
 from collections import OrderedDict
 
 
@@ -83,6 +85,21 @@ class AInternalModel:
     def addMethod(self, method):
         self._project['Analysis']['settings']['method'] = method
 
+    def addDataFile(self, datafile):
+
+        self._project['Analysis']['data']['datafile'] = datafile
+
+    def addOutputDir(self, dirPath):
+        self._project['Analysis']['settings']['outputdir'] = dirPath
+
+    def toggleModelTest(self, flag):
+
+        self._project['Analysis']['settings']['modeltest'] = flag
+
+    def dataFile(self):
+
+        return self._project['Analysis']['data']['datafile']
+
     def summary(self):
         """Returns the summary function code as a string."""
 
@@ -115,20 +132,39 @@ class AInternalModel:
     def objective(self):
         return self._project['Analysis']['settings']['objective']
 
+    def outputDir(self):
+        return self._project['Analysis']['settings']['outputdir']
+
+    def models(self):
+        """Returns the model list."""
+
+        return self._project['Analysis']['models']
+
+    def fileWithPathName(self):
+        """
+        Checks if directory exists, if exists, changes name so it matches.
+        Assumes model has been checked for sanity!
+        """
+
+        if os.path.isdir(self._project['Analysis']['settings']['outputdir']):
+            return self._fileWithPathName(os.path.join(self._project['Analysis']['settings']['outputdir'],
+                                                       'analysis.py'))
+
+    def _fileWithPathName(self, pathToFile):
+        """A recursive helper method to not overwrite analysis files."""
+
+        if not os.path.exists(pathToFile):
+            return pathToFile
+        else:
+            # Replace file name with a new one (_1 attached)
+            return self._fileWithPathName(pathToFile.replace('.py', '_1.py'))
+
     def deletePriorFromModel(self, idx, modelName):
         """Interface function to delete a prior fom a given model's priors list."""
 
         for model in self._project['Analysis']['models']:
             if model.name == modelName:
                 model.removePrior(idx)
-
-    def addDataFile(self, datafile):
-
-        self._project['Analysis']['data']['datafile'] = datafile
-
-    def dataFile(self):
-
-        return self._project['Analysis']['data']['datafile']
 
     def changeSetting(self, key, val):
         self._project['Analysis']['settings'][key] = val
@@ -155,10 +191,48 @@ class AInternalModel:
         newModels = [AModel.fromDict(model) for model in self._project['Analysis']['models']]
         self._project['Analysis']['models'] = newModels
 
-    def models(self):
-        """Returns the model list."""
+    def sanityCheckPassed(self, parent=None):
+        """
+        Checks whether model fields of current project are correct.
+        Returns True if ok, False otherwise + displays a message explaining
+        the problem.
+        """
 
-        return self._project['Analysis']['models']
+        # ===== Initialize message box ===== #
+        msg = QMessageBox()
+        errorTitle = 'Could not start an ABC process...'
+
+        # ===== Check if any models specified ===== #
+        if not self._project['Analysis']['models']:
+
+            text = 'No models defined. Your project should have at least one model.'
+            msg.critical(parent, errorTitle, text)
+            return False
+
+        # ===== Check if data loaded when not doing a model test ===== #
+        if not self._project['Analysis']['settings']['modeltest'] and \
+           not self._project['Analysis']['data']['datafile']:
+
+            text = 'Since you are not doing a model test, you a need to load a data file.'
+            msg.critical(parent, errorTitle, text)
+            return False
+
+        # ===== Check if output dir specified ===== #
+        if not self._project['Analysis']['settings']['outputdir']:
+            text = 'No output dir in settings specified!'
+            msg.critical(parent, errorTitle, text)
+            return False
+
+        # ===== Check if comparison AND models < 1 ===== #
+        if self._project['Analysis']['settings']['objective'] == 'comparison' and \
+            len(self._project['Analysis']['models']) < 2:
+
+            text = 'You need at least two models for objective "comparison".'
+            msg.critical(parent, errorTitle, text)
+            return False
+
+        # All checks passed, start process from caller
+        return True
 
     def __iter__(self):
         """Make iteration possible."""
