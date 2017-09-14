@@ -527,10 +527,12 @@ class AScriptCreator:
 
             # Write var name
             outfile.write('CONFIG = {\n')
-            # Write data file
+            # Write data file and delimiter
             outfile.write('{}"data": {{\n'.format(self.tab()))
-            outfile.write('{}"datafile": "{}"\n'.format(self.tab(2),
+            outfile.write('{}"datafile": "{}",\n'.format(self.tab(2),
                                                         projectDict['data']['datafile']))
+            outfile.write('{}"delimiter": "{}"\n'.format(self.tab(2),
+                                                        projectDict['data']['delimiter']))
             outfile.write('{}}},\n'.format(self.tab()))
 
             # Write models
@@ -567,8 +569,8 @@ class AScriptCreator:
             # Write settings
             outfile.write('{}"settings": {{\n'.format(self.tab()))
             # Format settings dict using pprint
-            # Convert ordered dicts to dicts for nice representation
-            projectDict['settings']['fixedparameters'] = dict(projectDict['settings']['fixedparameters'])
+            #projectDict['settings']['fixedparameters'] = dict(projectDict['settings']['fixedparameters'])
+            #print(projectDict['settings'])
             settings = pprint.pformat(dict(projectDict['settings'])) \
                 .replace('{', "") \
                 .replace("}", "")

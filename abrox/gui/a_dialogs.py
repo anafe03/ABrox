@@ -1,15 +1,16 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-import pandas as pd
 
 
 class ALoadDataDialog(QDialog):
     """Represents a pop-up for obtaining the data delimiter."""
 
-    def __init__(self, fileName, parent=None):
+
+    def __init__(self, fileName, internalModel, parent=None):
         super(ALoadDataDialog, self).__init__(parent)
 
         self.fileName = fileName
+        self._internalModel = internalModel
         self._buttons = QButtonGroup(self)
         self.data = None
         self.accepted = False
@@ -78,28 +79,25 @@ class ALoadDataDialog(QDialog):
     def _onOk(self):
         """Load data using pandas."""
 
-        # get checked button type
-        sep = self._buttons.checkedButton().text()
+        # Get checked button type
+        sepText = self._buttons.checkedButton().text()
 
-        try:
-            if sep == 'Tab':
-                data = pd.read_csv(self.fileName, delimiter='\t', header=0)
-            elif sep == 'Whitespace':
-                data = pd.read_csv(self.fileName, delim_whitespace=True, header=0)
-            elif sep == 'Semicolon':
-                data = pd.read_csv(self.fileName, delimiter=';', header=0)
-            elif sep == 'Comma':
-                data = pd.read_csv(self.fileName, delimiter=',', header=0)
-            else:
-                data = pd.read_csv(self.fileName, delimiter=self._otherEntry.text(), header=0)
+        # Check type of delimiter
+        if sepText == 'Tab':
+            delimiter = '\t'
+        elif sepText == 'Whitespace':
+            delimiter = r'\s*'
+        elif sepText == 'Semicolon':
+            delimiter = ';'
+        elif sepText == 'Comma':
+            delimiter = ','
+        else:
+            delimiter = self._otherEntry.text()
 
-            self.data = data
-            self.accepted = True
-            self.close()
-
-        except IOError as e:
-            QMessageBox.critical(self, 'Could not load file...',
-                                 str(e), QMessageBox.Ok)
+        # Update model
+        self._internalModel.addDataFileAndDelimiter(self.fileName, delimiter)
+        self.accepted = True
+        self.close()
 
     def _onCancel(self):
         """Called when user presses cancel. Accepted stays False."""

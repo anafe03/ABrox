@@ -3,6 +3,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QAbstractTableModel
 from a_dialogs import ALoadDataDialog
 import tracksave
+import pandas as pd
 
 
 class ADataViewer(QFrame):
@@ -11,10 +12,16 @@ class ADataViewer(QFrame):
     def __init__(self, model, console, parent=None):
         super(ADataViewer, self).__init__(parent)
 
+        # Add references to attributes
         self._internalModel = model
-        self._table = APandasView(console)
+        self._table = APandasView(console, self._internalModel)
         self._toolbar = ATableToolbar(model, self._table, console)
         self._configureLayout(QVBoxLayout())
+
+        # Update table, if any data
+        if self._internalModel.dataFile() is not None:
+            self._table.updateTableAndModel()
+            self._toolbar.updateLoadedFileLabel()
 
     def _configureLayout(self, layout):
         """Lays out the main components."""
@@ -28,22 +35,44 @@ class ADataViewer(QFrame):
 
 class APandasView(QTableView):
     """Represents the table view for the pandas data model."""
-    def __init__(self, console, parent=None):
+    def __init__(self, console, internalModel, parent=None):
         super(APandasView, self).__init__(parent)
 
         self._console = console
+        self._internalModel = internalModel
 
-    def updateTableAndModel(self, data, dataFileName):
+    def updateTableAndModel(self):
         """A proxy method to update table."""
 
-        # Create model
-        model = APandasModel(data)
+        # Get data frame and file name
+        data, dataFileName = self._loadDataWithPandas()
 
-        # Add model to table
-        self.setModel(model)
+        #  Make sure something is returned
+        if data is not None:
+            # Create model
+            model = APandasModel(data)
 
-        # Push DataFrame to IPython
-        self._console.addData(data, dataFileName)
+            # Add model to table
+            self.setModel(model)
+
+            # Push DataFrame to IPython
+            self._console.addData(data, dataFileName)
+
+    def _loadDataWithPandas(self):
+        """
+        Attempts ot load data as defined in the model.
+        Returns the loaded pandas DataFrame and the data
+        file name as provided by the internal model.
+        """
+
+        dataFileName, delim = self._internalModel.dataFileAndDelimiter()
+        try:
+            data = pd.read_csv(dataFileName, delimiter=delim, header=0)
+            return data, dataFileName
+        except IOError as e:
+            QMessageBox.critical(self, 'Could not load file {}'.format(dataFileName),
+                                 str(e), QMessageBox.Ok)
+            return None, None
 
 
 class APandasModel(QAbstractTableModel):
@@ -124,6 +153,11 @@ class ATableToolbar(QFrame):
         self._label = QLabel('No Data File Loaded...  ')
         self._configureLayout(QHBoxLayout())
 
+    def updateLoadedFileLabel(self):
+        """Updates the label above the table. Assumes data file loaded."""
+
+        self._label.setText('Showing: ' + self._internalModel.dataFile() + '  ')
+
     def _configureLayout(self, layout):
         """Lays out the main toolbar components"""
 
@@ -153,15 +187,14 @@ class ATableToolbar(QFrame):
                                                      "", "Data Files (*.csv *.txt *.dat)")
         # If something loaded, open properties dialog
         if loadedFileName[0]:
-            dialog = ALoadDataDialog(loadedFileName[0], self)
+            dialog = ALoadDataDialog(loadedFileName[0], self._internalModel, self)
             dialog.exec_()
             # If dialog accepted and loading ok
             if dialog.accepted:
-                # Update internal model
-                self._internalModel.addDataFile(loadedFileName[0])
                 # Update table and table model
-                self._table.updateTableAndModel(dialog.data, loadedFileName[0])
+                self._table.updateTableAndModel()
                 # Update toolbar text
-                self._label.setText('Showing: ' + loadedFileName[0] + '  ')
+                self.updateLoadedFileLabel()
                 # Update save flag
                 tracksave.saved = False
+

@@ -13,7 +13,7 @@ class AInternalModel:
         self._project = OrderedDict([
             ('Analysis',
                 OrderedDict([
-                    ('data', {'datafile': None}),
+                    ('data', {'datafile': None, 'delimiter': None}),
                     ('models', [
                         AModel('Model1'),
                     ]),
@@ -85,9 +85,10 @@ class AInternalModel:
     def addMethod(self, method):
         self._project['Analysis']['settings']['method'] = method
 
-    def addDataFile(self, datafile):
+    def addDataFileAndDelimiter(self, datafile, delim):
 
         self._project['Analysis']['data']['datafile'] = datafile
+        self._project['Analysis']['data']['delimiter'] = delim
 
     def addOutputDir(self, dirPath):
         self._project['Analysis']['settings']['outputdir'] = dirPath
@@ -112,8 +113,12 @@ class AInternalModel:
         return False if self._project['Analysis']['settings']['modeltest'] < 0 else True
 
     def dataFile(self):
-
         return self._project['Analysis']['data']['datafile']
+
+    def dataFileAndDelimiter(self):
+
+        return self._project['Analysis']['data']['datafile'], \
+               self._project['Analysis']['data']['delimiter']
 
     def summary(self):
         """Returns the summary function code as a string."""
