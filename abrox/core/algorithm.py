@@ -83,6 +83,11 @@ class Abc:
 
         self.objective = self.config['settings']['objective']
 
+        if not self.outdir:
+            raise ConfigurationError("Please provide a directory. Use '.' \
+            if you want to use your current working directory")
+        self.outdir = self.config['settings']['outputdir']
+
         # check if a method for model comparison is set
         if self.objective == "comparison" and len(self.config['models']) < 2:
             raise ConfigurationError('Define at least two models for comparison.')
@@ -205,7 +210,9 @@ class Abc:
                 logisticHandler.run()
 
         diff_time = time() - start_time
-        return self.model_collection.report(diff_time=diff_time,
-                                            threshold=self.model_collection.threshold,
-                                            method=self.method,
-                                            postMatrix=postMat)
+
+        return self.model_collection.saveResults(diff_time=diff_time,
+                                                 threshold=self.model_collection.threshold,
+                                                 method=self.method,
+                                                 postMatrix=postMat,
+                                                 outdir=self.outdir)

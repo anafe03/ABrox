@@ -1,7 +1,8 @@
 from random import randrange
 import numpy as np
-from scipy import stats
 import itertools
+import pickle
+import os
 
 from model import Model
 
@@ -156,6 +157,27 @@ class ModelCollection(list):
         out[0, :] = means
         out[1, :] = stds
         return out
+
+    def saveResults(self, diff_time, threshold,  outdir, method=None, postMatrix=None):
+        """Save results in dict and pickle"""
+        Dict = {'time': diff_time, 'threshold': threshold}
+
+        if method is None:
+            Dict['posterior'] = {}
+            for col in postMatrix.T:
+                Dict['posterior'][str(col)] = col
+
+        else:
+            for model in self:
+                Dict[model] = {}
+                Dict[model]['probability'] = model.accepted
+
+        bf = self.bayesFactor()
+
+        Dict['bf'] = bf
+
+        pickle.dump(Dict, open(os.path.join(outdir, "save.p"), "wb"))
+        return Dict
 
     def report(self, diff_time, threshold, method=None, postMatrix=None):
 
