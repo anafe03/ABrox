@@ -69,11 +69,10 @@ class AComputationSettingsFrame(QFrame):
             containerLayout.addWidget(ASettingEntry(self._internalModel, key), idx, 1, 1, 1)
 
         # Create objective and method choice widgets
-        methodChoiceWidget = AMethodChoiceBox(self._internalModel)
-        objectiveChoiceWidget = AObjectiveChoiceBox(self._internalModel, methodChoiceWidget)
+        objectiveChoiceWidget = AObjectiveChoiceBox(self._internalModel)
 
-        containerLayout.addWidget(objectiveChoiceWidget, idx+1, 0, 1, 2)
-        containerLayout.addWidget(methodChoiceWidget, idx+2, 0, 1, 2)
+        containerLayout.addWidget(objectiveChoiceWidget, idx+1, 0, 1, 1)
+
         # Lay out container
         container.setLayout(containerLayout)
 
@@ -105,11 +104,18 @@ class ASettingEntry(QDoubleSpinBox):
     def _configureRange(self):
         """Sets the range of the spinbox."""
 
+        # Percentile range is 0.00 - 1.00
         if self._key == 'percentile':
             self.setRange(0.0, 1.0)
             self.setSingleStep(0.1)
+            self.setDecimals(3)
         else:
             self.setRange(0.0, 1e10)
+
+        # Particles are only int
+        if self._key == 'particles':
+            self.setSingleStep(1)
+            self.setDecimals(0)
 
     def _onValueChanged(self, val):
         """Triggered when user changes the value fo the setting."""
@@ -351,88 +357,79 @@ class AModelComboBox(QComboBox):
 
 
 class AObjectiveChoiceBox(QWidget):
-    def __init__(self, internalModel, methodChoiceWidget, parent=None):
+    def __init__(self, internalModel, parent=None):
         super(AObjectiveChoiceBox, self).__init__(parent)
 
         self._internalModel = internalModel
-        self._methodChoiceWidget = methodChoiceWidget
-        self._configureLayout(QHBoxLayout())
+        self._configureLayout(QGridLayout())
 
     def _configureLayout(self, layout):
         """Lays out the main components."""
 
-        # Create an exclusive checkbox group
-        self.checkGroup = QButtonGroup()
-        self.checkGroup.setExclusive(True)
-        firstCheck = ACheckBox('inference')
-        firstCheck.setText('Inference')
-        secondCheck = ACheckBox('comparison')
-        secondCheck.setText('Comparison')
-        secondCheck.setChecked(True)
-        self.checkGroup.addButton(firstCheck)
-        self.checkGroup.addButton(secondCheck)
-        self.checkGroup.buttonClicked.connect(self._onToggle)
+        # Create exclusive checkbox groups
+        self.objectiveGroup = QButtonGroup()
+        self.objectiveGroup.setExclusive(True)
+        self.methodGroup = QButtonGroup()
+        self.methodGroup.setExclusive(True)
 
-        layout.addWidget(QLabel('Objective:'))
-        layout.addWidget(firstCheck)
-        layout.addWidget(secondCheck)
-        layout.addStretch(3)
+        # Create widgets
+        objectiveLabel = QLabel('Objective:')
+        inferenceCheck = ACheckBox('inference')
+        comparisonCheck = ACheckBox('comparison')
+        methodLabel = QLabel('Method:')
+        rejectionCheck = ACheckBox('rejection')
+        logisticCheck = ACheckBox('logistic')
 
-        layout.setContentsMargins(0, 0, 0, 0)
+        # Add checks to groups
+        self._addCheckBoxesToGroup(self.objectiveGroup, (inferenceCheck, comparisonCheck),
+                                   self._onObjectiveChanged)
 
-        self.setLayout(layout)
+        self._addCheckBoxesToGroup(self.methodGroup, (rejectionCheck, logisticCheck),
+                                   self._onMethodChanged)
 
-    def _onToggle(self, check):
-        """Activated when pne of the buttons in the group toggled."""
-
-        self._internalModel.addObjective(check.value)
-
-        # Control appearance of method checkbox
-        if check.value == 'inference':
-            self._methodChoiceWidget.setEnabled(False)
-        else:
-            self._methodChoiceWidget.setEnabled(True)
-
-
-class AMethodChoiceBox(QWidget):
-    def __init__(self, internalModel, parent=None):
-        super(AMethodChoiceBox, self).__init__(parent)
-
-        self._internalModel = internalModel
-        self._configureLayout(QHBoxLayout())
-
+        # Check according to model
         if self._internalModel.objective() == "comparison":
-            self.setEnabled(True)
+            comparisonCheck.setChecked(True)
         else:
-            self.setEnabled(False)
+            inferenceCheck.setChecked(True)
 
-    def _configureLayout(self, layout):
-        """Lays out the main components."""
+        if self._internalModel.method() == 'logistic':
+            logisticCheck.setChecked(True)
+        else:
+            rejectionCheck.setChecked(True)
 
-        # Create an exclusive checkbox group
-        self.checkGroup = QButtonGroup()
-        self.checkGroup.setExclusive(True)
-        firstCheck = ACheckBox('rejection')
-        firstCheck.setText('Rejection')
-        secondCheck = ACheckBox('logistic')
-        secondCheck.setText('Logistic')
-        secondCheck.setChecked(True)
-        self.checkGroup.addButton(firstCheck)
-        self.checkGroup.addButton(secondCheck)
-        self.checkGroup.buttonClicked.connect(self._onToggle)
+        # Fill layout
+        for i, row in enumerate([(objectiveLabel, inferenceCheck, comparisonCheck),
+                                 (methodLabel, rejectionCheck, logisticCheck)]):
+            for j, widget in enumerate(row):
+                layout.addWidget(widget, i, j, 1, 1)
 
-        layout.addWidget(QLabel('Method:'))
-        layout.addWidget(firstCheck)
-        layout.addWidget(secondCheck)
-        layout.addStretch(3)
         layout.setContentsMargins(0, 0, 0, 0)
-
         self.setLayout(layout)
 
-    def _onToggle(self, check):
-        """Activated when pne of the buttons in the group toggled."""
+    def _addCheckBoxesToGroup(self, group, checks, func):
+        """A helper method to add checkboxes to group."""
 
-        self._internalModel.addMethod(check.value)
+        for check in checks:
+            group.addButton(check)
+
+        group.buttonClicked.connect(func)
+
+    def _onObjectiveChanged(self, checkBox):
+        """Triggered when objective selection changed."""
+
+        self._internalModel.addObjective(checkBox.value)
+        if checkBox.value == 'comparison':
+            for button in self.methodGroup.buttons():
+                button.setEnabled(True)
+        else:
+            for button in self.methodGroup.buttons():
+                button.setEnabled(False)
+
+    def _onMethodChanged(self, checkBox):
+        """Triggered when method selection changed."""
+
+        self._internalModel.addMethod(checkBox.value)
 
 
 class ACheckBox(QCheckBox):
@@ -440,6 +437,7 @@ class ACheckBox(QCheckBox):
         super(ACheckBox, self).__init__(parent)
 
         self.value = value
+        self.setText(value.capitalize())
 
 
 class AScriptCreator:

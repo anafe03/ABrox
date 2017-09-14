@@ -152,6 +152,9 @@ class AInternalModel:
     def objective(self):
         return self._project['Analysis']['settings']['objective']
 
+    def method(self):
+        return self._project['Analysis']['settings']['method']
+
     def outputDir(self):
         return self._project['Analysis']['settings']['outputdir']
 

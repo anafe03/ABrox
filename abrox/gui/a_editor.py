@@ -199,7 +199,7 @@ class APythonHighlighter(QSyntaxHighlighter):
               'number': '#6987bb',
               'constant': '#6390bf',
               'pyqt': '#008b8b',
-              'error': '#8b0000'}
+              'error': '#a31010'}
 
     def __init__(self, parent=None):
         super(APythonHighlighter, self).__init__(parent)
@@ -296,8 +296,7 @@ class APythonHighlighter(QSyntaxHighlighter):
             self.setFormat(0, textLength,
                            APythonHighlighter.Formats["error"])
             return
-        if (prevState == ERROR and
-            not (text.startswith(sys.ps1) or text.startswith("#"))):
+        if prevState == ERROR and not text.startswith("#"):
             self.setCurrentBlockState(ERROR)
             self.setFormat(0, textLength,
                            APythonHighlighter.Formats["error"])
