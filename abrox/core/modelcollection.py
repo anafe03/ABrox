@@ -163,8 +163,8 @@ class ModelCollection(list):
 
         if method is None:
             resDict['posterior'] = {}
-            for col in postMatrix.T:
-                resDict['posterior'][str(col)] = col.tolist()
+            for i, col in enumerate(postMatrix.T):
+                resDict['posterior'][str(i)] = col.tolist()
 
 
         else:
@@ -172,10 +172,10 @@ class ModelCollection(list):
                 resDict[model.name] = {}
                 resDict[model.name]['probability'] = model.accepted
 
-        bf = self.bayesFactor().tolist()
+            bf = self.bayesFactor().tolist()
 
-        resDict['bf'] = bf
-        print(resDict)
+            resDict['bf'] = bf
+
         pickle.dump(resDict, open(os.path.join(outdir, "save.p"), "wb"))
         return resDict
 
