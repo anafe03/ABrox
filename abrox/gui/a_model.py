@@ -121,6 +121,10 @@ class AInternalModel:
         return self._project['Analysis']['data']['datafile'], \
                self._project['Analysis']['data']['delimiter']
 
+    def modelTest(self):
+
+        return self._project['Analysis']['settings']['modeltest']
+
     def summary(self):
         """Returns the summary function code as a string."""
 

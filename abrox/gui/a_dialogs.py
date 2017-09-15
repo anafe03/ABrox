@@ -5,7 +5,6 @@ from PyQt5.QtCore import *
 class ALoadDataDialog(QDialog):
     """Represents a pop-up for obtaining the data delimiter."""
 
-
     def __init__(self, fileName, internalModel, parent=None):
         super(ALoadDataDialog, self).__init__(parent)
 
@@ -105,14 +104,14 @@ class ALoadDataDialog(QDialog):
         self.close()
 
 
-class ASetParameterDialog(QDialog):
+class AFixParameterDialog(QDialog):
     """
     Represents a pop-up for fixing parameters.
     Assumes that a model index is available in the internal model.
     """
 
     def __init__(self, internalModel, parent=None):
-        super(ASetParameterDialog, self).__init__(parent)
+        super(AFixParameterDialog, self).__init__(parent)
 
         self._internalModel = internalModel
         self._spinBoxes = []

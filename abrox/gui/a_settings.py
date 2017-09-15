@@ -4,7 +4,7 @@ from PyQt5.QtGui import *
 import datetime
 import pprint
 from a_process_manager import AProcessManager
-from a_dialogs import ASetParameterDialog
+from a_dialogs import AFixParameterDialog
 import tracksave
 
 
@@ -200,13 +200,7 @@ class AModelTestFrame(QFrame):
         runGroupBox = QGroupBox('Computation')
         runGroupBoxLayout = QHBoxLayout()
 
-        # Create a checkbox
-        self._modelTest = QCheckBox()
-        self._modelTest.clicked.connect(self._onModelTest)
-        self._modelTest.setText('Model Test')
-
         # Create a combo in its own widget
-
         comboWidgetLayout = QHBoxLayout()
         comboWidgetLayout.setContentsMargins(0, 0, 0, 0)
         self._combo = AModelComboBox(self._internalModel)
@@ -222,7 +216,16 @@ class AModelTestFrame(QFrame):
         self._comboWidget.setLayout(comboWidgetLayout)
         self._comboWidget.setEnabled(False)
 
-        # Create run abd stop
+        # Create a checkbox for model test
+        self._modelTest = QCheckBox()
+        self._modelTest.clicked.connect(self._onModelTest)
+        self._modelTest.setText('Model Test')
+
+        # Use not False, since modeltest is an index otherwise
+        if self._internalModel.modelTest() is not False:
+            self._modelTest.click()
+
+        # Create run abd stop buttons
         self._run = self._createButton('Run', './icons/run', self._onRun,
                                        Qt.NoFocus, True)
         self._stop = self._createButton('Stop', './icons/stop', self._onStop,
@@ -231,8 +234,7 @@ class AModelTestFrame(QFrame):
         self._progress = QProgressBar()
         self._progress.setOrientation(Qt.Horizontal)
 
-        # Add all buttons to runbox layout
-
+        # Add buttons and progress bar to runbox layout
         runGroupBoxLayout.addWidget(self._run)
         runGroupBoxLayout.addWidget(self._stop)
         runGroupBoxLayout.addStretch(0)
@@ -331,7 +333,7 @@ class AModelTestFrame(QFrame):
             text = 'Project should contain at least one model.'
             msg.critical(self, 'Error loading data file...', text)
         else:
-            dialog = ASetParameterDialog(self._internalModel, self.nativeParentWidget())
+            dialog = AFixParameterDialog(self._internalModel, self.nativeParentWidget())
             dialog.exec_()
 
 
