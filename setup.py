@@ -5,14 +5,14 @@ setup(
     package_data={'abrox': ['gui/icons/*']},
     version='0.1.3',
     license='MIT',
-    description='A GUI for Approximate Bayesian Computation',
+    description='A tool for Approximate Bayesian Computation',
     long_description=open('README.md').read(),
     author='Ulf Mertens',
     author_email='mertens.ulf@gmail.com',
     # scripts=['scripts/abrox-gui'],
     entry_points={
         'console_scripts': [
-            'abrox-gui = abrox/gui.start:main'
+            'abrox-gui = abrox.gui.start:main'
         ]
     },
     url='https://github.com/mertensu/ABrox',  # use the URL to the github repo
