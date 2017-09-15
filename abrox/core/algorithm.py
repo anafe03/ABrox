@@ -4,11 +4,11 @@ import numpy as np
 import pandas as pd
 
 # import classes from files
-from basemodel import Model
-from modelcollection import ModelCollection
-from paramEstimation import ParamEstimator
-from Logistic import Logistic
-from customException import SimulateFunctionError, MismatchError, ConfigurationError
+from .basemodel import Model
+from .modelcollection import ModelCollection
+from .paramEstimation import ParamEstimator
+from .Logistic import Logistic
+from .customException import SimulateFunctionError, MismatchError, ConfigurationError
 
 
 # =======================================#

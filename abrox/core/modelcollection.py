@@ -4,7 +4,7 @@ import itertools
 import pickle
 import os
 
-from model import Model
+from .model import Model
 
 # =======================================#
 # Model Collection class
