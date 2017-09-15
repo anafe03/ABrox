@@ -182,7 +182,6 @@ class ModelCollection(list):
 
     def report(self, diff_time, threshold, method=None, postMatrix=None):
 
-
         if method is None:  # parameter estimation
             descriptives = self.descriptives(postMatrix)
 
