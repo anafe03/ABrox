@@ -21,6 +21,7 @@ class Abc:
 
     def __init__(self, config):
         self.config = config
+        self.observed_data = None
         self.jobs = 1
         self.checker()
         self.setModelList()
@@ -102,9 +103,12 @@ class Abc:
 
     def observedData(self):
         """ Loads observed data or generates pseudo-observed data from model """
+
+        print(self.config['data'])
+        print(self.config['settings'])
         if self.config['data']['datafile'] is not None and self.config['settings']['modeltest'] is False:
             # import observed data
-            self.observed_data = self.loadData(self.config)
+            self.observed_data = self.loadData()
         else:
             flag = True
             for i, model in enumerate(self.models):
@@ -118,10 +122,11 @@ class Abc:
     def loadData(self):
         """Load/store the external dataset"""
         try:
-            self.data = pd.read_csv(self.config['data']['datafile'],
-                                    delimiter=self.config['data']['delimiter']).as_matrix()
+            return pd.read_csv(self.config['data']['datafile'],
+                               delimiter=self.config['data']['delimiter']).as_matrix()
 
-        except ImportError('Imported data could not be stored')
+        except ImportError('Imported data could not be stored'):
+            return None
 
     def create_particle(self, model_index=None):
         """Generate particle"""

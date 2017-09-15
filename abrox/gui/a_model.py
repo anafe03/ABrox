@@ -13,7 +13,8 @@ class AInternalModel:
         self._project = OrderedDict([
             ('Analysis',
                 OrderedDict([
-                    ('data', {'datafile': None, 'delimiter': None}),
+                    ('data', {'datafile': None,
+                              'delimiter': None}),
                     ('models', [
                         AModel('Model1'),
                     ]),
@@ -236,7 +237,7 @@ class AInternalModel:
             return False
 
         # ===== Check if data loaded when not doing a model test ===== #
-        if not self._project['Analysis']['settings']['modeltest'] and \
+        if self._project['Analysis']['settings']['modeltest'] is False and \
            not self._project['Analysis']['data']['datafile']:
 
             text = 'Since you are not performing a model test, ' \

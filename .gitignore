@@ -9,6 +9,7 @@
 
 # Pycharm cache
 /abrox/gui/.idea
+/abrox/core/.idea
 
 # test_script.py
 /abrox/gui/test_script.py
