@@ -12,7 +12,7 @@ setup(
     # scripts=['scripts/abrox-gui'],
     entry_points={
         'console_scripts': [
-            'abrox-gui = abrox.gui.start:main'
+            'abrox-gui = abrox.gui:main'
         ]
     },
     url='https://github.com/mertensu/ABrox',  # use the URL to the github repo

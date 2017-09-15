@@ -118,7 +118,9 @@ class Abc:
     def loadData(self):
         """Load/store the external dataset"""
         try:
-            self.data = self.config['data']['datafile'].as_matrix()
+            self.data = pd.read_csv(self.config['data']['datafile'],
+                                    delimiter=self.config['data']['delimiter']).as_matrix()
+
         except ImportError('Imported data could not be stored')
 
     def create_particle(self, model_index=None):
