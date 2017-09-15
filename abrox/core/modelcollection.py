@@ -69,7 +69,7 @@ class ModelCollection(list):
             sumstats += sumstat
 
         # if summary statistics is multi-dimensional
-        if isinstance(sumstats[0], list):
+        if type(sumstats[0]) is np.ndarray:
             sumstats = np.array(sumstats)
 
         # else if scalar, reshape to array with one column
@@ -81,7 +81,6 @@ class ModelCollection(list):
         for idx, sum_stat in enumerate(sumstats.T):
             Median = np.median(sum_stat)
             MAD[idx] = np.median([np.abs(x - Median) for x in sum_stat])
-            # print("MAD = {}".format(MAD[idx]))
             sumstats[:, idx] = sum_stat / MAD[idx]
 
         # scale observed summary statistics by each MAD
