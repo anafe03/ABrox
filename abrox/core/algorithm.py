@@ -102,7 +102,7 @@ class Abc:
 
     def observedData(self):
         """ Loads observed data or generates pseudo-observed data from model """
-        if self.config['data']['datafile'] and self.config['settings']['modeltest'] is False:
+        if self.config['data']['datafile'] is not None and self.config['settings']['modeltest'] is False:
             # import observed data
             self.observed_data = self.loadData(self.config)
         else:
@@ -116,6 +116,7 @@ class Abc:
                 raise ConfigurationError("Did you provide the correct model index?")
 
     def loadData(self):
+        """Load/store the external dataset"""
         try:
             self.data = self.config['data']['datafile'].as_matrix()
         except ImportError('Imported data could not be stored')
