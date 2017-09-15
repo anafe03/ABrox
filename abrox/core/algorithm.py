@@ -98,8 +98,8 @@ class Abc:
         if self.objective == "comparison" and not self.config['settings']['method']:
             raise ConfigurationError(
                 "You need to provide a method for BF approximation. Either 'rejection' or 'logistic'")
-        elif self.objective == "inference" and not self.config['settings']['method']:
-            raise ConfigurationError('Do not specify a method when interested in inference')
+        elif self.objective == "inference" and self.config['settings']['method'] is not None:
+            raise ConfigurationError('Do not specify a method when interested in inference.')
 
         self.method = self.config['settings']['method']
 
