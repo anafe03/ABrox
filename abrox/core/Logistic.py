@@ -31,13 +31,13 @@ class Logistic:
             N.append(len(model.scaled_simsum))
 
         Y = np.repeat(model_indices, N)
-
+        print(Y)
         # X = np.zeroes(shape=(Y.shape[0], len(self.model_collection)))
 
         # for i, model in enumerate(self.model_collection):
         #     X[:, i] = model.scaled_simsum
 
-        print("Scaled simsum shape: {}".format(self.model_collection[0].shape))
+        print("Scaled simsum shape: {}".format(self.model_collection[0].scaled_simsum.shape))
 
         X = np.append(self.model_collection[0].scaled_simsum,
                       self.model_collection[1].scaled_simsum)

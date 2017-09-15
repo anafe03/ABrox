@@ -1,0 +1,54 @@
+[ABrox Project File]
+{
+    "Analysis": {
+        "data": {
+            "datafile": null,
+            "delimiter": null
+        },
+        "models": [
+            {
+                "name": "Model1",
+                "priors": [
+                    {
+                        "p": "stats.uniform(loc=0.0, scale=1.0)"
+                    },
+                    {
+                        "g": "stats.uniform(loc=0.0, scale=1.0)"
+                    }
+                ],
+                "simulate": "def simulate(params):\n    trials = 50\n\n    p = params['p']\n    g = params['g']\n    p_correct = p + (1-p)*g\n\n    bw_t = np.sum(\n            np.random.uniform(0,1,trials) < p_correct)\n    bw_f = trials - bw_t\n\n    ww_t = np.sum(\n            np.random.uniform(0,1,trials) < p_correct)\n    ww_f = trials - ww_t\n\n    bt_t = np.sum(\n            np.random.uniform(0, 1, trials) < p_correct)\n    bt_f = trials - bt_t\n\n    wt_t = np.sum(\n            np.random.uniform(0, 1, trials) < p_correct)\n    wt_f = trials - wt_t\n\n    out = [bw_t,bw_f, ww_t, ww_f, bt_t, bt_f, wt_t, wt_f ]\n    return np.array(out)"
+            },
+            {
+                "name": "Model2",
+                "priors": [
+                    {
+                        "pw": "stats.uniform(loc=0.0, scale=1.0)"
+                    },
+                    {
+                        "pt": "stats.uniform(loc=0.0, scale=1.0)"
+                    },
+                    {
+                        "g": "stats.uniform(loc=0.0, scale=1.0)"
+                    }
+                ],
+                "simulate": "def simulate(params):\n    trials = 50\n    p_w = params['pw']\n    p_t = params['pt']\n    g = params['g']\n    p_correct_w = p_w + (1-p_w) * g\n    p_correct_t = p_t + (1-p_t) * g\n\n\n    bw_t = np.sum(\n            np.random.uniform(0, 1, trials) < p_correct_w)\n    bw_f = trials - bw_t\n\n    ww_t = np.sum(\n            np.random.uniform(0, 1, trials) < p_correct_w)\n    ww_f = trials - ww_t\n\n    bt_t = np.sum(\n            np.random.uniform(0, 1, trials) < p_correct_t)\n    bt_f = trials - bt_t\n\n    wt_t = np.sum(\n            np.random.uniform(0, 1, trials) < p_correct_t)\n    wt_f = trials - wt_t\n\n    out = [bw_t, bw_f, ww_t, ww_f, bt_t, bt_f, wt_t, wt_f]\n    return np.array(out)\n\n\n"
+            }
+        ],
+        "summary": "def summary(data):\n    # write your code here\n    return data",
+        "distance": "def distance(simSummary, obsSummary):\n    # write your code here\n    pass",
+        "settings": {
+            "outputdir": "C:/Users/Developer/Desktop/Projects/ApproxBayes/test_scripts",
+            "distance_metric": "default",
+            "particles": 1000,
+            "threshold": -1,
+            "percentile": 0.05,
+            "objective": "comparison",
+            "method": "logistic",
+            "modeltest": 0,
+            "fixedparameters": {
+                "p": 0.7,
+                "g": 0.2
+            }
+        }
+    }
+}

@@ -114,7 +114,7 @@ class AMainWindow(QMainWindow):
         """Set up the python console."""
 
         # Create the dock widget
-        consoleDockWidget = QDockWidget("Output Console", self)
+        consoleDockWidget = QDockWidget("Python Console", self)
         consoleDockWidget.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         consoleDockWidget.setObjectName("ConsoleDockWidget")
         consoleDockWidget.setAllowedAreas(Qt.AllDockWidgetAreas)

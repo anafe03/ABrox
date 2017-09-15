@@ -21,8 +21,8 @@
                 "simulate": "def simulate(params):\n    n = 50\n    first_sample = np.random.normal(0,1,n)\n    sec_sample = np.random.normal(0,1,n)\n    return np.column_stack((first_sample,sec_sample))"
             }
         ],
-        "summary": "def summary(params):\n    diff_mean = np.subtract(np.mean(data,axis=0))\n    mean_std = np.mean(np.std(data,axis=0))\n    return diff_mean / mean_std\n    ",
-        "distance": "def distance(params):\n    # write your code here\n    pass",
+        "summary": "def summary(data):\n    data_mean = np.mean(data, axis=0)\n    diff_mean = data_mean[0] - data_mean[1]\n    mean_std = np.mean(np.std(data,axis=0))\n    return diff_mean / mean_std\n    ",
+        "distance": "def distance(simSummary, obsSummary):\n    # write your code here\n    pass",
         "settings": {
             "objective": "comparison",
             "threshold": -1,

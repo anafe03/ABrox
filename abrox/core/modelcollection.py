@@ -160,31 +160,28 @@ class ModelCollection(list):
 
     def saveResults(self, diff_time, threshold,  outdir, method=None, postMatrix=None):
         """Save results in dict and pickle"""
-        Dict = {'time': diff_time, 'threshold': threshold}
+        resDict = {'time': diff_time, 'threshold': threshold}
 
         if method is None:
-            Dict['posterior'] = {}
+            resDict['posterior'] = {}
             for col in postMatrix.T:
-                Dict['posterior'][str(col)] = col
+                resDict['posterior'][str(col)] = col.tolist()
+
 
         else:
             for model in self:
-                Dict[model] = {}
-                Dict[model]['probability'] = model.accepted
+                resDict[model.name] = {}
+                resDict[model.name]['probability'] = model.accepted
 
-        bf = self.bayesFactor()
+        bf = self.bayesFactor().tolist()
 
-        Dict['bf'] = bf
-
-        pickle.dump(Dict, open(os.path.join(outdir, "save.p"), "wb"))
-        return Dict
+        resDict['bf'] = bf
+        print(resDict)
+        pickle.dump(resDict, open(os.path.join(outdir, "save.p"), "wb"))
+        return resDict
 
     def report(self, diff_time, threshold, method=None, postMatrix=None):
 
-        print("\nComputation time: {:.2f} seconds\n".
-              format(diff_time))
-        print("Threshold value: {}\n".
-              format(round(threshold, 5)))
 
         if method is None:  # parameter estimation
             descriptives = self.descriptives(postMatrix)

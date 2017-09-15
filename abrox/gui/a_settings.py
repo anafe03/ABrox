@@ -205,7 +205,7 @@ class AModelTestFrame(QFrame):
         comboWidgetLayout.setContentsMargins(0, 0, 0, 0)
         self._combo = AModelComboBox(self._internalModel)
         self._combo.installEventFilter(self)
-        configButton = self._createButton('Set Parameter', './icons/config',
+        configButton = self._createButton('Fix Parameters', './icons/config',
                                           self._onFixParameter, Qt.NoFocus, True)
         comboWidgetLayout.addWidget(QLabel('Pick a model:'))
         comboWidgetLayout.addWidget(self._combo)
@@ -569,11 +569,10 @@ class AScriptCreator:
             # Write settings
             outfile.write('{}"settings": {{\n'.format(self.tab()))
             # Format settings dict using pprint
-            #projectDict['settings']['fixedparameters'] = dict(projectDict['settings']['fixedparameters'])
-            #print(projectDict['settings'])
+            projectDict['settings']['fixedparameters'] = dict(projectDict['settings']['fixedparameters'])
             settings = pprint.pformat(dict(projectDict['settings'])) \
-                .replace('{', "") \
-                .replace("}", "")
+                .replace('{', "", 1)
+            settings = self._rreplace(settings, '}', '', count=1)
             # Indent output of pprint with 8 spaces
             settings = ''.join(['{}{}'.format(self.tab(2), l) for l in settings.splitlines(True)])
             outfile.write(settings)
@@ -591,6 +590,11 @@ class AScriptCreator:
                '{}abc.run()\n'.format(self.tab(), self.tab(), self.tab())
 
         outfile.write(call)
+
+    def _rreplace(self, s, old, new, count=1):
+        """A helper function to replace strings backwards."""
+        li = s.rsplit(old, count)
+        return new.join(li)
 
     def tab(self, s=1):
         """Returns a string containing 4*s whitespaces."""

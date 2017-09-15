@@ -24,7 +24,8 @@ setup(
                       'pandas',
                       'pyqt5',
                       'qdarkstyle',
-                      'ipython'
+                      'ipython',
+					  'scikit-learn'
                       ],
     classifiers=[],
 )

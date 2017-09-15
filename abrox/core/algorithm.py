@@ -72,7 +72,8 @@ class Abc:
 
     def setSettings(self):
         """ Store settings from config in members of class """
-        self.nparticle = self.config['settings']['particles']
+
+        self.nparticle = (self.config['settings']['particles'])
 
         # check if threshold should be computed
         if self.config['settings']['threshold'] == -1:
@@ -84,10 +85,11 @@ class Abc:
 
         self.objective = self.config['settings']['objective']
 
+        self.outdir = self.config['settings']['outputdir']
+
         if not self.outdir:
             raise ConfigurationError("Please provide a directory. Use '.' \
             if you want to use your current working directory")
-        self.outdir = self.config['settings']['outputdir']
 
         # check if a method for model comparison is set
         if self.objective == "comparison" and len(self.config['models']) < 2:
@@ -104,8 +106,6 @@ class Abc:
     def observedData(self):
         """ Loads observed data or generates pseudo-observed data from model """
 
-        print(self.config['data'])
-        print(self.config['settings'])
         if self.config['data']['datafile'] is not None and self.config['settings']['modeltest'] is False:
             # import observed data
             self.observed_data = self.loadData()
@@ -194,7 +194,7 @@ class Abc:
             # create particles in parallel
 
             for idx in range(len(self.models)):
-                arguments = [idx] * (self.nparticle // len(self.models))
+                arguments = [idx] * int(self.nparticle / len(self.models))
                 results = Map(self.create_particle, arguments)
                 # add each particle
                 for result in results:
