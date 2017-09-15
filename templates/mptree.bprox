@@ -37,7 +37,7 @@
         "summary": "def summary(data):\n    # write your code here\n    return data",
         "distance": "def distance(simSummary, obsSummary):\n    # write your code here\n    pass",
         "settings": {
-            "outputdir": "C:/Users/Developer/Desktop/Projects/ApproxBayes/test_scripts",
+            "outputdir": "/Users/ulf.mertens/Desktop/test_script",
             "distance_metric": "default",
             "particles": 1000,
             "threshold": -1,
