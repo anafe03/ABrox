@@ -2,7 +2,7 @@ from functools import reduce
 from operator import mul
 import numpy as np
 from collections import ChainMap
-from distance import get_distance
+from .distance import get_distance
 
 # =========================================#
 # Helper functions
