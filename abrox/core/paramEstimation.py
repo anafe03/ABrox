@@ -22,23 +22,27 @@ class ParamEstimator:
 
         weights = self.computeWeights()
         X = self.model_collection[0].scaled_simsum[weights > 0, :]
+        print("X shape: {}".format(X.shape))
         X = sm.add_constant(X)
 
         # NxM posterior matrix containing len(Y) rows and nparams columns
-        nparams = len(self.model_collection.simsum)
+
+        nparams = len(self.model_collection[0].parameterList[0])
         print("number of parameters: {}".format(nparams))
         postMat = np.empty(shape=(X.shape[0], nparams))
         for idx in range(nparams):
             Y = np.array([paramSample[idx]
                           for paramSample in self.model_collection[0].parameterList])
 
+            print("Mean of param: {}".format(np.mean(Y)))
+
             Y = Y[weights > 0]
 
             wls_model = sm.WLS(Y, X, weights=weights[weights > 0])
             fit = wls_model.fit()
 
-            print(self.model_collection.obssum)
-            prediction = fit.predict(np.append(1, self.model_collection.obssum))
+            nFeatures = 1 + self.model_collection.obssum.shape[1]
+            prediction = fit.predict(np.append(1,self.model_collection.obssum).reshape(1,nFeatures))
             resid = fit.resid
             postMat[:, idx] = prediction + resid
 
