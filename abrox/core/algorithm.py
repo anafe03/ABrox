@@ -15,7 +15,6 @@ from .customException import SimulateFunctionError, MismatchError, Configuration
 # Class with implementation of the
 # ABC rejection algorithm
 # =======================================#
-
 class Abc:
     """The ABC algorithm."""
 

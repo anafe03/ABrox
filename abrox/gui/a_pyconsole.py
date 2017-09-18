@@ -38,7 +38,6 @@ class AIPythonWidget(RichJupyterWidget):
         font.setPointSize(10)
         self.font = font
 
-
     def pushVariables(self, variableDict):
         """Given a dictionary containing name / value pairs, push those variables to the IPython console widget """
 
@@ -94,6 +93,12 @@ class AConsoleWindow(QWidget):
         self._ipythonConsole.printHtml('{} successfully loaded.'.format(dataFileName))
         self._ipythonConsole.printText('\n')
         self._ipythonConsole.printHtml('You can access your data via the console by typing <strong>data</strong>.')
+
+    def addResults(self, results):
+
+        self._ipythonConsole.pushVariables({'results': results})
+        self._ipythonConsole.printText('\n')
+        self._ipythonConsole.printHtml('You can access your results by typing <strong>results</strong>.')
 
     def sizeHint(self):
         """

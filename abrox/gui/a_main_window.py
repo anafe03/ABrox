@@ -7,6 +7,7 @@ import tracksave
 import time
 from a_tree import AModelTree
 from a_pyconsole import AConsoleWindow
+from a_console import AOutputConsole
 from a_model import AInternalModel
 from a_utils import *
 
@@ -19,6 +20,7 @@ class AMainWindow(QMainWindow):
         self._internalModel = AInternalModel()
         self._mdiArea = QMdiArea()
         self._console = AConsoleWindow()
+        self._outputConsole = AOutputConsole(self._internalModel)
         self._initMain()
 
     def _initMain(self):
@@ -111,27 +113,33 @@ class AMainWindow(QMainWindow):
         self.setCentralWidget(self._mdiArea)
 
     def _configureConsole(self):
-        """Set up the python console."""
+        """Set up the python console and the output console."""
 
-        # Create the dock widget
-        consoleDockWidget = QDockWidget("Python Console", self)
+        # Create the console dock widget
+        consoleDockWidget = QDockWidget("Console Window", self)
         consoleDockWidget.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        consoleDockWidget.setObjectName("ConsoleDockWidget")
+        consoleDockWidget.setObjectName("PyConsoleDockWidget")
         consoleDockWidget.setAllowedAreas(Qt.AllDockWidgetAreas)
         consoleDockWidget.setFeatures(QDockWidget.AllDockWidgetFeatures)
 
-        # Add console to dock
-        consoleDockWidget.setWidget(self._console)
+        # Add console to dock and toggle view action to menu
         self._paneViewMenu.addAction(consoleDockWidget.toggleViewAction())
 
-        # Add dock to main
+        # Create a tab controller
+        self.outputConsole = QLabel('WTF')
+        settings = [(self._console, "Python Console", 0, "./icons/py.png"),
+                    (self._outputConsole, "Output Console", 1, "./icons/output.png")]
+        self._tabController = ATabController(settings)
+
+        consoleDockWidget.setWidget(self._tabController)
         self.addDockWidget(Qt.BottomDockWidgetArea, consoleDockWidget)
 
     def _configureTree(self):
         """Set up the tree for modifying the session structure."""
 
         # Create the tree widget
-        self._tree = AModelTree(self._mdiArea, self._internalModel, self._console)
+        self._tree = AModelTree(self._mdiArea, self._internalModel,
+                                self._console, self._outputConsole)
 
         # Create the dock widget
         treeDockWidget = QDockWidget("Project Tree", self)
@@ -282,3 +290,30 @@ class AStartUp(QWidget):
         layout.addWidget(button1)
         layout.addWidget(button2)
         self.setLayout(layout)
+
+
+class ATabController(QTabWidget):
+    """Main representation of a tab widget. Constructor expects
+    an iterable with 4-tuple items containing (widget, text, idx icon name)."""
+    def __init__(self, tabSettings, parent=None):
+        super(ATabController, self).__init__(parent)
+
+        self._configureTabs(tabSettings)
+        self.setTabPosition(QTabWidget.South)
+        self.currentChanged.connect(self._onTabChange)
+
+    def _configureTabs(self, settings):
+        """Configures tab layout and size policy."""
+
+        for tab in settings:
+            self.addTab(tab[0], tab[1])
+            self.setTabIcon(tab[2], QIcon(tab[3]))
+        self.setSizePolicy(QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding))
+
+    def _onTabChange(self, idx):
+        """Use to change window text of dock widget when tabs change."""
+
+        if idx == 0:
+            self.parent().setWindowTitle('Python Console')
+        else:
+            self.parent().setWindowTitle('Output Console')

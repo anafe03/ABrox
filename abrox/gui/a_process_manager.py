@@ -65,6 +65,7 @@ class AProcessManager:
 class APythonAbcProcess(QObject):
     abcFinished = pyqtSignal()
     abcStarted = pyqtSignal()
+    consoleLog = pyqtSignal(str)
 
     def __init__(self, flag):
         """

@@ -18,12 +18,13 @@ class AModelTree(QTreeWidget):
     NUM_MODELS = 1
     FONT_SIZE = 9
 
-    def __init__(self, mdiArea, model, console, parent=None):
+    def __init__(self, mdiArea, model, console, outputConsole, parent=None):
         super(AModelTree, self).__init__(parent)
 
         self._mdiArea = mdiArea
         self._internalModel = model
         self._console = console
+        self._outputConsole = outputConsole
         self._initTree()
 
     def _initTree(self):

@@ -3,6 +3,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import datetime
 import pprint
+import pickle
 from a_process_manager import AProcessManager
 from a_dialogs import AFixParameterDialog
 import tracksave
@@ -324,6 +325,10 @@ class AModelTestFrame(QFrame):
         # Hide progress
         self._progress.hide()
 
+        # Load pickled var
+        # TODO - CHECK RETURN STATUS
+        self._loadPickledResults()
+
     def _onFixParameter(self):
         """Invoke a dialog for settings parameters."""
 
@@ -335,6 +340,18 @@ class AModelTestFrame(QFrame):
         else:
             dialog = AFixParameterDialog(self._internalModel, self.nativeParentWidget())
             dialog.exec_()
+
+    def _loadPickledResults(self):
+        """Called when algorithm finished."""
+
+        # Get dict name
+        name = self._internalModel.outputDir() + '/' + 'save.p'
+
+        # Unpickle
+        unpickled = pickle.load(open(name, 'rb'))
+
+        # Push to console
+        self._console.addResults(unpickled)
 
 
 class AModelComboBox(QComboBox):
