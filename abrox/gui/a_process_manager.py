@@ -11,11 +11,12 @@ class AProcessManager:
     that scripName is the absolute path of a runnable python script.
     Uses a QProcess instance to manage the process.
     """
-    def __init__(self, parent, internalModel, console):
+    def __init__(self, parent, internalModel, console, outputConsole):
 
         # Create instances
         self._parent = parent
         self._internalModel = internalModel
+        self._outputConsole = outputConsole
         self._console = console
         self._flag = {"run": False}
         self._runThread = QThread()
@@ -34,6 +35,8 @@ class AProcessManager:
         self._abcProcess.abcFinished.connect(self._runThread.quit)
         # Connect run handler signal to thread methods
         self._abcProcess.abcStarted.connect(self._onAbcStarted)
+        self._abcProcess.abcAborted.connect(self._onAbcAborted)
+        self._abcProcess.consoleLog.connect(self._onConsoleLog)
         # Connect thread signals to run handler methods
         self._runThread.started.connect(self._abcProcess.run)
         self._runThread.finished.connect(self._onAbcFinished)
@@ -53,17 +56,31 @@ class AProcessManager:
 
     def _onAbcStarted(self):
 
+        self._outputConsole.write('Starting ABC...')
         self._parent.signalAbcStarted()
-        print('From manager: Starting abc')
 
     def _onAbcFinished(self):
 
-        self._parent.signalAbcFinished()
-        print('From manager: Finished abc')
+        self._outputConsole.write('ABC finished.')
+        self._parent.signalAbcFinished(self._abcProcess.error)
+
+    def _onAbcAborted(self):
+
+        self._outputConsole.writeWarning('ABC aborted.')
+        self._parent.signalAbcAborted()
+
+    def _onConsoleLog(self, text):
+        """
+        Triggered when subprocess reads from temporary output file
+        which stores the output of the abc core algorithm.
+        """
+
+        self._outputConsole.write(text)
 
 
 class APythonAbcProcess(QObject):
     abcFinished = pyqtSignal()
+    abcAborted = pyqtSignal()
     abcStarted = pyqtSignal()
     consoleLog = pyqtSignal(str)
 
@@ -103,13 +120,16 @@ class APythonAbcProcess(QObject):
         # Block execution of thread until abc finishes
         self.__p.wait()
 
-        # Read output
         # Return read pointer to temp file to start
         f.seek(0)
         # Read log
-        print(f.read().decode('utf-8'))
+        self.consoleLog.emit(f.read().decode('utf-8'))
         # Close temporary file - removes it
         f.close()
+
+        # Check return
+        if self.__p.returncode != 0:
+            self.error = True
 
         # Clear reference to subprocess object
         self.__p = None
@@ -119,6 +139,6 @@ class APythonAbcProcess(QObject):
 
         if self.__p is not None:
             self.__p.kill()
-            self.abcFinished.emit()
+            self.abcAborted.emit()
             self.aborted = True
 

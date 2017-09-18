@@ -11,13 +11,13 @@ import tracksave
 
 class ASettingsWindow(QFrame):
     """Main container for the output settings and run."""
-    def __init__(self, internalModel, console, parent=None):
+    def __init__(self, internalModel, console, outputConsole, parent=None):
         super(ASettingsWindow, self).__init__(parent)
 
         self._internalModel = internalModel
         self._console = console
         self._compSettingsFrame = AComputationSettingsFrame(internalModel, console)
-        self._modelTestFrame = AModelTestFrame(internalModel, console)
+        self._modelTestFrame = AModelTestFrame(internalModel, console, outputConsole)
 
         self._configureLayout(QHBoxLayout())
 
@@ -179,12 +179,15 @@ class AOuputDir(QWidget):
 
 class AModelTestFrame(QFrame):
     """Main container for the model testing"""
-    def __init__(self, internalModel, console, parent=None):
+    def __init__(self, internalModel, console, outputConsole, parent=None):
         super(AModelTestFrame, self).__init__(parent)
 
         self._internalModel = internalModel
         self._console = console
-        self._processManager = AProcessManager(self, self._internalModel, self._console)
+        self._outputConsole = outputConsole
+        self._processManager = AProcessManager(self, self._internalModel,
+                                               self._console,
+                                               self._outputConsole)
         self._comboWidget = QWidget()
 
         self._configureLayout(QVBoxLayout())
@@ -315,7 +318,7 @@ class AModelTestFrame(QFrame):
         self._run.setEnabled(False)
         self._stop.setEnabled(True)
 
-    def signalAbcFinished(self):
+    def signalAbcFinished(self, error):
         """Signaled from the process manager."""
 
         # Disable stop button, enable run
@@ -325,9 +328,19 @@ class AModelTestFrame(QFrame):
         # Hide progress
         self._progress.hide()
 
-        # Load pickled var
-        # TODO - CHECK RETURN STATUS
-        self._loadPickledResults()
+        # Load pickled var, if no error thrown from process
+        if not error:
+            self._loadPickledResults()
+
+    def signalAbcAborted(self):
+        """Signaled from the process manager."""
+
+        # Disable stop button, enable run
+        self._run.setEnabled(True)
+        self._stop.setEnabled(False)
+
+        # Hide progress
+        self._progress.hide()
 
     def _onFixParameter(self):
         """Invoke a dialog for settings parameters."""
@@ -350,8 +363,10 @@ class AModelTestFrame(QFrame):
         # Unpickle
         unpickled = pickle.load(open(name, 'rb'))
 
-        # Push to console
+        # Push to console and write to output console
         self._console.addResults(unpickled)
+        self._outputConsole.write('You can access your results by typing '
+                                  '<strong>results</strong> in the Python console.')
 
 
 class AModelComboBox(QComboBox):

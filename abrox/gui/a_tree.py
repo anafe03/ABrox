@@ -74,7 +74,7 @@ class AModelTree(QTreeWidget):
             elif key == 'distance':
                 root.addChild(ADistanceNode(self._internalModel, self._internalModel[key]))
             elif key == 'settings':
-                root.addChild(ASettingsNode(self._internalModel, self._console))
+                root.addChild(ASettingsNode(self._internalModel, self._console, self._outputConsole))
 
         # Expand all nodes
         self.expandAll()
@@ -463,11 +463,11 @@ class ADistanceNode(ABaseNode):
 
 
 class ASettingsNode(ABaseNode):
-    def __init__(self, internalModel, console, text='Settings'):
+    def __init__(self, internalModel, console, outputConsole, text='Settings'):
         """Represents an output node in the analysis tree."""
         super(ASettingsNode, self).__init__(text)
 
-        self._settingsWindow = ASettingsWindow(internalModel, console)
+        self._settingsWindow = ASettingsWindow(internalModel, console, outputConsole)
         self.setIcon(0, QIcon('./icons/settings.png'))
 
     def display(self, mdiArea):
@@ -494,7 +494,7 @@ class AMdiWindow(QMdiSubWindow):
         self.setWindowIcon(QIcon('icons/icon.ico'))
 
     def closeEvent(self, event):
-        """Reimplement the close event to simply hide widget."""
+        """Re-implement the close event to simply hide widget."""
 
         self.setWidget(QWidget())
         event.accept()

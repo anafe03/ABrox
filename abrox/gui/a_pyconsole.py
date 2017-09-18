@@ -98,7 +98,6 @@ class AConsoleWindow(QWidget):
 
         self._ipythonConsole.pushVariables({'results': results})
         self._ipythonConsole.printText('\n')
-        self._ipythonConsole.printHtml('You can access your results by typing <strong>results</strong>.')
 
     def sizeHint(self):
         """

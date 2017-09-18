@@ -10,10 +10,16 @@ class AConsoleWindow(QTextEdit):
 
         self.setReadOnly(True)
 
+        # Change font
+        font = QFont()
+        font.setFamily('Consolas')
+        font.setPointSize(10)
+        self.setFont(font)
+
 
 class AOutputConsole(QWidget):
 
-    greeting = '<font color="#dce582"> {} Welcome to BProx! {}</font><br>'.\
+    greeting = '<font color="#dce582"> {} Welcome to ABrox! {}</font><br>'.\
                                     format('*'*5, '*'*5)
     defaultColor = QColor(239, 240, 241)
     warningColor = QColor(244, 241, 41)
@@ -29,6 +35,7 @@ class AOutputConsole(QWidget):
         self._greet()
 
     def _initConsole(self):
+
 
         self._configureLayout(QHBoxLayout())
 
@@ -69,7 +76,7 @@ class AOutputConsole(QWidget):
         if saveName[0]:
             with open(saveName[0] + saveName[1], 'w') as outfile:
                 txt = self._consoleWindow.toPlainText()
-                dummy = '***** Welcome to Abrox! *****\n'
+                dummy = '***** Welcome to ABrox! *****\n'
                 txt = txt.replace(dummy, '')
                 outfile.write(txt)
 

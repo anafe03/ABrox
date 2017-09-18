@@ -116,7 +116,7 @@ class AMainWindow(QMainWindow):
         """Set up the python console and the output console."""
 
         # Create the console dock widget
-        consoleDockWidget = QDockWidget("Console Window", self)
+        consoleDockWidget = QDockWidget("Console Panel", self)
         consoleDockWidget.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         consoleDockWidget.setObjectName("PyConsoleDockWidget")
         consoleDockWidget.setAllowedAreas(Qt.AllDockWidgetAreas)
@@ -128,7 +128,7 @@ class AMainWindow(QMainWindow):
         # Create a tab controller
         self.outputConsole = QLabel('WTF')
         settings = [(self._console, "Python Console", 0, "./icons/py.png"),
-                    (self._outputConsole, "Output Console", 1, "./icons/output.png")]
+                    (self._outputConsole, "Console Log", 1, "./icons/output.png")]
         self._tabController = ATabController(settings)
 
         consoleDockWidget.setWidget(self._tabController)
@@ -300,7 +300,8 @@ class ATabController(QTabWidget):
 
         self._configureTabs(tabSettings)
         self.setTabPosition(QTabWidget.South)
-        self.currentChanged.connect(self._onTabChange)
+        # do not use since
+        # self.currentChanged.connect(self._onTabChange)
 
     def _configureTabs(self, settings):
         """Configures tab layout and size policy."""
