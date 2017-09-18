@@ -1,0 +1,102 @@
+[ABrox Project File]
+{
+    "Analysis": {
+        "data": {
+            "datafile": "/Users/ulf.mertens/Desktop/pdg/lambert.csv",
+            "delimiter": ","
+        },
+        "models": [
+            {
+                "name": "PDG",
+                "priors": [
+                    {
+                        "C_priv": "stats.uniform(loc=0.0, scale=1.0)"
+                    },
+                    {
+                        "C_pub": "stats.uniform(loc=0.0, scale=1.0)"
+                    },
+                    {
+                        "A_priv_wh_m": "stats.uniform(loc=0.0, scale=1.0)"
+                    },
+                    {
+                        "A_pub_wh_m": "stats.uniform(loc=0.0, scale=1.0)"
+                    },
+                    {
+                        "A_priv_wh_f": "stats.uniform(loc=0.0, scale=1.0)"
+                    },
+                    {
+                        "A_pub_wh_f": "stats.uniform(loc=0.0, scale=1.0)"
+                    },
+                    {
+                        "A_priv_bl_m": "stats.uniform(loc=0.0, scale=1.0)"
+                    },
+                    {
+                        "A_pub_bl_m": "stats.uniform(loc=0.0, scale=1.0)"
+                    },
+                    {
+                        "A_priv_bl_f": "stats.uniform(loc=0.0, scale=1.0)"
+                    },
+                    {
+                        "A_pub_bl_f": "stats.uniform(loc=0.0, scale=1.0)"
+                    },
+                    {
+                        "G": "stats.uniform(loc=0.0, scale=1.0)"
+                    }
+                ],
+                "simulate": "def simulate(params):\n    C_priv = params['C_priv']\n    C_pub = params['C_pub']\n\n    A_priv_wh_m = params['A_priv_wh_m']\n    A_pub_wh_m = params['A_pub_wh_m']\n\n    A_priv_wh_f = params['A_priv_wh_f']\n    A_pub_wh_f = params['A_pub_wh_f']\n\n    A_priv_bl_m = params['A_priv_bl_m']\n    A_pub_bl_m = params['A_pub_bl_m']\n\n    A_priv_bl_f = params['A_priv_bl_f']\n    A_pub_bl_f = params['A_pub_bl_f']\n\n    G = params['G']\n\n    # PRIVATE condition\n\n    probs = {\"private\":\n                 {\"WT\" : {\"m\" : None, \"f\": None},\n                  \"WG\":  {\"m\": None, \"f\": None},\n                  \"BT\":  {\"m\": None, \"f\": None},\n                  \"BG\":  {\"m\": None, \"f\": None}},\n             \"public\":\n                 {\"WT\": {\"m\": None, \"f\": None},\n                  \"WG\": {\"m\": None, \"f\": None},\n                  \"BT\": {\"m\": None, \"f\": None},\n                  \"BG\": {\"m\": None, \"f\": None}}\n             }\n\n    # probability to say tool after white prime\n    probs['private']['WT']['m'] = C_priv + (1-C_priv) * A_priv_wh_m + (1-C_priv)*(1-A_priv_wh_m)*G\n    probs['private']['WT']['f'] = C_priv + (1-C_priv) * A_priv_wh_f + (1-C_priv)*(1-A_priv_wh_f)*G\n\n    # probability to say gun after white prime\n    probs['private']['WG']['m'] = C_priv + (1-C_priv)*(1-A_priv_wh_m)*(1-G)\n    probs['private']['WG']['f'] = C_priv + (1 - C_priv) * (1 - A_priv_wh_f) * (1 - G)\n\n    # probability to say tool after black prime\n    probs['private']['BT']['m'] = C_priv + (1-C_priv)*(1-A_priv_bl_m)*G\n    probs['private']['BT']['f'] = C_priv + (1 - C_priv) * (1 - A_priv_bl_f) * G\n\n    # probability to say gun after black prime\n    probs['private']['BG']['m'] = C_priv + (1-C_priv)*A_priv_bl_m + (1-C_priv)*(1-A_priv_bl_m)*(1-G)\n    probs['private']['BG']['f'] = C_priv + (1 - C_priv) * A_priv_bl_f + (1 - C_priv) * (1 - A_priv_bl_f) * (1 - G)\n\n    # PUBLIC condition\n\n    # probability to say tool after white prime\n    probs['public']['WT']['m'] = C_pub + (1-C_pub) * A_pub_wh_m + (1-C_pub)*(1-A_pub_wh_m)*G\n    probs['public']['WT']['f'] = C_pub + (1-C_pub) * A_pub_wh_m + (1-C_pub)*(1-A_pub_wh_m)*G\n\n    # probabilit to say gun after white prime\n    probs['public']['WG']['m'] = C_pub + (1 - C_pub) * (1 - A_pub_wh_m) * (1 - G)\n    probs['public']['WG']['f'] = C_pub + (1 - C_pub) * (1 - A_pub_wh_f) * (1 - G)\n\n    # probability to say tool after black prime\n    probs['public']['BT']['m'] = C_pub + (1 - C_pub) * (1 - A_pub_bl_m) * G\n    probs['public']['BT']['f'] = C_pub + (1 - C_pub) * (1 - A_pub_bl_f) * G\n\n    # probability to say gun after black prime\n    probs['public']['BG']['m'] = C_pub + (1 - C_pub) * A_pub_bl_m + (1 - C_pub) * (1 - A_pub_bl_m) * (1 - G)\n    probs['public']['BG']['f'] = C_pub + (1 - C_pub) * A_pub_bl_f + (1 - C_pub) * (1 - A_pub_bl_f) * (1 - G)\n\n    subjects = 127\n    trials = 384//4\n\n\n    results = {\"private\" :\n                   {\"WT\": 0, \"WG\": 0, \"BT\": 0, \"BG\": 0},\n               \"public\" :\n                   {\"WT\": 0, \"WG\": 0, \"BT\": 0, \"BG\": 0}}\n\n    for subj in range(subjects):\n\n        for cond, val1 in probs.items():\n            for expCond, val2 in val1.items():\n                for sex in ['m','f']:\n                    results[cond][expCond] += np.sum(np.random.uniform(0, 1, trials//2) < probs[cond][expCond][sex])\n\n    for cond, val1 in probs.items():\n        for expCond in val1:\n            results[cond][expCond] /= subjects\n\n    out = np.empty(shape=(4,2))\n    conds = ['private','public']\n    expConds = ['WT','WG','BT','BG']\n    for i, cond in enumerate(conds):\n        for j, expCond in enumerate(expConds):\n            out[j,i] = results[cond][expCond]\n\n    return out"
+            },
+            {
+                "name": "SG",
+                "priors": [
+                    {
+                        "C_priv": "stats.uniform(loc=0.0, scale=1.0)"
+                    },
+                    {
+                        "C_pub": "stats.uniform(loc=0.0, scale=1.0)"
+                    },
+                    {
+                        "A_priv_wh_m": "stats.uniform(loc=0.0, scale=1.0)"
+                    },
+                    {
+                        "A_pub_wh_m": "stats.uniform(loc=0.0, scale=1.0)"
+                    },
+                    {
+                        "A_priv_wh_f": "stats.uniform(loc=0.0, scale=1.0)"
+                    },
+                    {
+                        "A_pub_wh_f": "stats.uniform(loc=0.0, scale=1.0)"
+                    },
+                    {
+                        "A_priv_bl_m": "stats.uniform(loc=0.0, scale=1.0)"
+                    },
+                    {
+                        "A_pub_bl_m": "stats.uniform(loc=0.0, scale=1.0)"
+                    },
+                    {
+                        "A_priv_bl_f": "stats.uniform(loc=0.0, scale=1.0)"
+                    },
+                    {
+                        "A_pub_bl_f": "stats.uniform(loc=0.0, scale=1.0)"
+                    },
+                    {
+                        "G": "stats.uniform(loc=0.0, scale=1.0)"
+                    }
+                ],
+                "simulate": "def simulate(params):\n    C_priv = params['C_priv']\n    C_pub = params['C_pub']\n\n    A_priv_wh_m = params['A_priv_wh_m']\n    A_pub_wh_m = params['A_pub_wh_m']\n\n    A_priv_wh_f = params['A_priv_wh_f']\n    A_pub_wh_f = params['A_pub_wh_f']\n\n    A_priv_bl_m = params['A_priv_bl_m']\n    A_pub_bl_m = params['A_pub_bl_m']\n\n    A_priv_bl_f = params['A_priv_bl_f']\n    A_pub_bl_f = params['A_pub_bl_f']\n\n    G = params['G']\n\n    # PRIVATE condition\n\n    probs = {\"private\":\n                 {\"WT\": {\"m\": None, \"f\": None},\n                  \"WG\": {\"m\": None, \"f\": None},\n                  \"BT\": {\"m\": None, \"f\": None},\n                  \"BG\": {\"m\": None, \"f\": None}},\n             \"public\":\n                 {\"WT\": {\"m\": None, \"f\": None},\n                  \"WG\": {\"m\": None, \"f\": None},\n                  \"BT\": {\"m\": None, \"f\": None},\n                  \"BG\": {\"m\": None, \"f\": None}}\n             }\n\n    # probability to say tool after white prime\n    probs['private']['WT']['m'] = A_priv_wh_m + (1 - A_priv_wh_m) * C_priv + (1-A_priv_wh_m)*(1-C_priv)*G\n    probs['private']['WT']['f'] = C_priv + (1 - C_priv) * A_priv_wh_f * C_priv + (1-A_priv_wh_f)*(1-C_priv)*G\n\n    # probability to say gun after white prime\n    probs['private']['WG']['m'] = (1-A_priv_wh_m) * C_priv + (1-A_priv_wh_m)*(1-C_priv)*(1-G)\n    probs['private']['WG']['f'] = (1-A_priv_wh_f) * C_priv + (1-A_priv_wh_f)*(1-C_priv)*(1-G)\n\n    # probability to say tool after black prime\n    probs['private']['BT']['m'] = (1-A_priv_bl_m) * C_priv + (1-A_priv_bl_m)*(1-C_priv)*G\n    probs['private']['BT']['f'] = (1-A_priv_bl_f) * C_priv + (1-A_priv_bl_f)*(1-C_priv)*G\n\n    # probability to say gun after black prime\n    probs['private']['BG']['m'] = A_priv_bl_m + (1-A_priv_bl_m)*C_priv + (1-A_priv_bl_m)*(1-C_priv)*(1-G)\n    probs['private']['BG']['f'] = A_priv_bl_f + (1-A_priv_bl_f)*C_priv + (1-A_priv_bl_f)*(1-C_priv)*(1-G)\n\n    # PUBLIC condition\n\n    # probability to say tool after white prime\n    probs['public']['WT']['m'] = A_pub_wh_m + (1 - A_pub_wh_m) * C_pub + (1 - A_pub_wh_m) * (1 - C_pub) * G\n    probs['public']['WT']['f'] = C_pub + (1 - C_pub) * A_pub_wh_f * C_pub + (1 - A_pub_wh_f) * (1 - C_pub) * G\n\n    # probability to say gun after white prime\n    probs['public']['WG']['m'] = (1 - A_pub_wh_m) * C_pub + (1-A_pub_wh_m)*(1-C_pub) * (1 - G)\n    probs['public']['WG']['f'] = (1 - A_pub_wh_f) * C_pub + (1-A_pub_wh_f)*(1-C_pub) * (1 - G)\n\n    # probability to say tool after black prime\n    probs['public']['BT']['m'] = (1 - A_pub_bl_m) * C_pub + (1 - A_pub_bl_m) * (1 - C_pub) * G\n    probs['public']['BT']['f'] = (1 - A_pub_bl_f) * C_pub + (1 - A_pub_bl_f) * (1 - C_pub) * G\n\n    # probability to say gun after black prime\n    probs['public']['BG']['m'] = A_pub_bl_m + (1 - A_pub_bl_m) * C_pub + (1 - A_pub_bl_m) * (1 - C_pub) * (1 - G)\n    probs['public']['BG']['f'] = A_pub_bl_f + (1 - A_pub_bl_f) * C_pub + (1 - A_pub_bl_f) * (1 - C_pub) * (1 - G)\n\n    subjects = 127\n    trials = 384 // 4\n\n    results = {\"private\":\n                   {\"WT\": 0, \"WG\": 0, \"BT\": 0, \"BG\": 0},\n               \"public\":\n                   {\"WT\": 0, \"WG\": 0, \"BT\": 0, \"BG\": 0}}\n\n    for subj in range(subjects):\n\n        for cond, val1 in probs.items():\n            for expCond, val2 in val1.items():\n                for sex in ['m', 'f']:\n                    results[cond][expCond] += np.sum(np.random.uniform(0, 1, trials // 2) < probs[cond][expCond][sex])\n\n    for cond, val1 in probs.items():\n        for expCond in val1:\n            results[cond][expCond] /= subjects\n\n    out = np.empty(shape=(4, 2))\n    conds = ['private', 'public']\n    expConds = ['WT', 'WG', 'BT', 'BG']\n    for i, cond in enumerate(conds):\n        for j, expCond in enumerate(expConds):\n            out[j, i] = results[cond][expCond]\n\n    return out"
+            }
+        ],
+        "summary": "def summary(data):\n    return data.flatten()",
+        "distance": "def distance(simSummary, obsSummary):\n    # write your code here\n    pass",
+        "settings": {
+            "percentile": 0.05,
+            "objective": "comparison",
+            "outputdir": "/Users/ulf.mertens/Desktop/pdg",
+            "modeltest": false,
+            "threshold": -1,
+            "distance_metric": "default",
+            "particles": 1000.0,
+            "fixedparameters": {},
+            "method": "logistic"
+        }
+    }
+}
