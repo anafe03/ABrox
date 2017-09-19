@@ -8,7 +8,7 @@ from .basemodel import Model
 from .modelcollection import ModelCollection
 from .paramEstimation import ParamEstimator
 from .Logistic import Logistic
-from .customException import SimulateFunctionError, MismatchError, ConfigurationError
+from .customException import SimulateFunctionError, MismatchError, ConfigurationError, SummaryFunctionError
 
 
 # =======================================#
@@ -72,7 +72,7 @@ class Abc:
     def setSettings(self):
         """ Store settings from config in members of class """
 
-        self.nparticle = (self.config['settings']['particles'])
+        self.nparticle = self.config['settings']['particles']
 
         # check if threshold should be computed
         if self.config['settings']['threshold'] == -1:
@@ -97,8 +97,8 @@ class Abc:
         if self.objective == "comparison" and not self.config['settings']['method']:
             raise ConfigurationError(
                 "You need to provide a method for BF approximation. Either 'rejection' or 'logistic'")
-        elif self.objective == "inference" and not self.config['settings']['method']:
-            raise ConfigurationError('Do not specify a method when interested in inference')
+        elif self.objective == "inference" and self.config['settings']['method'] is not None:
+            raise ConfigurationError('Do not specify a method when interested in inference.')
 
         self.method = self.config['settings']['method']
 
@@ -166,12 +166,16 @@ class Abc:
         # check shape
         for model in self.model_collection:
             param = model.sample_parameter()
-            if type(model.simulate(param)) is not np.ndarray:
+            sim = model.simulate(param)
+            sum = model.summary(sim)
+            if type(sim) is not np.ndarray:
                 raise SimulateFunctionError(
                     'Simulate function must return array of type np.ndarray')
             if not model.simulate(param).shape == self.observed_data.shape:
                 raise MismatchError('''Make sure that your observed dataset has
                                  the same shape as the simulated dataset''')
+            if type(sum) is not np.ndarray and not isinstance(sum,(int,float)):
+                raise SummaryFunctionError('Summary function must return either an Int, Float or np.ndarray')
 
         # compute summary of observed data
         self.observed_summary = self.model_collection[0].summary(self.observed_data)

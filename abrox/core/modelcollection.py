@@ -69,7 +69,7 @@ class ModelCollection(list):
             sumstats += sumstat
 
         # if summary statistics is multi-dimensional
-        if isinstance(sumstats[0], list):
+        if type(sumstats[0]) is np.ndarray:
             sumstats = np.array(sumstats)
 
         # else if scalar, reshape to array with one column
@@ -81,7 +81,6 @@ class ModelCollection(list):
         for idx, sum_stat in enumerate(sumstats.T):
             Median = np.median(sum_stat)
             MAD[idx] = np.median([np.abs(x - Median) for x in sum_stat])
-            # print("MAD = {}".format(MAD[idx]))
             sumstats[:, idx] = sum_stat / MAD[idx]
 
         # scale observed summary statistics by each MAD
@@ -164,8 +163,8 @@ class ModelCollection(list):
 
         if method is None:
             resDict['posterior'] = {}
-            for col in postMatrix.T:
-                resDict['posterior'][str(col)] = col.tolist()
+            for i, col in enumerate(postMatrix.T):
+                resDict['posterior'][str(i)] = col.tolist()
 
 
         else:
@@ -173,15 +172,14 @@ class ModelCollection(list):
                 resDict[model.name] = {}
                 resDict[model.name]['probability'] = model.accepted
 
-        bf = self.bayesFactor().tolist()
+            bf = self.bayesFactor().tolist()
 
-        resDict['bf'] = bf
-        print(resDict)
+            resDict['bf'] = bf
+
         pickle.dump(resDict, open(os.path.join(outdir, "save.p"), "wb"))
         return resDict
 
     def report(self, diff_time, threshold, method=None, postMatrix=None):
-
 
         if method is None:  # parameter estimation
             descriptives = self.descriptives(postMatrix)
