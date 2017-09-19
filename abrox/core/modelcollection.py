@@ -166,7 +166,6 @@ class ModelCollection(list):
             for i, col in enumerate(postMatrix.T):
                 resDict['posterior'][str(i)] = col.tolist()
 
-
         else:
             for model in self:
                 resDict[model.name] = {}
