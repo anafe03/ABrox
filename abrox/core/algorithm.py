@@ -55,7 +55,6 @@ class Abc:
 
         self.models = []
         for i, modelDict in enumerate(self.config['models']):
-            print(modelDict)
             self.models.append(Model(**modelDict))
 
         for model in self.models:

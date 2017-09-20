@@ -159,7 +159,7 @@ class ModelCollection(list):
 
     def saveResults(self, diff_time, threshold,  outdir, method=None, postMatrix=None):
         """Save results in dict and pickle"""
-        resDict = {'time (s)': round(diff_time), 'threshold': round(threshold)}
+        resDict = {'time (s)': round(diff_time,3), 'threshold': round(threshold,3)}
 
         if method is None:
             resDict['posterior'] = {}

@@ -48,6 +48,16 @@ class Logistic:
 
         weights = weights[weights > 0]
 
+
+        if X.shape[1] < 2:
+
+            X = X.reshape(-1,1)
+
+        if len(self.model_collection.obssum.shape) == 1:
+            self.model_collection.obssum = self.model_collection.obssum.reshape(-1,1)
+
+
+
         lreg.fit(X, Y, weights)
         model_probabilities = lreg.predict_proba(self.model_collection.obssum).flatten()
         for idx, model in enumerate(self.model_collection):

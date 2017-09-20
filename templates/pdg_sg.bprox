@@ -90,7 +90,7 @@
         "settings": {
             "percentile": 0.05,
             "objective": "comparison",
-            "outputdir": "/Users/ulf.mertens/Desktop/pdg",
+            "outputdir": "/Users/ulf.mertens/Desktop/abrox_demo/mptree",
             "modeltest": false,
             "threshold": -1,
             "distance_metric": "default",
