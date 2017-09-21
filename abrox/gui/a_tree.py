@@ -64,7 +64,7 @@ class AModelTree(QTreeWidget):
 
         for key in self._internalModel:
             if key == 'data':
-                root.addChild(ADataNode('Data', self._internalModel, self._console))
+                root.addChild(ADataNode('Data', self._internalModel, self._console, self._outputConsole))
             elif key == 'models':
                 for model in self._internalModel[key]:
                     modelNode = AModelNode(model, self._internalModel)
@@ -238,12 +238,12 @@ class AAnalysisNode(ABaseNode):
 
 class ADataNode(ABaseNode):
 
-    def __init__(self, text='Data', internalModel=None, console=None):
+    def __init__(self, text='Data', internalModel=None, console=None, outputConsole=None):
         """Represents a data viewer node."""
         super(ADataNode, self).__init__(text)
 
         self._internalModel = internalModel
-        self._dataViewer = ADataViewer(internalModel, console)
+        self._dataViewer = ADataViewer(internalModel, console, outputConsole)
         self.setIcon(0, QIcon('./icons/data.png'))
 
     def display(self, mdiArea):

@@ -197,6 +197,10 @@ class AInternalModel:
             if model.name == modelName:
                 model.removePrior(idx)
 
+    def clearData(self):
+        self._project['Analysis']['data'] = {'datafile': None,
+                                             'delimiter': None}
+
     def changeSetting(self, key, val):
         self._project['Analysis']['settings'][key] = val
 

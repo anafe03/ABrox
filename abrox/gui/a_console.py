@@ -5,15 +5,16 @@ from PyQt5.QtGui import *
 
 class AConsoleWindow(QTextEdit):
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, font=None):
         super(AConsoleWindow, self).__init__(parent)
 
         self.setReadOnly(True)
 
         # Change font
-        font = QFont()
-        font.setFamily('Consolas')
-        font.setPointSize(10)
+        if font is None:
+            font = QFont()
+            font.setFamily('Consolas')
+            font.setPointSize(10)
         self.setFont(font)
 
 
@@ -35,7 +36,6 @@ class AOutputConsole(QWidget):
         self._greet()
 
     def _initConsole(self):
-
 
         self._configureLayout(QHBoxLayout())
 

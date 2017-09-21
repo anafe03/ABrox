@@ -56,7 +56,7 @@ class AProcessManager:
 
     def _onAbcStarted(self):
 
-        self._outputConsole.write('Starting ABC...')
+        self._outputConsole.write('ABC started...')
         self._parent.signalAbcStarted()
 
     def _onAbcFinished(self):

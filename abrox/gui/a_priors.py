@@ -10,7 +10,7 @@ from collections import OrderedDict
 import tracksave
 
 
-class APriorsWindow(QFrame):
+class APriorsWindow(QScrollArea):
     """
     This class represents the frame for the APriorSpecifier
     (left) and APriorPlot (right).
@@ -28,7 +28,14 @@ class APriorsWindow(QFrame):
         self.setFrameShape(QFrame.Panel)
         layout.addWidget(self._specifier)
         layout.addWidget(self._plotter)
-        self.setLayout(layout)
+
+        # Inner widget of scrollarea
+        content = QWidget()
+        content.setLayout(layout)
+
+        # Place inner widget inside the scrollable area
+        self.setWidget(content)
+        self.setWidgetResizable(True)
 
     def changeModelName(self, newName):
         """Called externally to change model name."""
@@ -118,6 +125,7 @@ class APriorPlot(QFrame):
         # Create the canvas widget as container
         self.canvas = FigureCanvas(self.figure)
         self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.canvas.setMinimumSize(self.canvas.size())
         FigureCanvas.updateGeometry(self)
         self._configureStyle()
         self._configurePlotter(QVBoxLayout())

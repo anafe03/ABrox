@@ -1,11 +1,11 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-import datetime
-import pprint
 import pickle
 from a_process_manager import AProcessManager
 from a_dialogs import AFixParameterDialog
+from a_script_creator import AScriptCreator
+from a_utils import createButton
 import tracksave
 
 
@@ -17,7 +17,7 @@ class ASettingsWindow(QFrame):
         self._internalModel = internalModel
         self._console = console
         self._compSettingsFrame = AComputationSettingsFrame(internalModel, console)
-        self._modelTestFrame = AModelTestFrame(internalModel, console, outputConsole)
+        self._modelTestFrame = ARunFrame(internalModel, console, outputConsole)
 
         self._configureLayout(QHBoxLayout())
 
@@ -34,7 +34,7 @@ class ASettingsWindow(QFrame):
         self.setLayout(layout)
 
 
-class AComputationSettingsFrame(QFrame):
+class AComputationSettingsFrame(QScrollArea):
     """Main container for settings and run."""
     def __init__(self, internalModel, console, parent=None):
         super(AComputationSettingsFrame, self).__init__(parent)
@@ -42,16 +42,32 @@ class AComputationSettingsFrame(QFrame):
         self._internalModel = internalModel
         self._console = console
         self._output = AOuputDir(internalModel)
-
+        self._comboWidget = QWidget()
         self._configureLayout(QVBoxLayout())
 
     def _configureLayout(self, layout):
         """Lays out main components of the frame."""
 
-        self.setFrameStyle(QFrame.Panel)
+        generalGroupBox = self._generalSettingsGroup()
+        modelTestGroupBox = self._modelTestSettingsGroup()
+
+        layout.addWidget(generalGroupBox)
+        layout.addWidget(modelTestGroupBox)
+        layout.addStretch(1)
+
+        # Inner widget of scrollarea
+        content = QWidget()
+        content.setLayout(layout)
+
+        # Place inner widget inside the scrollable area
+        self.setWidget(content)
+        self.setWidgetResizable(True)
+
+    def _generalSettingsGroup(self):
+        """Create and returns the general settings group box."""
 
         # Create a group box
-        groupBox = QGroupBox('Settings')
+        groupBox = QGroupBox('General Settings')
         groupBoxLayout = QVBoxLayout()
 
         # Settings entries
@@ -76,14 +92,88 @@ class AComputationSettingsFrame(QFrame):
 
         # Lay out container
         container.setLayout(containerLayout)
-
         groupBoxLayout.addWidget(self._output)
         groupBoxLayout.addWidget(container)
         groupBox.setLayout(groupBoxLayout)
-        layout.addWidget(groupBox)
-        layout.addStretch(1)
-        # Add layout to widget
-        self.setLayout(layout)
+
+        return groupBox
+
+    def _modelTestSettingsGroup(self):
+        """Create and return the model test settings groupbox."""
+
+        # Create group boxes
+        groupBox = QGroupBox('Model Test Settings')
+        groupBoxLayout = QVBoxLayout()
+
+        # Create a combo in its own widget
+        self._combo = AModelComboBox(self._internalModel)
+        self._combo.installEventFilter(self)
+
+        # Create a config button
+        configButton = createButton('Fix Parameters', './icons/config.png', None,
+                                    self._onFixParameter, Qt.NoFocus, True)
+
+        # Add widgets to composite widget layout
+        comboWidgetLayout = QHBoxLayout()
+        comboWidgetLayout.addWidget(QLabel('Pick a model:'))
+        comboWidgetLayout.addWidget(self._combo)
+        comboWidgetLayout.addWidget(configButton)
+        comboWidgetLayout.setContentsMargins(0, 0, 0, 0)
+        comboWidgetLayout.setStretchFactor(self._combo, 5)  # use for stretch
+        self._comboWidget.setLayout(comboWidgetLayout)
+        self._comboWidget.setEnabled(False)
+
+        # Create a checkbox for model test
+        self._modelTest = QCheckBox()
+        self._modelTest.clicked.connect(self._onModelTest)
+        self._modelTest.setText('Model Test')
+
+        # Use not False, since model test is an index otherwise
+        if self._internalModel.modelTest() is not False:
+            self._modelTest.click()
+
+        # Set layout of group box and return it
+        groupBoxLayout.addWidget(self._modelTest)
+        groupBoxLayout.addWidget(self._comboWidget)
+        groupBox.setLayout(groupBoxLayout)
+        return groupBox
+
+    def eventFilter(self, qobject, event):
+        """
+        Adds an event poll function to the frame, 
+        update combobox when mouse pressed.
+        """
+
+        if type(qobject) is AModelComboBox:
+            if event.type() == QEvent.MouseButtonPress:
+                self._combo.updateItems()
+        return False
+
+    def _onModelTest(self, checked):
+        """Controls the appearance of the model test frame."""
+
+        if checked:
+            # Enable selector pane
+            self._comboWidget.setEnabled(True)
+            # Update list with models
+            self._combo.updateItems()
+            # Add current first model to model test
+            self._internalModel.addModelIndexForTest(self._combo.currentIndex())
+        else:
+            self._comboWidget.setEnabled(False)
+            self._internalModel.addModelIndexForTest(False)
+
+    def _onFixParameter(self):
+        """Invoke a dialog for settings parameters."""
+
+        # Do some error checks
+        if not self._internalModel.models():
+            msg = QMessageBox()
+            text = 'Project should contain at least one model.'
+            msg.critical(self, 'Error loading data file...', text)
+        else:
+            dialog = AFixParameterDialog(self._internalModel, self.nativeParentWidget())
+            dialog.exec_()
 
 
 class ASettingEntry(QDoubleSpinBox):
@@ -142,12 +232,8 @@ class AOuputDir(QWidget):
         self._path.textChanged.connect(self._onEdit)
 
         # Create button for dir
-        self._button = QToolButton()
-        self._button.setFocusPolicy(Qt.NoFocus)
-        self._button.setIcon(QIcon('./icons/load.png'))
-        self._button.setToolTip('Select output directory...')
-        self._button.setStatusTip('Select output directory...')
-        self._button.clicked.connect(self._onOpen)
+        self._button = createButton("", './icons/load.png', 'Select output directory...',
+                                    self._onOpen, Qt.NoFocus, True, True)
 
         # Add widgets to layout
         layout.addWidget(self._button)
@@ -177,10 +263,10 @@ class AOuputDir(QWidget):
         self._internalModel.addOutputDir(text)
 
 
-class AModelTestFrame(QFrame):
+class ARunFrame(QScrollArea):
     """Main container for the model testing"""
     def __init__(self, internalModel, console, outputConsole, parent=None):
-        super(AModelTestFrame, self).__init__(parent)
+        super(ARunFrame, self).__init__(parent)
 
         self._internalModel = internalModel
         self._console = console
@@ -188,8 +274,6 @@ class AModelTestFrame(QFrame):
         self._processManager = AProcessManager(self, self._internalModel,
                                                self._console,
                                                self._outputConsole)
-        self._comboWidget = QWidget()
-
         self._configureLayout(QVBoxLayout())
 
     def _configureLayout(self, layout):
@@ -197,43 +281,14 @@ class AModelTestFrame(QFrame):
 
         self.setFrameStyle(QFrame.Panel)
 
-        # Create group boxes
-        groupBox = QGroupBox('Model Test Settings')
-        groupBoxLayout = QVBoxLayout()
-
         runGroupBox = QGroupBox('Computation')
         runGroupBoxLayout = QHBoxLayout()
 
-        # Create a combo in its own widget
-        comboWidgetLayout = QHBoxLayout()
-        comboWidgetLayout.setContentsMargins(0, 0, 0, 0)
-        self._combo = AModelComboBox(self._internalModel)
-        self._combo.installEventFilter(self)
-        configButton = self._createButton('Fix Parameters', './icons/config',
-                                          self._onFixParameter, Qt.NoFocus, True)
-        comboWidgetLayout.addWidget(QLabel('Pick a model:'))
-        comboWidgetLayout.addWidget(self._combo)
-        comboWidgetLayout.addWidget(configButton)
-        comboWidgetLayout.addStretch(3)
-        comboWidgetLayout.setStretchFactor(self._combo, 5)
-        comboWidgetLayout.setStretchFactor(configButton, 1)
-        self._comboWidget.setLayout(comboWidgetLayout)
-        self._comboWidget.setEnabled(False)
-
-        # Create a checkbox for model test
-        self._modelTest = QCheckBox()
-        self._modelTest.clicked.connect(self._onModelTest)
-        self._modelTest.setText('Model Test')
-
-        # Use not False, since modeltest is an index otherwise
-        if self._internalModel.modelTest() is not False:
-            self._modelTest.click()
-
         # Create run abd stop buttons
-        self._run = self._createButton('Run', './icons/run', self._onRun,
-                                       Qt.NoFocus, True)
-        self._stop = self._createButton('Stop', './icons/stop', self._onStop,
-                                        Qt.NoFocus, False)
+        self._run = createButton('Run', './icons/run', "Run ABC estimation...",
+                                       self._onRun, Qt.NoFocus, True)
+        self._stop = createButton('Stop', './icons/stop', "Abort ABC.",
+                                        self._onStop, Qt.NoFocus, False)
         # Create progress bar
         self._progress = QProgressBar()
         self._progress.setOrientation(Qt.Horizontal)
@@ -246,48 +301,16 @@ class AModelTestFrame(QFrame):
         runGroupBoxLayout.setStretchFactor(self._progress, 3)
         runGroupBox.setLayout(runGroupBoxLayout)
 
-        groupBoxLayout.addWidget(self._modelTest)
-        groupBoxLayout.addWidget(self._comboWidget)
-
-        groupBox.setLayout(groupBoxLayout)
-        layout.addWidget(groupBox)
         layout.addWidget(runGroupBox)
         layout.addStretch(1)
-        self.setLayout(layout)
 
-    def eventFilter(self, qobject, event):
-        """
-        Adds an event poller to the frame,
-        update combobox when mouse pressed.
-        """
-        if type(qobject) is AModelComboBox:
-            if event.type() == QEvent.MouseButtonPress:
-                self._combo.updateItems()
-        return False
+        # Inner widget of scrollarea
+        content = QWidget()
+        content.setLayout(layout)
 
-    def _createButton(self, label, iconPath, func, focusPolicy, enabled):
-        """Utility to save typing"""
-
-        button = QPushButton(label)
-        button.setIcon(QIcon(iconPath))
-        button.clicked.connect(func)
-        button.setFocusPolicy(focusPolicy)
-        button.setEnabled(enabled)
-        return button
-
-    def _onModelTest(self, checked):
-        """Controls the appearance of the model test frame."""
-
-        if checked:
-            # Enable selector pane
-            self._comboWidget.setEnabled(True)
-            # Update list with models
-            self._combo.updateItems()
-            # Add current first model to model test
-            self._internalModel.addModelIndexForTest(self._combo.currentIndex())
-        else:
-            self._comboWidget.setEnabled(False)
-            self._internalModel.addModelIndexForTest(False)
+        # Place inner widget inside the scrollable area
+        self.setWidget(content)
+        self.setWidgetResizable(True)
 
     def _onRun(self):
         """For debugging."""
@@ -341,18 +364,6 @@ class AModelTestFrame(QFrame):
 
         # Hide progress
         self._progress.hide()
-
-    def _onFixParameter(self):
-        """Invoke a dialog for settings parameters."""
-
-        # Do some error checks
-        if not self._internalModel.models():
-            msg = QMessageBox()
-            text = 'Project should contain at least one model.'
-            msg.critical(self, 'Error loading data file...', text)
-        else:
-            dialog = AFixParameterDialog(self._internalModel, self.nativeParentWidget())
-            dialog.exec_()
 
     def _loadPickledResults(self):
         """Called when algorithm finished."""
@@ -472,163 +483,3 @@ class ACheckBox(QCheckBox):
 
         self.value = value
         self.setText(value.capitalize())
-
-
-class AScriptCreator:
-    """
-    Handles the creation of a runnable python script. Accepts the gui model
-    as first parameter and uses its interface to get the information needed.
-    fileName is the name of the python file to-be-created.
-    """
-
-    def __init__(self, internalModel):
-
-        self._internalModel = internalModel
-        self.scriptName = None
-
-    def createScript(self):
-        """
-        Creates an abs runnable script with the file name provided by model.
-        Assumes that model sanity checks have been passed!
-        """
-
-        fileName = self._internalModel.fileWithPathName()
-
-        # Get a dictionary of modelName: sim function code
-        simulateDict = self._internalModel.simulate()
-
-        # Get project dict and remove project name, since
-        # config file does not need a project name
-        projectDict = self._internalModel.toDict()
-        projectDict = {k: v for value in projectDict.values()
-                       for k, v in value.items()}
-
-        # Open file and write components
-        with open(fileName, 'w') as outfile:
-            self._writeHeader(outfile)
-            self._writeImports(outfile)
-            self._writeSummaryAndDistFunc(outfile)
-            self._writeSimulateFuncs(outfile, simulateDict)
-            self._writeConfig(outfile, projectDict, simulateDict)
-            self._writeAlgorithmCall(outfile)
-
-        # Return filename for process manager
-        return fileName
-
-    def _writeHeader(self, outfile):
-        """Write header with info and date."""
-
-        header = '"""\n' \
-                 'This is an automatically generated script by ABrox GUI.\n' \
-                 'Created on {}.\n' \
-                 '"""\n\n'.format(datetime.datetime.now())
-        outfile.write(header)
-
-    def _writeImports(self, outfile):
-        """Write imports needed for abc."""
-
-        imports = '# Required imports\n' \
-                  'import numpy as np\n' \
-                  'from scipy import stats\n' \
-                  'from abrox.core.algorithm import Abc\n\n\n'
-
-        outfile.write(imports)
-
-    def _writeSummaryAndDistFunc(self, outfile):
-        """Write summary and distance (if specified) code."""
-
-        # Write summary
-        outfile.write(self._internalModel.summary())
-        outfile.write('\n\n\n')
-
-        # Write distance
-        if self._internalModel.distance() is not None:
-            outfile.write(self._internalModel.distance())
-            outfile.write('\n\n\n')
-
-    def _writeSimulateFuncs(self, outfile, simulateDict):
-        """Write simulate functions code."""
-
-        for key in simulateDict:
-            # The value of simulateDict is a 2-tuple (0 - code, 1 - name)
-            outfile.write(simulateDict[key][0])
-            outfile.write('\n\n\n')
-
-    def _writeConfig(self, outfile, projectDict, simulateDict):
-            """Creates the config file in a nice format. Pretty nasty."""
-
-            # Write var name
-            outfile.write('CONFIG = {\n')
-            # Write data file and delimiter
-            outfile.write('{}"data": {{\n'.format(self.tab()))
-            outfile.write('{}"datafile": "{}",\n'.format(self.tab(2),
-                                                        projectDict['data']['datafile']))
-            outfile.write('{}"delimiter": "{}"\n'.format(self.tab(2),
-                                                        projectDict['data']['delimiter']))
-            outfile.write('{}}},\n'.format(self.tab()))
-
-            # Write models
-            outfile.write('{}"models": [\n'.format(self.tab()))
-            for model in projectDict['models']:
-                outfile.write('{}{{\n'.format(self.tab(2)))
-                outfile.write('{}"name": "{}",\n'.format(self.tab(2),
-                                                         model['name']))
-                # Write priors
-                outfile.write('{}"priors": [\n'.format(self.tab(2)))
-                for prior in model['priors']:
-                    outfile.write('{}{{"{}": {}}},\n'.format(self.tab(3),
-                                                             list(prior.keys())[0],
-                                                             list(prior.values())[0]))
-                # Close priors list
-                outfile.write('{}],\n'.format(self.tab(2)))
-
-                # Write simulate
-                outfile.write('{}"simulate": {}\n'.format(self.tab(2),
-                                                          simulateDict[model['name']][1]))
-                # Close this model dict
-                outfile.write('{}}},\n'.format(self.tab(2)))
-            # Close models list
-            outfile.write('{}],\n'.format(self.tab()))
-
-            # Write summary
-            outfile.write('{}"summary": summary,\n'.format(self.tab()))
-
-            # Write distance
-            outfile.write('{}"distance": {},\n'.format(self.tab(),
-                                                       'distance' if projectDict['settings']
-                                                       ['distance_metric'] == 'custom' else None))
-
-            # Write settings
-            outfile.write('{}"settings": {{\n'.format(self.tab()))
-            # Format settings dict using pprint
-            projectDict['settings']['fixedparameters'] = dict(projectDict['settings']['fixedparameters'])
-            settings = pprint.pformat(dict(projectDict['settings'])) \
-                .replace('{', "", 1)
-            settings = self._rreplace(settings, '}', '', count=1)
-            # Indent output of pprint with 8 spaces
-            settings = ''.join(['{}{}'.format(self.tab(2), l) for l in settings.splitlines(True)])
-            outfile.write(settings)
-            # Close settings dict
-            outfile.write('\n{}}}\n'.format(self.tab()))
-            # Close config dict
-            outfile.write('}\n\n\n')
-
-    def _writeAlgorithmCall(self, outfile):
-        """Writes the algorithm call enclosed in an if __name__ == ..."""
-
-        call = 'if __name__ == "__main__":\n' \
-               '{}# Create and run an Abc instance\n' \
-               '{}abc = Abc(config=CONFIG)\n' \
-               '{}abc.run()\n'.format(self.tab(), self.tab(), self.tab())
-
-        outfile.write(call)
-
-    def _rreplace(self, s, old, new, count=1):
-        """A helper function to replace strings backwards."""
-        li = s.rsplit(old, count)
-        return new.join(li)
-
-    def tab(self, s=1):
-        """Returns a string containing 4*s whitespaces."""
-
-        return " " * (s*4)

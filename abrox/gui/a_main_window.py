@@ -127,8 +127,8 @@ class AMainWindow(QMainWindow):
 
         # Create a tab controller
         self.outputConsole = QLabel('WTF')
-        settings = [(self._console, "Python Console", 0, "./icons/py.png"),
-                    (self._outputConsole, "Console Log", 1, "./icons/output.png")]
+        settings = [(self._outputConsole, "Console Log", 0, "./icons/output.png"),
+                    (self._console, "Python Console", 1, "./icons/py.png")]
         self._tabController = ATabController(settings)
 
         consoleDockWidget.setWidget(self._tabController)

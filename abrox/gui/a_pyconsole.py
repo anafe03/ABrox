@@ -43,6 +43,11 @@ class AIPythonWidget(RichJupyterWidget):
 
         self.kernel_manager.kernel.shell.push(variableDict)
 
+    def removeVariable(self, variableName):
+        """Given a variable name, deletes variable from namespace."""
+
+        self._execute('del {}'.format(variableName), True)
+
     def clearTerminal(self):
         """ Clears the terminal """
 
@@ -85,14 +90,15 @@ class AConsoleWindow(QWidget):
         layout.addWidget(self._ipythonConsole)
         self.setLayout(layout)
 
-    def addData(self, data, dataFileName):
+    def addData(self, data):
         """Called on loading data. Pushes data to the console and informs for loading."""
 
         self._ipythonConsole.pushVariables({'data': data})
-        self._ipythonConsole.printText('\n')
-        self._ipythonConsole.printHtml('{} successfully loaded.'.format(dataFileName))
-        self._ipythonConsole.printText('\n')
-        self._ipythonConsole.printHtml('You can access your data via the console by typing <strong>data</strong>.')
+
+    def removeData(self):
+        """Called on clear data. Executes del data in the terminal."""
+
+        self._ipythonConsole.removeVariable('data')
 
     def addResults(self, results):
 
