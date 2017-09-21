@@ -1,7 +1,6 @@
 from PyQt5.QtWidgets import QHBoxLayout, QWidget, QApplication
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import QSize
-from PyQt5 import QtSvg
 from qtconsole.inprocess import QtInProcessKernelManager
 from qtconsole.rich_jupyter_widget import RichJupyterWidget
 import os
@@ -9,6 +8,7 @@ import os
 
 class AIPythonWidget(RichJupyterWidget):
     """Convenience class for a live IPython console widget. """
+
     def __init__(self, customBanner=None, *args, **kwargs):
         super(AIPythonWidget, self).__init__(*args, **kwargs)
 

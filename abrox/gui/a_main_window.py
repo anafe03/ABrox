@@ -4,7 +4,7 @@ from PyQt5.QtGui import *
 import json
 from collections import OrderedDict
 import tracksave
-import time
+import webbrowser
 from a_tree import AModelTree
 from a_pyconsole import AConsoleWindow
 from a_console import AOutputConsole
@@ -72,6 +72,8 @@ class AMainWindow(QMainWindow):
 
         fontAction = createAction('Editor Font...', callback=self._openFontDialog, parent=self,
                                   tip='Configure editor font', checkable=False)
+
+        # ===== Add actions to view menu ===== #
         addActionsToMenu(viewMenu, (fontAction, ))
 
         # Create actions for file menu
@@ -80,13 +82,21 @@ class AMainWindow(QMainWindow):
         loadSession = createAction('&Load Project...', callback=self._loadSession, parent=fileMenu,
                                    tip='Load project...', icon='loadsession')
         saveSession = createAction('&Save Project', callback=self._saveSession, parent=fileMenu,
-                                   tip='Save current project...', icon='save')
+                                   tip='Save current project...', icon='savesession')
         exitAction = createAction('&Exit', callback=self.close, tip='Quit ABrox', parent=fileMenu,)
 
-        # Add actions to file menu
+        # ===== Add actions to file menu ===== #
         addActionsToMenu(fileMenu, (loadData, loadSession, saveSession, None, exitAction))
 
-        # Add actions to view menu
+        # ===== Add actions to help menu ===== #
+        helpOnline = createAction('&Get Help Online...', callback=self._helpOnline,
+                                  parent=helpMenu, icon='help', tip='Get help from the ABrox homepage')
+        aboutQt = createAction('&About Qt', callback=self._aboutQt, icon='about',
+                               parent=helpMenu, tip='Read more about Qt...')
+        about = createAction('&About ABrox', callback=self._about, icon='about',
+                             parent=helpMenu, tip='Read more about ABrox...')
+
+        addActionsToMenu(helpMenu, (helpOnline, aboutQt, about))
 
     def _configureToolbar(self):
         """Sets up toolbar for helper methods."""
@@ -229,11 +239,34 @@ class AMainWindow(QMainWindow):
         """Activated when user clicks the tabbed view menu button."""
         self._mdiArea.setViewMode(QMdiArea.TabbedView)
 
+    def _about(self):
+        """Triggered when about menu item clicked."""
+
+        text = 'ABrox developed by Ulf Mertens & Stefan Radev (2017).\n' \
+               'Dark style by https://github.com/ColinDuquesnoy.\n\n' \
+               'ABrox is a free software distributed under the GNU 3.0 licence. ' \
+               'The developers take absolutely no responsibility for the use of this program ' \
+               'or sloppy data analysis in general. ' \
+               'For more information, check out our web page at "Get help online".'
+
+        mbox = QMessageBox()
+        mbox.information(self, 'About ABrox', text)
+
+    def _aboutQt(self):
+        """Triggered when about qt item clicked."""
+
+        dialog = QMessageBox()
+        dialog.aboutQt(self, 'About Qt')
+
+    def _helpOnline(self):
+        """Triggered when get help online menu item clicked."""
+
+        webbrowser.open_new('http://www.psychologie.uni-heidelberg.de/ae/meth/approxbayes/index.html')
+
     def _openFontDialog(self):
         """Opens a font menu and changes the font of all editors on select."""
 
         currentFont = self._tree.currentEditorFont()
-        print(currentFont.family())
 
         font, valid = QFontDialog.getFont(currentFont, self, 'Select Font for Editor')
         if valid:
@@ -318,3 +351,9 @@ class ATabController(QTabWidget):
             self.parent().setWindowTitle('Python Console')
         else:
             self.parent().setWindowTitle('Output Console')
+
+    def sizeHint(self):
+        """Used to make run button visible by shrinking console pane to 1/3.5 of display height."""
+
+        screenHeight = QApplication.desktop().screenGeometry().height()
+        return QSize(self.width(), screenHeight/3.5)
