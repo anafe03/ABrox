@@ -1,6 +1,8 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import QLocale
+from PyQt5.QtGui import QPixmap
 from a_main_window import AMainWindow
+import time
 import sys
 import ctypes
 import qdarkstyle
@@ -35,19 +37,19 @@ def main(args=None):
     # =============================================================== #
     #                       CREATE SPLASH SCREEN                      #
     # =============================================================== #
-    # splash = QSplashScreen()
-    # splash.setPixmap(QPixmap('./icons/fast_ic.png'))
-    # splash.setEnabled(False)
-    # splash.show()
-    # app.processEvents()
-    # time.sleep(5)
+    splash = QSplashScreen()
+    splash.setPixmap(QPixmap('./icons/logo.png'))
+    splash.setEnabled(False)
+    splash.show()
+    app.processEvents()
+    time.sleep(3)
 
     # =============================================================== #
     #                       CREATE MAIN WINDOW                        #
     # =============================================================== #
     mainWindow = AMainWindow()
     mainWindow.showMaximized()
-    # splash.finish(mainWindow)
+    splash.finish(mainWindow)
     sys.exit(app.exec_())
 
 
