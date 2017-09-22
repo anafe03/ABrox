@@ -1,6 +1,10 @@
 # Compiled python modules.
 *.pyc
 
+# PyCharm files
+abrox/core/.idea/
+abrox/gui/.idea/
+
 # Setuptools distribution folder.
 /dist/
 
