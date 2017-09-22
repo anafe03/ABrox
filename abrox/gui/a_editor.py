@@ -43,9 +43,9 @@ class APythonTextEditor(QPlainTextEdit):
         self.lineNumberArea = ALineNumberArea(self)
 
         # Create font and set it as default
-        self.font = QFont(fontFamily, fontSize)
-        self.font.setFixedPitch(True)
-        self.setFont(self.font)
+        font = QFont(fontFamily, fontSize)
+        font.setFixedPitch(True)
+        self.setFont(font)
 
         # Connect callbacks for line-numbers update
         self.blockCountChanged.connect(self.updateLineNumberAreaWidth)
@@ -90,9 +90,19 @@ class APythonTextEditor(QPlainTextEdit):
         if code:
             self.insertPlainText(code)
         else:
-            self.insertPlainText('def {}(params):\n'
+            if name.lower() == 'simulate':
+                param = 'params'
+            elif name.lower() == 'summary':
+                param = 'data'
+            elif name.lower() == 'distance':
+                param = 'simSummary, obsSummary'
+            else:
+                # Just to make sure that param is defined
+                param = ''
+
+            self.insertPlainText('def {}({}):\n'
                                  '    # write your code here\n'
-                                 '    pass'.format(name.lower()))
+                                 '    pass'.format(name.lower(), param))
 
     def lineNumberAreaPaintEvent(self, event):
         """Called when line-numbers widget calls its paint event"""
@@ -113,7 +123,7 @@ class APythonTextEditor(QPlainTextEdit):
                 number = str(blockNumber + 1)
                 pen = QPen(ALineNumberArea.FOREGROUND)
                 painter.setPen(pen)
-                painter.setFont(self.font)
+                painter.setFont(self.font())
                 painter.drawText(5, top, self.lineNumberArea.width(), height,
                                  Qt.AlignLeft, number)
 
@@ -160,6 +170,12 @@ class APythonTextEditor(QPlainTextEdit):
                 cursor = self.textCursor()
                 cursor.insertText("    ")
                 return True
+        if event.type() == QEvent.Wheel:
+            if event.modifiers() == Qt.ControlModifier:
+                if event.angleDelta().y() > 0:
+                    self.zoomIn(2)
+                else:
+                    self.zoomOut(2)
         return QPlainTextEdit.event(self, event)
 
     def resizeEvent(self, event):
@@ -183,7 +199,7 @@ class APythonHighlighter(QSyntaxHighlighter):
               'number': '#6987bb',
               'constant': '#6390bf',
               'pyqt': '#008b8b',
-              'error': '#8b0000'}
+              'error': '#a31010'}
 
     def __init__(self, parent=None):
         super(APythonHighlighter, self).__init__(parent)
@@ -280,8 +296,7 @@ class APythonHighlighter(QSyntaxHighlighter):
             self.setFormat(0, textLength,
                            APythonHighlighter.Formats["error"])
             return
-        if (prevState == ERROR and
-            not (text.startswith(sys.ps1) or text.startswith("#"))):
+        if prevState == ERROR and not text.startswith("#"):
             self.setCurrentBlockState(ERROR)
             self.setFormat(0, textLength,
                            APythonHighlighter.Formats["error"])

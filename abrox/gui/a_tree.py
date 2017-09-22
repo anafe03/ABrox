@@ -18,12 +18,13 @@ class AModelTree(QTreeWidget):
     NUM_MODELS = 1
     FONT_SIZE = 9
 
-    def __init__(self, mdiArea, model, console, parent=None):
+    def __init__(self, mdiArea, model, console, outputConsole, parent=None):
         super(AModelTree, self).__init__(parent)
 
         self._mdiArea = mdiArea
         self._internalModel = model
         self._console = console
+        self._outputConsole = outputConsole
         self._initTree()
 
     def _initTree(self):
@@ -63,7 +64,7 @@ class AModelTree(QTreeWidget):
 
         for key in self._internalModel:
             if key == 'data':
-                root.addChild(ADataNode('Data', self._internalModel, self._console))
+                root.addChild(ADataNode('Data', self._internalModel, self._console, self._outputConsole))
             elif key == 'models':
                 for model in self._internalModel[key]:
                     modelNode = AModelNode(model, self._internalModel)
@@ -73,7 +74,7 @@ class AModelTree(QTreeWidget):
             elif key == 'distance':
                 root.addChild(ADistanceNode(self._internalModel, self._internalModel[key]))
             elif key == 'settings':
-                root.addChild(ASettingsNode(self._internalModel, self._console))
+                root.addChild(ASettingsNode(self._internalModel, self._console, self._outputConsole))
 
         # Expand all nodes
         self.expandAll()
@@ -167,6 +168,31 @@ class AModelTree(QTreeWidget):
         """
 
         self._populate()
+        self._mdiArea.closeAllSubWindows()
+
+    def currentEditorFont(self):
+        """Returns the font of the current editor."""
+
+        # Iterate until finding a widget with an editor
+        iterator = QTreeWidgetItemIterator(self)
+        while iterator.value():
+            if type(iterator.value()) is ASimulateNode or type(iterator.value()) is ASummaryNode:
+                return iterator.value().editorFont()
+            iterator += 1
+
+    def changeEditorFont(self, font):
+        """Called from main window when user changed another font."""
+
+        # Iterate until finding a widget with an editor
+        iterator = QTreeWidgetItemIterator(self)
+        while iterator.value():
+            node = iterator.value()
+            # Id node has an editor, change font
+            if type(node) is ASimulateNode or \
+               type(node) is ASummaryNode or \
+               type(node) is ADistanceNode:
+                node.setEditorFont(font)
+            iterator += 1
 
     def contextMenuEvent(self, event):
         """Re-implements the right-click, menu-pop-up event."""
@@ -212,12 +238,13 @@ class AAnalysisNode(ABaseNode):
 
 class ADataNode(ABaseNode):
 
-    def __init__(self, text='Data', internalModel=None, console=None):
+    def __init__(self, text='Data', internalModel=None, console=None, outputConsole=None):
         """Represents a data viewer node."""
         super(ADataNode, self).__init__(text)
 
         self._internalModel = internalModel
-        self._dataViewer = ADataViewer(internalModel, console)
+        self._dataViewer = ADataViewer(internalModel, console, outputConsole)
+        self.setIcon(0, QIcon('./icons/data.png'))
 
     def display(self, mdiArea):
         """Displays the data editor table."""
@@ -226,6 +253,7 @@ class ADataNode(ABaseNode):
             self.subWindow.show()
         else:
             self.subWindow = AMdiWindow()
+            self.subWindow.setWindowIcon(self.icon(0))
             self.subWindow.setWindowTitle('Data Viewer')
             self.subWindow.setWidget(self._dataViewer)
             mdiArea.addSubWindow(self.subWindow)
@@ -241,6 +269,7 @@ class AModelNode(ABaseNode):
         # Customize behavior
         self._internalModel = internalModel
         self.setFlags(self.flags() | Qt.ItemIsEditable)
+        self.setIcon(0, QIcon('./icons/model.png'))
 
         # Store a flag to old name, updated when model changes name
         self.oldName = model.name
@@ -298,6 +327,7 @@ class APriorsNode(ABaseNode):
 
         self._internalModel = internalModel
         self.priorsWindow = APriorsWindow(internalModel, model)
+        self.setIcon(0, QIcon('./icons/priors.png'))
 
     def display(self, mdiArea):
 
@@ -306,6 +336,7 @@ class APriorsNode(ABaseNode):
             self.subWindow.show()
         else:
             self.subWindow = AMdiWindow()
+            self.subWindow.setWindowIcon(self.icon(0))
             self.subWindow.setWindowTitle(self.parent().text(0) + ' Priors')
             self.subWindow.setWidget(self.priorsWindow)
             mdiArea.addSubWindow(self.subWindow)
@@ -328,6 +359,7 @@ class ASimulateNode(ABaseNode):
 
         self.modelName = modelName
         self._editor = APythonTextEditor(internalModel, code, text, modelName)
+        self.setIcon(0, QIcon('./icons/function.png'))
 
     def display(self, mdiArea):
         """Displays the simulate function editor."""
@@ -337,10 +369,17 @@ class ASimulateNode(ABaseNode):
             self.subWindow.show()
         else:
             self.subWindow = AMdiWindow()
+            self.subWindow.setWindowIcon(self.icon(0))
             self.subWindow.setWindowTitle(self.parent().text(0) + ' Simulate Function')
             self.subWindow.setWidget(self._editor)
             mdiArea.addSubWindow(self.subWindow)
             self.subWindow.show()
+
+    def editorFont(self):
+        return self._editor.font()
+
+    def setEditorFont(self, font):
+        self._editor.setFont(font)
 
     def changeModelName(self, text):
         """Called from AModelNode on name change."""
@@ -362,6 +401,7 @@ class ASummaryNode(ABaseNode):
         super(ASummaryNode, self).__init__(text)
 
         self._editor = APythonTextEditor(internalModel, code, text)
+        self.setIcon(0, QIcon('./icons/function.png'))
 
     def display(self, mdiArea):
 
@@ -370,10 +410,17 @@ class ASummaryNode(ABaseNode):
             self.subWindow.show()
         else:
             self.subWindow = AMdiWindow()
+            self.subWindow.setWindowIcon(self.icon(0))
             self.subWindow.setWindowTitle(self.text(0) + ' Function')
             self.subWindow.setWidget(self._editor)
             mdiArea.addSubWindow(self.subWindow)
             self.subWindow.show()
+
+    def editorFont(self):
+        return self._editor.font()
+
+    def setEditorFont(self, font):
+        self._editor.setFont(font)
 
     def getCodeFromEditor(self):
         """Returns the text from the editor."""
@@ -388,6 +435,7 @@ class ADistanceNode(ABaseNode):
         super(ADistanceNode, self).__init__(text)
 
         self._editor = APythonTextEditor(internalModel, code, text)
+        self.setIcon(0, QIcon('./icons/function.png'))
 
     def display(self, mdiArea):
 
@@ -396,10 +444,17 @@ class ADistanceNode(ABaseNode):
             self.subWindow.show()
         else:
             self.subWindow = AMdiWindow()
+            self.subWindow.setWindowIcon(self.icon(0))
             self.subWindow.setWindowTitle(self.text(0) + ' Function')
             self.subWindow.setWidget(self._editor)
             mdiArea.addSubWindow(self.subWindow)
             self.subWindow.show()
+
+    def editorFont(self):
+        return self._editor.font()
+
+    def setEditorFont(self, font):
+        self._editor.setFont(font)
 
     def getCodeFromEditor(self):
         """Returns the text from the editor."""
@@ -408,11 +463,12 @@ class ADistanceNode(ABaseNode):
 
 
 class ASettingsNode(ABaseNode):
-    def __init__(self, internalModel, console, text='Settings'):
+    def __init__(self, internalModel, console, outputConsole, text='Settings'):
         """Represents an output node in the analysis tree."""
         super(ASettingsNode, self).__init__(text)
 
-        self._settingsWindow = ASettingsWindow(internalModel, console)
+        self._settingsWindow = ASettingsWindow(internalModel, console, outputConsole)
+        self.setIcon(0, QIcon('./icons/settings.png'))
 
     def display(self, mdiArea):
 
@@ -421,6 +477,7 @@ class ASettingsNode(ABaseNode):
             self.subWindow.show()
         else:
             self.subWindow = AMdiWindow()
+            self.subWindow.setWindowIcon(self.icon(0))
             self.subWindow.setWindowTitle(self.text(0))
             self.subWindow.setWidget(self._settingsWindow)
             mdiArea.addSubWindow(self.subWindow)
@@ -437,7 +494,7 @@ class AMdiWindow(QMdiSubWindow):
         self.setWindowIcon(QIcon('icons/icon.ico'))
 
     def closeEvent(self, event):
-        """Reimplement the close event to simply hide widget."""
+        """Re-implement the close event to simply hide widget."""
 
         self.setWidget(QWidget())
         event.accept()

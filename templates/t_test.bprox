@@ -1,0 +1,40 @@
+[ABrox Project File]
+{
+    "Analysis": {
+        "data": {
+            "datafile": null,
+            "delimiter": null
+        },
+        "models": [
+            {
+                "name": "Model1",
+                "priors": [
+                    {
+                        "d": "stats.cauchy(loc=0.0, scale=0.7)"
+                    }
+                ],
+                "simulate": "def simulate(params):\n    n = 50\n    first_sample = np.random.normal(0,1,n)\n    sec_sample = np.random.normal(params['d'],1,n)\n    return np.column_stack((first_sample,sec_sample))"
+            },
+            {
+                "name": "Model2",
+                "priors": [],
+                "simulate": "def simulate(params):\n    n = 50\n    first_sample = np.random.normal(0,1,n)\n    sec_sample = np.random.normal(0,1,n)\n    return np.column_stack((first_sample,sec_sample))"
+            }
+        ],
+        "summary": "def summary(data):\n    data_mean = np.mean(data, axis=0)\n    diff_mean = data_mean[0] - data_mean[1]\n    mean_std = np.mean(np.std(data,axis=0))\n    return diff_mean / mean_std\n    ",
+        "distance": "def distance(simSummary, obsSummary):\n    # write your code here\n    pass",
+        "settings": {
+            "objective": "comparison",
+            "threshold": -1,
+            "modeltest": 0,
+            "distance_metric": "default",
+            "fixedparameters": {
+                "d": 0.8
+            },
+            "percentile": 0.05,
+            "method": "logistic",
+            "outputdir": "C:/Users/Developer/Desktop/Projects/ApproxBayes/test_scripts",
+            "particles": 1000.0
+        }
+    }
+}

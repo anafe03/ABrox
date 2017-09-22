@@ -1,13 +1,20 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 setup(
     name='abrox',
-    packages=['abrox'],  # this must be the same as the name above
-    version='0.1',
+    packages=find_packages(),
+    package_data={'abrox': ['gui/icons/*']},
+    version='0.1.3',
     license='MIT',
-    description='A GUI for Approximate Bayesian Computation',
+    description='A tool for Approximate Bayesian Computation',
     long_description=open('README.md').read(),
     author='Ulf Mertens',
     author_email='mertens.ulf@gmail.com',
+    # scripts=['scripts/abrox-gui'],
+    entry_points={
+        'console_scripts': [
+            'abrox-gui = abrox.gui:main'
+        ]
+    },
     url='https://github.com/mertensu/ABrox',  # use the URL to the github repo
     download_url='https://github.com/mertensu/ABrox/archive/0.1.tar.gz',
     setup_requires=['numpy'],
@@ -16,7 +23,9 @@ setup(
                       'statsmodels',
                       'pandas',
                       'pyqt5',
-                      'ipython'
+                      'qdarkstyle',
+                      'ipython',
+					  'scikit-learn'
                       ],
     classifiers=[],
 )

@@ -2,7 +2,7 @@ from functools import reduce
 from operator import mul
 import numpy as np
 from collections import ChainMap
-from distance import get_distance
+from .distance import get_distance
 
 # =========================================#
 # Helper functions
@@ -71,15 +71,12 @@ class Model:
         Sample parameters from prior. If prior is not a distribution but
         a single value, store the single value instead of sampling (rvs).
         """
-        if not self.prior:
-            raise ValueError("No prior specified")
-        samples = {}
         priorDict = dict(ChainMap(*self.prior))
+        if not priorDict:
+            return priorDict
+        samples = {}
         for key in priorDict.keys():
-            if isinstance(priorDict[key], (int, float)):
-                samples[key] = priorDict[key]
-            else:
-                samples[key] = priorDict[key].rvs()
+            samples[key] = priorDict[key].rvs()
         return samples
 
     @property

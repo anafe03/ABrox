@@ -1,5 +1,5 @@
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QAction
+from PyQt5.QtWidgets import QAction, QPushButton, QToolButton
 
 
 def addActionsToMenu(menu, actions):
@@ -29,3 +29,24 @@ def createAction(text, callback=None, parent=None, shortcut=None,
     if checkable:
         action.setCheckable(True)
     return action
+
+
+def createButton(label, iconPath=None, toolText=None, func=None,
+                  focusPolicy=None, enabled=True, tool=False):
+    """Utility function creating a button. to save typing"""
+
+    button = QPushButton(label)
+    if tool:
+        button = QToolButton()
+        button.setText(label)
+    if iconPath is not None:
+        button.setIcon(QIcon(iconPath))
+    if func is not None:
+        button.clicked.connect(func)
+    if focusPolicy is not None:
+        button.setFocusPolicy(focusPolicy)
+    if toolText is not None:
+        button.setToolTip(toolText)
+        button.setStatusTip(toolText)
+    button.setEnabled(enabled)
+    return button

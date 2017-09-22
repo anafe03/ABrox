@@ -1,7 +1,6 @@
 from PyQt5.QtWidgets import QHBoxLayout, QWidget, QApplication
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import QSize
-from PyQt5 import QtSvg
 from qtconsole.inprocess import QtInProcessKernelManager
 from qtconsole.rich_jupyter_widget import RichJupyterWidget
 import os
@@ -9,6 +8,7 @@ import os
 
 class AIPythonWidget(RichJupyterWidget):
     """Convenience class for a live IPython console widget. """
+
     def __init__(self, customBanner=None, *args, **kwargs):
         super(AIPythonWidget, self).__init__(*args, **kwargs)
 
@@ -38,11 +38,15 @@ class AIPythonWidget(RichJupyterWidget):
         font.setPointSize(10)
         self.font = font
 
-
     def pushVariables(self, variableDict):
         """Given a dictionary containing name / value pairs, push those variables to the IPython console widget """
 
         self.kernel_manager.kernel.shell.push(variableDict)
+
+    def removeVariable(self, variableName):
+        """Given a variable name, deletes variable from namespace."""
+
+        self._execute('del {}'.format(variableName), True)
 
     def clearTerminal(self):
         """ Clears the terminal """
@@ -86,14 +90,20 @@ class AConsoleWindow(QWidget):
         layout.addWidget(self._ipythonConsole)
         self.setLayout(layout)
 
-    def addData(self, data, dataFileName):
+    def addData(self, data):
         """Called on loading data. Pushes data to the console and informs for loading."""
 
         self._ipythonConsole.pushVariables({'data': data})
+
+    def removeData(self):
+        """Called on clear data. Executes del data in the terminal."""
+
+        self._ipythonConsole.removeVariable('data')
+
+    def addResults(self, results):
+
+        self._ipythonConsole.pushVariables({'results': results})
         self._ipythonConsole.printText('\n')
-        self._ipythonConsole.printHtml('{} successfully loaded.'.format(dataFileName))
-        self._ipythonConsole.printText('\n')
-        self._ipythonConsole.printHtml('You can access your data via the console by typing <strong>data</strong>.')
 
     def sizeHint(self):
         """

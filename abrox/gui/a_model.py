@@ -1,6 +1,8 @@
+from PyQt5.QtWidgets import QMessageBox
 import copy
 import re
-import pprint
+import os
+from collections import OrderedDict
 
 
 class AInternalModel:
@@ -8,29 +10,33 @@ class AInternalModel:
     def __init__(self):
 
         # Create an analysis skeleton as a dict
-        self._project = {'Analysis': {
-                            'data': {
-                                'datafile': None
-                            },
-                            'models': [
-                                AModel('Model1')
-                            ],
-                            'summary': "",
-                            'distance': "",
-                            'settings': {
-                                'outputdir': "",
-                                'distance_metric': "default",
-                                'particles': 1000,
-                                'threshold': -1,
-                                'percentile': 0.05,
-                                'objective': 'comparison',
-                                'method': 'logistic',
-                                'modeltest': False,
-                                'fixedparameters': [
-
-                                ]
-                            }
-                        }}
+        self._project = OrderedDict([
+            ('Analysis',
+                OrderedDict([
+                    ('data', {'datafile': None,
+                              'delimiter': None}),
+                    ('models', [
+                        AModel('Model1'),
+                    ]),
+                    ('summary', ""),
+                    ('distance', ""),
+                    ('settings', {
+                        'outputdir': "",
+                        'distance_metric': "default",
+                        'particles': 1000,
+                        'threshold': -1,
+                        'percentile': 0.05,
+                        'objective': 'comparison',
+                        'method': 'logistic',
+                        'modeltest': False,
+                        'fixedparameters': OrderedDict()
+                    }
+                    )
+                    ]
+                )
+             )
+            ]
+        )
 
     def deleteModel(self, nameToRemove):
         """Interface function to remove a model."""
@@ -74,6 +80,51 @@ class AInternalModel:
     def addDistance(self, distanceCode):
         self._project['Analysis']['distance'] = distanceCode
 
+    def addObjective(self, objective):
+        self._project['Analysis']['settings']['objective'] = objective
+
+    def addMethod(self, method):
+        self._project['Analysis']['settings']['method'] = method
+
+    def addDataFileAndDelimiter(self, datafile, delim):
+
+        self._project['Analysis']['data']['datafile'] = datafile
+        self._project['Analysis']['data']['delimiter'] = delim
+
+    def addOutputDir(self, dirPath):
+        self._project['Analysis']['settings']['outputdir'] = dirPath
+
+    def addModelIndexForTest(self, idx):
+        self._project['Analysis']['settings']['modeltest'] = idx
+
+    def addFixedParameters(self, listOfTuples):
+
+        self._project['Analysis']['settings']['fixedparameters'] = OrderedDict(listOfTuples)
+
+    def selectedModelForTest(self):
+
+        # Make sure a model is selected
+        if self._project['Analysis']['settings']['modeltest'] is False or \
+                                                              not self.selectedModelIndexValid():
+            raise IndexError('No valid model selected for test!')
+        idx = self._project['Analysis']['settings']['modeltest']
+        return self._project['Analysis']['models'][idx]
+
+    def selectedModelIndexValid(self):
+        return False if self._project['Analysis']['settings']['modeltest'] < 0 else True
+
+    def dataFile(self):
+        return self._project['Analysis']['data']['datafile']
+
+    def dataFileAndDelimiter(self):
+
+        return self._project['Analysis']['data']['datafile'], \
+               self._project['Analysis']['data']['delimiter']
+
+    def modelTest(self):
+
+        return self._project['Analysis']['settings']['modeltest']
+
     def summary(self):
         """Returns the summary function code as a string."""
 
@@ -103,6 +154,42 @@ class AInternalModel:
             simulateCodes[model.name] = (simulateCode, funcName + '_' + model.name)
         return simulateCodes
 
+    def objective(self):
+        return self._project['Analysis']['settings']['objective']
+
+    def method(self):
+        return self._project['Analysis']['settings']['method']
+
+    def outputDir(self):
+        return self._project['Analysis']['settings']['outputdir']
+
+    def models(self):
+        """Returns the model list."""
+
+        return self._project['Analysis']['models']
+
+    def fixedParameters(self):
+        return self._project['Analysis']['settings']['fixedparameters']
+
+    def fileWithPathName(self):
+        """
+        Checks if directory exists, if exists, changes name so it matches.
+        Assumes model has been checked for sanity!
+        """
+
+        if os.path.isdir(self._project['Analysis']['settings']['outputdir']):
+            return self._fileWithPathName(os.path.join(self._project['Analysis']['settings']['outputdir'],
+                                                       'analysis.py'))
+
+    def _fileWithPathName(self, pathToFile):
+        """A recursive helper method to not overwrite analysis files."""
+
+        if not os.path.exists(pathToFile):
+            return pathToFile
+        else:
+            # Replace file name with a new one (_1 attached)
+            return self._fileWithPathName(pathToFile.replace('.py', '_1.py'))
+
     def deletePriorFromModel(self, idx, modelName):
         """Interface function to delete a prior fom a given model's priors list."""
 
@@ -110,13 +197,9 @@ class AInternalModel:
             if model.name == modelName:
                 model.removePrior(idx)
 
-    def addDataFile(self, datafile):
-
-        self._project['Analysis']['data']['datafile'] = datafile
-
-    def dataFile(self):
-
-        return self._project['Analysis']['data']['datafile']
+    def clearData(self):
+        self._project['Analysis']['data'] = {'datafile': None,
+                                             'delimiter': None}
 
     def changeSetting(self, key, val):
         self._project['Analysis']['settings'][key] = val
@@ -143,10 +226,49 @@ class AInternalModel:
         newModels = [AModel.fromDict(model) for model in self._project['Analysis']['models']]
         self._project['Analysis']['models'] = newModels
 
-    def models(self):
-        """Returns the model list."""
+    def sanityCheckPassed(self, parent=None):
+        """
+        Checks whether model fields of current project are correct.
+        Returns True if ok, False otherwise + displays a message explaining
+        the problem.
+        """
 
-        return self._project['Analysis']['models']
+        # ===== Initialize message box ===== #
+        msg = QMessageBox()
+        errorTitle = 'Could not start an ABC process...'
+
+        # ===== Check if any models specified ===== #
+        if not self._project['Analysis']['models']:
+
+            text = 'No models defined. Your project should contain at least one model.'
+            msg.critical(parent, errorTitle, text)
+            return False
+
+        # ===== Check if data loaded when not doing a model test ===== #
+        if self._project['Analysis']['settings']['modeltest'] is False and \
+           not self._project['Analysis']['data']['datafile']:
+
+            text = 'Since you are not performing a model test, ' \
+                   'you a need to load a data file.'
+            msg.critical(parent, errorTitle, text)
+            return False
+
+        # ===== Check if output dir specified ===== #
+        if not self._project['Analysis']['settings']['outputdir']:
+            text = 'No output dir in settings specified!'
+            msg.critical(parent, errorTitle, text)
+            return False
+
+        # ===== Check if comparison AND models < 1 ===== #
+        if self._project['Analysis']['settings']['objective'] == 'comparison' and \
+            len(self._project['Analysis']['models']) < 2:
+
+            text = 'You need at least two models for objective "comparison".'
+            msg.critical(parent, errorTitle, text)
+            return False
+
+        # All checks passed, start process from caller
+        return True
 
     def __iter__(self):
         """Make iteration possible."""
@@ -196,11 +318,11 @@ class AModel:
         return any(self._priors)
 
     def toDict(self):
-        """Returns a dict representation of itself."""
+        """Returns an ordered dict representation of itself."""
 
-        return {'name': self.name,
-                'priors': self._priors,
-                'simulate': self.simulate}
+        return OrderedDict([('name', self.name),
+                            ('priors', self._priors),
+                            ('simulate', self.simulate)])
 
     def __repr__(self):
 

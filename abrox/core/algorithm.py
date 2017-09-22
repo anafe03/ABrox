@@ -4,23 +4,23 @@ import numpy as np
 import pandas as pd
 
 # import classes from files
-from basemodel import Model
-from modelcollection import ModelCollection
-from paramEstimation import ParamEstimator
-from Logistic import Logistic
-from customException import SimulateFunctionError, MismatchError, ConfigurationError
+from .basemodel import Model
+from .modelcollection import ModelCollection
+from .paramEstimation import ParamEstimator
+from .Logistic import Logistic
+from .customException import SimulateFunctionError, MismatchError, ConfigurationError, SummaryFunctionError
 
 
 # =======================================#
 # Class with implementation of the
 # ABC rejection algorithm
 # =======================================#
-
 class Abc:
     """The ABC algorithm."""
 
     def __init__(self, config):
         self.config = config
+        self.observed_data = None
         self.jobs = 1
         self.checker()
         self.setModelList()
@@ -49,6 +49,10 @@ class Abc:
 
     def setModelList(self):
         """ Store instances of basemodels in list for further processing """
+
+        if not self.config['models']:
+            raise ConfigurationError('No models defined.')
+
         self.models = []
         for i, modelDict in enumerate(self.config['models']):
             print(modelDict)
@@ -67,6 +71,7 @@ class Abc:
 
     def setSettings(self):
         """ Store settings from config in members of class """
+
         self.nparticle = self.config['settings']['particles']
 
         # check if threshold should be computed
@@ -79,34 +84,48 @@ class Abc:
 
         self.objective = self.config['settings']['objective']
 
+        self.outdir = self.config['settings']['outputdir']
+
+        if not self.outdir:
+            raise ConfigurationError("Please provide a directory. Use '.' \
+            if you want to use your current working directory")
+
         # check if a method for model comparison is set
+        if self.objective == "comparison" and len(self.config['models']) < 2:
+            raise ConfigurationError('Define at least two models for comparison.')
+
         if self.objective == "comparison" and not self.config['settings']['method']:
             raise ConfigurationError(
                 "You need to provide a method for BF approximation. Either 'rejection' or 'logistic'")
-        elif self.objective == "inference" and not self.config['settings']['method']:
-            raise ConfigurationError('Do not specify a method when interested in inference')
+        elif self.objective == "inference" and self.config['settings']['method'] is not None:
+            raise ConfigurationError('Do not specify a method when interested in inference.')
 
         self.method = self.config['settings']['method']
 
     def observedData(self):
         """ Loads observed data or generates pseudo-observed data from model """
-        if self.config['data'] and not self.config['settings']['modeltest']:
+
+        if self.config['data']['datafile'] is not None and self.config['settings']['modeltest'] is False:
             # import observed data
-            self.observed_data = self.loadData(self.config)
+            self.observed_data = self.loadData()
         else:
             flag = True
             for i, model in enumerate(self.models):
-                if model.name == self.config['settings']['modeltest']:
+                if i == self.config['settings']['modeltest']:
                     params = self.config['settings']['fixedparameters']
                     self.observed_data = model.simulate(params)
                     flag = False
             if flag:
-                raise ConfigurationError("Did you provide the correct model name in 'modeltest'?")
+                raise ConfigurationError("Did you provide the correct model index?")
 
     def loadData(self):
+        """Load/store the external dataset"""
         try:
-            self.data = self.config['data']['datafile'].as_matrix()
-        except ImportError('Imported data could not be stored')
+            return pd.read_csv(self.config['data']['datafile'],
+                               delimiter=self.config['data']['delimiter']).as_matrix()
+
+        except ImportError('Imported data could not be stored'):
+            return None
 
     def create_particle(self, model_index=None):
         """Generate particle"""
@@ -147,12 +166,16 @@ class Abc:
         # check shape
         for model in self.model_collection:
             param = model.sample_parameter()
-            if type(model.simulate(param)) is not np.ndarray:
+            sim = model.simulate(param)
+            sum = model.summary(sim)
+            if type(sim) is not np.ndarray:
                 raise SimulateFunctionError(
                     'Simulate function must return array of type np.ndarray')
             if not model.simulate(param).shape == self.observed_data.shape:
                 raise MismatchError('''Make sure that your observed dataset has
                                  the same shape as the simulated dataset''')
+            if type(sum) is not np.ndarray and not isinstance(sum,(int,float)):
+                raise SummaryFunctionError('Summary function must return either an Int, Float or np.ndarray')
 
         # compute summary of observed data
         self.observed_summary = self.model_collection[0].summary(self.observed_data)
@@ -174,7 +197,7 @@ class Abc:
             # create particles in parallel
 
             for idx in range(len(self.models)):
-                arguments = [idx] * (self.nparticle // len(self.models))
+                arguments = [idx] * int(self.nparticle / len(self.models))
                 results = Map(self.create_particle, arguments)
                 # add each particle
                 for result in results:
@@ -198,7 +221,9 @@ class Abc:
                 logisticHandler.run()
 
         diff_time = time() - start_time
-        return self.model_collection.report(diff_time=diff_time,
-                                            threshold=self.model_collection.threshold,
-                                            method=self.method,
-                                            postMatrix=postMat)
+
+        return self.model_collection.saveResults(diff_time=diff_time,
+                                                 threshold=self.model_collection.threshold,
+                                                 method=self.method,
+                                                 postMatrix=postMat,
+                                                 outdir=self.outdir)

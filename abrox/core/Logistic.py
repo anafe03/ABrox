@@ -12,6 +12,7 @@ class Logistic:
     def __init__(self, model_collection):
         self.model_collection = model_collection
 
+
     def computeWeights(self):
         """Compute weights according to Epanechnikov kernel"""
         threshold_array = [self.model_collection.threshold] * len(self.model_collection.distances)
@@ -32,26 +33,22 @@ class Logistic:
 
         Y = np.repeat(model_indices, N)
 
-        X = np.append(self.model_collection[0].scaled_simsum,
-                      self.model_collection[1].scaled_simsum)
+        nCols = self.model_collection[0].scaled_simsum.shape[1]
 
-        dat = np.column_stack((X, Y))
-        dat = dat[weights > 0, :]
+        # init empty array to be filled
+        X = np.empty(shape=(0,nCols))
 
-        np.savetxt("test.csv", dat)
-        print(np.sum(dat[:, 1]))
+        for model in self.model_collection:
+            X = np.concatenate((X,model.scaled_simsum),axis=0)
+
+        X = X[weights > 0, :]
+        Y = Y[weights > 0]
 
         lreg = linear_model.LogisticRegression(solver="lbfgs")
 
         weights = weights[weights > 0]
 
-        # kf = KFold(n_splits=5, shuffle=True)
-        # for idx, blub in kf.split(dat):
-        #     dat_sub = dat[idx]
-        #     lreg.fit(dat_sub[:, 0].reshape(-1, 1), dat_sub[:, 1], weights[idx])
-        #     print(lreg.predict_proba([self.model_collection.obssum]))
-
-        lreg.fit(dat[:, 0].reshape(-1, 1), dat[:, 1], weights)
-        model_probabilities = lreg.predict_proba([self.model_collection.obssum]).flatten()
+        lreg.fit(X, Y, weights)
+        model_probabilities = lreg.predict_proba(self.model_collection.obssum).flatten()
         for idx, model in enumerate(self.model_collection):
             model.accepted = model_probabilities[idx]
