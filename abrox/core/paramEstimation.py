@@ -1,6 +1,5 @@
 import numpy as np
 import statsmodels.api as sm
-from scipy import stats
 
 
 class ParamEstimator:
@@ -41,8 +40,6 @@ class ParamEstimator:
         for idx in range(nparams):
             Y = np.array([paramSample[idx]
                           for paramSample in paramMatrix])
-
-            print("Mean of param: {}".format(stats.describe(Y)))
 
             wls_model = sm.WLS(Y, X, weights=weights[weights > 0])
             fit = wls_model.fit()
