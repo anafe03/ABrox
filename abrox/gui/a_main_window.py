@@ -21,6 +21,8 @@ class AMainWindow(QMainWindow):
         self._mdiArea = QMdiArea()
         self._console = AConsoleWindow()
         self._outputConsole = AOutputConsole(self._internalModel)
+        self._tree = AModelTree(self._mdiArea, self._internalModel,
+                                self._console, self._outputConsole)
         self._initMain()
 
     def _initMain(self):
@@ -109,8 +111,10 @@ class AMainWindow(QMainWindow):
                                    tip='Load project...', icon='loadsession')
         saveSession = createAction('&Save Project', callback=self._saveSession, parent=self,
                                    tip='Save current project...', icon='savesession')
+        addModel = createAction('&Add Model', callback=self._tree._addModel, parent=self,
+                                tip='Add model to project', icon='newmodel')
         # Add actions to toolbar
-        addActionsToMenu(toolbar, (loadSession, saveSession))
+        addActionsToMenu(toolbar, (loadSession, saveSession, addModel))
 
     def _configureMain(self):
         """Set up the workspace for editing code."""
@@ -147,9 +151,6 @@ class AMainWindow(QMainWindow):
     def _configureTree(self):
         """Set up the tree for modifying the session structure."""
 
-        # Create the tree widget
-        self._tree = AModelTree(self._mdiArea, self._internalModel,
-                                self._console, self._outputConsole)
 
         # Create the dock widget
         treeDockWidget = QDockWidget("Project Tree", self)

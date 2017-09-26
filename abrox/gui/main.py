@@ -42,7 +42,7 @@ def main(args=None):
     splash.setEnabled(False)
     splash.show()
     app.processEvents()
-    time.sleep(3)
+    #time.sleep(3)
 
     # =============================================================== #
     #                       CREATE MAIN WINDOW                        #

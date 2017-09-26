@@ -195,17 +195,21 @@ class ASettingEntry(QDoubleSpinBox):
     def _configureRange(self):
         """Sets the range of the spinbox."""
 
-        # Percentile range is 0.00 - 1.00
+        # Percentile settings
         if self._key == 'percentile':
             self.setRange(0.0, 1.0)
             self.setSingleStep(0.1)
             self.setDecimals(3)
-        else:
-            self.setRange(0.0, 1e10)
 
-        # Particles are only int
+        # Threshold settings
+        if self._key == 'threshold':
+            self.setRange(0.0, 1e10)
+            self.setSingleStep(0.1)
+            self.setDecimals(3)
+
+        # Particles settings
         if self._key == 'particles':
-            self.setSingleStep(1)
+            self.setSingleStep(10)
             self.setDecimals(0)
 
     def _onValueChanged(self, val):

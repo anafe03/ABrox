@@ -45,7 +45,6 @@ class AModelTree(QTreeWidget):
         self.itemClicked.connect(self._onItemClicked)
         self.itemChanged.connect(self._onItemChanged)
         self.header().close()
-        #self.setHeaderLabel('Model Tree')
         self.setUniformRowHeights(True)
         self.setColumnCount(1)
 
@@ -96,7 +95,7 @@ class AModelTree(QTreeWidget):
     def _popUpAnalysisMenu(self, pos):
         """Display the right-click invoked context menu when analysis node clicked."""
 
-        addModel = createAction('Add Model...', callback= self._addModel)
+        addModel = createAction('Add Model...', callback= self._addModel, icon='newmodel')
         menu = QMenu()
         addActionsToMenu(menu, (addModel, ))
         menu.exec_(pos)
@@ -104,7 +103,7 @@ class AModelTree(QTreeWidget):
     def _popUpModelMenu(self, pos):
         """Display the right-click invoked context menu when model node clicked."""
 
-        deleteModel = createAction('Delete Model', callback=self._deleteModel)
+        deleteModel = createAction('Delete Model', callback=self._deleteModel, icon='removemodel')
         menu = QMenu()
         addActionsToMenu(menu, (deleteModel, ))
         menu.exec_(pos)
