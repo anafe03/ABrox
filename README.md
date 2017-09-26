@@ -2,7 +2,15 @@
 
 # ABrox
 
-`ABrox` is a python package for Approximate Bayesian Computation accompanied by a user-friendly graphical interface.
+`ABrox` is a python package for Approximate Bayesian Computation accompanied by a user-friendly graphical interface. 
+
+In the current version, we use the ABC rejection algorithm with a local regression adjustment for the
+case of parameter inference, and local logistic (multinomial) regression for model comparison. 
+
+## Features
+
+* Model comparison via approximate Bayes factors
+* Parameter inference
 
 ![Screenshot](abrox/gui/icons/screen.png)
 
@@ -20,6 +28,15 @@ We provide several templates in order to get more familiar with the GUI.
 
 If you are more comfortable with plain Python, you can run your project once from the GUI and
 continue working with the Python-file that has been generated in the output folder.
+
+## Templates
+
+We provide a few example project files so you can see how `ABrox` works ([here](https://github.com/mertensu/ABrox/tree/master/templates)). 
+Currently, we provide:
+
+* Two-sample t-test
+* Levene-Test
+* Multinomial Processing tree (comparison)
 
 ### Contributors
 
