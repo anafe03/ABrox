@@ -85,7 +85,7 @@ class ModelCollection(list):
 
         # scale observed summary statistics by each MAD
         self.obssum = np.array([self.obssum]) / MAD
-        # print("Observed summary stat: {}".format(self.obssum))
+        print("Observed summary stat: {}".format(self.obssum))
 
         for model in self:
             model.scaled_obssum = self.obssum

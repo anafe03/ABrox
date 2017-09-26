@@ -1,7 +1,7 @@
 from functools import reduce
 from operator import mul
 import numpy as np
-from collections import ChainMap
+from collections import ChainMap, OrderedDict
 from .distance import get_distance
 
 # =========================================#
@@ -73,10 +73,10 @@ class Model:
         """
         priorDict = dict(ChainMap(*self.prior))
         if not priorDict:
-            return priorDict
-        samples = {}
-        for key in priorDict.keys():
-            samples[key] = priorDict[key].rvs()
+            return {}
+        samples = OrderedDict()
+        for d in self.prior:
+            samples[list(d.keys())[0]] = list(d.values())[0].rvs()
         return samples
 
     @property
