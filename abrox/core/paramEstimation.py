@@ -23,13 +23,11 @@ class ParamEstimator:
 
         weights = self.computeWeights()
         X = self.model_collection[0].scaled_simsum[weights > 0, :]
-        print("X shape: {}".format(X.shape))
         X = sm.add_constant(X)
 
         # NxM posterior matrix containing len(Y) rows and nparams columns
 
         nparams = len(self.model_collection[0].parameterList[0])
-        print("number of parameters: {}".format(nparams))
 
         paramMatrix = np.array(self.model_collection[0].parameterList)
         out = np.column_stack((paramMatrix,weights,self.model_collection.distances))
