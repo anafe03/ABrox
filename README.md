@@ -1,8 +1,10 @@
-![Logo](abrox/gui/logo.png)
+![Logo](abrox/gui/icons/logo.png)
 
 # ABrox
 
 `ABrox` is a python package for Approximate Bayesian Computation accompanied by a user-friendly graphical interface.
+
+![Screenshot](abrox/gui/icons/screen.png)
 
 ## Installation
 
@@ -19,3 +21,6 @@ We provide several templates in order to get more familiar with the GUI.
 If you are more comfortable with plain Python, you can run your project once from the GUI and
 continue working with the Python-file that has been generated in the output folder.
 
+### Contributors
+
+Ulf Mertens \& Stefan Radev
