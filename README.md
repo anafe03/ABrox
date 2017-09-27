@@ -1,4 +1,4 @@
-![Logo](abrox/gui/icons/logo.png)
+![Logo](abrox/gui/icons/readme_logo.png)
 
 # ABrox
 

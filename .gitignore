@@ -20,4 +20,6 @@ abrox/gui/.idea/
 /abrox/gui/test_script.py
 
 # DS_Store
+.DS_Store
 /abrox/.DS_Store
+/abrox/gui/.DS_Store
