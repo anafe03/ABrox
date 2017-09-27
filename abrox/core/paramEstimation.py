@@ -1,6 +1,5 @@
 import numpy as np
 import statsmodels.api as sm
-from scipy import stats
 
 
 class ParamEstimator:
@@ -23,13 +22,11 @@ class ParamEstimator:
 
         weights = self.computeWeights()
         X = self.model_collection[0].scaled_simsum[weights > 0, :]
-        print("X shape: {}".format(X.shape))
         X = sm.add_constant(X)
 
         # NxM posterior matrix containing len(Y) rows and nparams columns
 
         nparams = len(self.model_collection[0].parameterList[0])
-        print("number of parameters: {}".format(nparams))
 
         paramMatrix = np.array(self.model_collection[0].parameterList)
         out = np.column_stack((paramMatrix,weights,self.model_collection.distances))
@@ -43,8 +40,6 @@ class ParamEstimator:
         for idx in range(nparams):
             Y = np.array([paramSample[idx]
                           for paramSample in paramMatrix])
-
-            print("Mean of param: {}".format(stats.describe(Y)))
 
             wls_model = sm.WLS(Y, X, weights=weights[weights > 0])
             fit = wls_model.fit()
