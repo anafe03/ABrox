@@ -85,7 +85,7 @@ class ModelCollection(list):
 
         # scale observed summary statistics by each MAD
         self.obssum = np.array([self.obssum]) / MAD
-        # print("Observed summary stat: {}".format(self.obssum))
+        print("Observed summary stat: {}".format(self.obssum))
 
         for model in self:
             model.scaled_obssum = self.obssum
@@ -159,20 +159,22 @@ class ModelCollection(list):
 
     def saveResults(self, diff_time, threshold,  outdir, method=None, postMatrix=None):
         """Save results in dict and pickle"""
-        resDict = {'time': diff_time, 'threshold': threshold}
+        resDict = {'time (s)': round(diff_time,3), 'threshold': round(threshold,3)}
 
         if method is None:
             resDict['posterior'] = {}
             for i, col in enumerate(postMatrix.T):
                 resDict['posterior'][str(i)] = col.tolist()
 
-
         else:
             for model in self:
                 resDict[model.name] = {}
-                resDict[model.name]['probability'] = model.accepted
+                if method == 'rejection':
+                    resDict[model.name]['samples'] = model.accepted
+                if method == 'logistic':
+                    resDict[model.name]['probability'] = round(model.accepted,3)
 
-            bf = self.bayesFactor().tolist()
+            bf = np.around(self.bayesFactor(),decimals=3).tolist()
 
             resDict['bf'] = bf
 

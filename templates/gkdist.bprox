@@ -1,0 +1,47 @@
+[ABrox Project File]
+{
+    "Analysis": {
+        "data": {
+            "datafile": null,
+            "delimiter": null
+        },
+        "models": [
+            {
+                "name": "Model1",
+                "priors": [
+                    {
+                        "A": "stats.uniform(loc=0.0, scale=10.0)"
+                    },
+                    {
+                        "B": "stats.uniform(loc=0.0, scale=10.0)"
+                    },
+                    {
+                        "g": "stats.uniform(loc=0.0, scale=10.0)"
+                    },
+                    {
+                        "k": "stats.uniform(loc=-10.0, scale=20.0)"
+                    }
+                ],
+                "simulate": "def simulate(params):\n    n = 10000\n    z = np.random.normal(0,1,n)\n    z_squared = z**2\n    term1 = (1+0.8*np.tanh(params['g']*z/2))\n    term2 = z*(1+z_squared)**k\n    return np.array(params['A'] + params['B'] * term1 * term2).reshape(1,n)"
+            }
+        ],
+        "summary": "def summary(data):\n    return np.percentile(data,q=np.linspace(0,100,9))\n",
+        "distance": "def distance(simSummary, obsSummary):\n    # write your code here\n    pass",
+        "settings": {
+            "outputdir": "/Users/ulf.mertens/Desktop/abrox_demo/gkdist",
+            "modeltest": 0,
+            "method": "logistic",
+            "fixedparameters": {
+                "A": 3.0,
+                "B": 1.0,
+                "g": 2.0,
+                "k": 0.5
+            },
+            "percentile": 0.05,
+            "threshold": -1,
+            "particles": 1000,
+            "objective": "inference",
+            "distance_metric": "default"
+        }
+    }
+}

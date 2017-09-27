@@ -1,5 +1,6 @@
 import numpy as np
 import statsmodels.api as sm
+from scipy import stats
 
 
 class ParamEstimator:
@@ -29,14 +30,21 @@ class ParamEstimator:
 
         nparams = len(self.model_collection[0].parameterList[0])
         print("number of parameters: {}".format(nparams))
+
+        paramMatrix = np.array(self.model_collection[0].parameterList)
+        out = np.column_stack((paramMatrix,weights,self.model_collection.distances))
+        thresh = np.repeat(self.model_collection.threshold,out.shape[0]).reshape(out.shape[0],1)
+        out = np.column_stack((out,self.model_collection[0].scaled_simsum,thresh))
+        np.savetxt("/Users/ulf.mertens/Seafile/Uni/approxbayes/test/out.csv",out)
+        paramMatrix = paramMatrix[weights > 0]
+
+
         postMat = np.empty(shape=(X.shape[0], nparams))
         for idx in range(nparams):
             Y = np.array([paramSample[idx]
-                          for paramSample in self.model_collection[0].parameterList])
+                          for paramSample in paramMatrix])
 
-            print("Mean of param: {}".format(np.mean(Y)))
-
-            Y = Y[weights > 0]
+            print("Mean of param: {}".format(stats.describe(Y)))
 
             wls_model = sm.WLS(Y, X, weights=weights[weights > 0])
             fit = wls_model.fit()

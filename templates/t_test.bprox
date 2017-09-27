@@ -29,11 +29,11 @@
             "modeltest": 0,
             "distance_metric": "default",
             "fixedparameters": {
-                "d": 0.8
+                "d": 0.5
             },
             "percentile": 0.05,
             "method": "logistic",
-            "outputdir": "C:/Users/Developer/Desktop/Projects/ApproxBayes/test_scripts",
+            "outputdir": "/Users/ulf.mertens/Desktop/abrox_demo/t_test",
             "particles": 1000.0
         }
     }
