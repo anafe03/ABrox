@@ -40,4 +40,5 @@ Currently, we provide:
 
 ### Contributors
 
-Ulf Mertens \& Stefan Radev
+[Ulf Mertens](http://www.psychologie.uni-heidelberg.de/ae/meth/team/mertens/)
+ and Stefan Radev
