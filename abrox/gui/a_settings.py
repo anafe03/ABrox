@@ -43,7 +43,9 @@ class AComputationSettingsFrame(QScrollArea):
         self._console = console
         self._output = AOuputDir(internalModel)
         self._comboWidget = QWidget()
+        self._settingEntries = dict()
         self._configureLayout(QVBoxLayout())
+
 
     def _configureLayout(self, layout):
         """Lays out main components of the frame."""
@@ -74,16 +76,34 @@ class AComputationSettingsFrame(QScrollArea):
         containerLayout = QGridLayout()
         container = QWidget()
         # Define labels
-        labels = [('Number of particles:', 'particles'),
+        labels = [('Number of simulations:', 'simulations'),
                   ('Threshold:', 'threshold'),
                   ('Percentile:', 'percentile')]
 
         # Add labels and spinboxes to grid
         for idx, label in enumerate(labels):
+
+            # Create label and add to layout
             labelName = labels[idx][0]
             key = labels[idx][1]
             containerLayout.addWidget(QLabel(labelName, self), idx, 0, 1, 1)
-            containerLayout.addWidget(ASettingEntry(self._internalModel, key), idx, 1, 1, 1)
+
+            # Create entry and add to layout and dict
+            entry = ASettingEntry(self._internalModel, key)
+            containerLayout.addWidget(entry, idx, 1, 1, 1)
+            self._settingEntries[key] = entry
+
+        # Add automatic threshold check button
+        self._autoCheck = QCheckBox()
+        self._autoCheck.setText('Automatic')
+        containerLayout.addWidget(self._autoCheck, 1, 2)
+
+        if self._internalModel.setting('threshold') == -1:
+            self._autoCheck.setChecked(True)
+            self._settingEntries['threshold'].setEnabled(False)
+        else:
+            self._autoCheck.setChecked(False)
+        self._autoCheck.toggled.connect(self._onAutoThreshold)
 
         # Create objective and method choice widgets
         objectiveChoiceWidget = AObjectiveChoiceBox(self._internalModel)
@@ -163,6 +183,18 @@ class AComputationSettingsFrame(QScrollArea):
             self._comboWidget.setEnabled(False)
             self._internalModel.addModelIndexForTest(False)
 
+    def _onAutoThreshold(self, checked):
+        """Activated when user checks/unchecks auto threshold."""
+
+        if checked:
+            self._internalModel.changeSetting('threshold', -1)
+            self._settingEntries['threshold'].setEnabled(False)
+        else:
+            self._settingEntries['threshold'].setEnabled(True)
+            self._internalModel.changeSetting('threshold', self._settingEntries['threshold'].value())
+
+        print(self._internalModel._project['Analysis']['settings'])
+
     def _onFixParameter(self):
         """Invoke a dialog for settings parameters."""
 
@@ -195,20 +227,19 @@ class ASettingEntry(QDoubleSpinBox):
     def _configureRange(self):
         """Sets the range of the spinbox."""
 
+        self.setDecimals(3)
+        self.setSingleStep(0.1)
         # Percentile settings
         if self._key == 'percentile':
             self.setRange(0.0, 1.0)
-            self.setSingleStep(0.1)
-            self.setDecimals(3)
 
         # Threshold settings
         if self._key == 'threshold':
             self.setRange(0.0, 1e10)
-            self.setSingleStep(0.1)
-            self.setDecimals(3)
 
         # Particles settings
-        if self._key == 'particles':
+        if self._key == 'simulations':
+            self.setRange(0, 1e10)
             self.setSingleStep(10)
             self.setDecimals(0)
 

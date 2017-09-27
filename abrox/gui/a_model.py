@@ -23,7 +23,7 @@ class AInternalModel:
                     ('settings', {
                         'outputdir': "",
                         'distance_metric': "default",
-                        'particles': 1000,
+                        'simulations': 1000,
                         'threshold': -1,
                         'percentile': 0.05,
                         'objective': 'comparison',
@@ -203,6 +203,9 @@ class AInternalModel:
 
     def changeSetting(self, key, val):
         self._project['Analysis']['settings'][key] = val
+
+    def setting(self, key):
+        return self._project['Analysis']['settings'][key]
 
     def toDict(self):
         """Returns a dict representation of the entire session."""

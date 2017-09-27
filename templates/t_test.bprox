@@ -34,7 +34,7 @@
             "percentile": 0.05,
             "method": "logistic",
             "outputdir": "/Users/ulf.mertens/Desktop/abrox_demo/t_test",
-            "particles": 1000.0
+            "simulations": 1000.0
         }
     }
 }

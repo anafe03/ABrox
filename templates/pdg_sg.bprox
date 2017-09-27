@@ -94,7 +94,7 @@
             "modeltest": false,
             "threshold": -1,
             "distance_metric": "default",
-            "particles": 1000.0,
+            "simulations": 1000.0,
             "fixedparameters": {},
             "method": "logistic"
         }

@@ -39,7 +39,7 @@
         "settings": {
             "outputdir": "/Users/ulf.mertens/Desktop/test_script",
             "distance_metric": "default",
-            "particles": 1000,
+            "simulations": 1000,
             "threshold": -1,
             "percentile": 0.05,
             "objective": "comparison",

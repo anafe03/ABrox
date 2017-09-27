@@ -26,8 +26,13 @@ class APriorsWindow(QScrollArea):
         """Places the specifier and the plotter into hlayout."""
 
         self.setFrameShape(QFrame.Panel)
-        layout.addWidget(self._specifier)
-        layout.addWidget(self._plotter)
+
+        splitter = QSplitter()
+        splitter.addWidget(self._specifier)
+        splitter.addWidget(self._plotter)
+        splitter.setCollapsible(0, False)
+        splitter.setCollapsible(1, False)
+        layout.addWidget(splitter)
 
         # Inner widget of scrollarea
         content = QWidget()

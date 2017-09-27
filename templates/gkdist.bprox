@@ -39,7 +39,7 @@
             },
             "percentile": 0.05,
             "threshold": -1,
-            "particles": 1000,
+            "simulations": 1000,
             "objective": "inference",
             "distance_metric": "default"
         }
