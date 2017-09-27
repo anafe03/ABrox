@@ -12,8 +12,6 @@ case of parameter inference, and local logistic (multinomial) regression for mod
 * Model comparison via approximate Bayes factors
 * Parameter inference
 
-![Screenshot](abrox/gui/icons/screen.png)
-
 ## Installation
 
 `ABrox` can be installed via pip. Simply type `pip install abrox` into your terminal. It might take
