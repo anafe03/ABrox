@@ -71,7 +71,7 @@ class Abc:
     def setSettings(self):
         """ Store settings from config in members of class """
 
-        self.nparticle = self.config['settings']['particles']
+        self.nparticle = self.config['settings']['simulations']
 
         # check if threshold should be computed
         if self.config['settings']['threshold'] == -1:
