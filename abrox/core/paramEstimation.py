@@ -29,10 +29,6 @@ class ParamEstimator:
         nparams = len(self.model_collection[0].parameterList[0])
 
         paramMatrix = np.array(self.model_collection[0].parameterList)
-        out = np.column_stack((paramMatrix,weights,self.model_collection.distances))
-        thresh = np.repeat(self.model_collection.threshold,out.shape[0]).reshape(out.shape[0],1)
-        out = np.column_stack((out,self.model_collection[0].scaled_simsum,thresh))
-        np.savetxt("/Users/ulf.mertens/Seafile/Uni/approxbayes/test/out.csv",out)
         paramMatrix = paramMatrix[weights > 0]
 
 
