@@ -12,7 +12,6 @@ class Logistic:
     def __init__(self, model_collection):
         self.model_collection = model_collection
 
-
     def computeWeights(self):
         """Compute weights according to Epanechnikov kernel"""
         threshold_array = [self.model_collection.threshold] * len(self.model_collection.distances)
@@ -26,6 +25,7 @@ class Logistic:
         weights = self.computeWeights()
 
         model_indices = np.arange(len(self.model_collection))
+        print(model_indices)
 
         N = []
         for model in self.model_collection:
@@ -41,13 +41,13 @@ class Logistic:
         for model in self.model_collection:
             X = np.concatenate((X,model.scaled_simsum),axis=0)
 
+
         X = X[weights > 0, :]
         Y = Y[weights > 0]
 
         lreg = linear_model.LogisticRegression(solver="lbfgs")
 
         weights = weights[weights > 0]
-
 
         if X.shape[1] < 2:
 
@@ -56,9 +56,17 @@ class Logistic:
         if len(self.model_collection.obssum.shape) == 1:
             self.model_collection.obssum = self.model_collection.obssum.reshape(-1,1)
 
+        model_probabilities = np.empty(len(self.model_collection))
 
+        if len(np.unique(Y)) < 2:
+            win = Y[0]
+            lose = 1 - Y[0]
+            model_probabilities[win] = 1
+            model_probabilities[lose] = 0
 
-        lreg.fit(X, Y, weights)
-        model_probabilities = lreg.predict_proba(self.model_collection.obssum).flatten()
+        else:
+            lreg.fit(X, Y, weights)
+            model_probabilities = lreg.predict_proba(self.model_collection.obssum).flatten()
+
         for idx, model in enumerate(self.model_collection):
             model.accepted = model_probabilities[idx]
