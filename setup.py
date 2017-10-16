@@ -3,7 +3,7 @@ setup(
     name='abrox',
     packages=find_packages(),
     package_data={'abrox': ['gui/icons/*']},
-    version='0.9.1',
+    version='0.9.2',
     license='MIT',
     description='A tool for Approximate Bayesian Computation',
     long_description=open('README.md').read(),
@@ -12,7 +12,7 @@ setup(
     # scripts=['scripts/abrox-gui'],
     entry_points={
         'console_scripts': [
-            'abrox-gui = abrox.gui:main'
+            'abrox-gui = abrox.gui.main:main'
         ]
     },
     url='https://github.com/mertensu/ABrox',  # use the URL to the github repo
