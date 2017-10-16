@@ -2,11 +2,11 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import pickle
-from a_process_manager import AProcessManager
-from a_dialogs import AFixParameterDialog
-from a_script_creator import AScriptCreator
-from a_utils import createButton
-import tracksave
+from .a_process_manager import AProcessManager
+from .a_dialogs import AFixParameterDialog
+from .a_script_creator import AScriptCreator
+from .a_utils import createButton
+from abrox.gui import tracksave
 
 
 class ASettingsWindow(QFrame):
