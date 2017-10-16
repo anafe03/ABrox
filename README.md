@@ -22,6 +22,16 @@ pip install abrox
 
 It might take a few seconds since there are several dependencies that you might have to install as well. 
 
+### MacPorts
+
+If you installed Python via MacPorts, the `abrox-gui` command after installation of `abrox` does not work.
+You can alternatively start the GUI via (assuming Python version 3.5):
+
+```
+cd /Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages/abrox/gui/
+python3.5 main.py
+```
+
 ### Windows
 
 Assuming Python is already installed, first install Visual Studio Build Tools from:
