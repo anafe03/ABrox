@@ -25,7 +25,6 @@ class Logistic:
         weights = self.computeWeights()
 
         model_indices = np.arange(len(self.model_collection))
-        print(model_indices)
 
         N = []
         for model in self.model_collection:
