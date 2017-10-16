@@ -38,13 +38,12 @@ After the installation, open a console in the download directory and type:
 python -m pip install #name_of_the_whl_file
 ``` 
 
-Then:
+Repeat the same steps for the Numpy wheel:
 
-```
-python -m pip install numpy
-```
+3. [here](http://www.lfd.uci.edu/~gohlke/pythonlibs/#numpy)
 
-Then:
+
+Now, open a terminal and type:
 
 ```
 python -m pip install abrox
