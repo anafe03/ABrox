@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import QLocale
 from PyQt5.QtGui import QPixmap
-from a_main_window import AMainWindow
+from .a_main_window import AMainWindow
 import time
 import sys
 import ctypes
