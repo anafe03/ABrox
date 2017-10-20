@@ -31,3 +31,17 @@ class Abc:
         :return:
         """
         pass
+
+    def reject(self):
+        pass
+
+    def report(self):
+        pass
+
+    def run(self):
+        # error checking
+        # preparation
+        # preprocessing
+        # rejecting
+        # reporting
+        pass
