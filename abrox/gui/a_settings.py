@@ -2,10 +2,10 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import pickle
-from .a_process_manager import AProcessManager
-from .a_dialogs import AFixParameterDialog
-from .a_script_creator import AScriptCreator
-from .a_utils import createButton
+from abrox.gui.a_process_manager import AProcessManager
+from abrox.gui.a_dialogs import AFixParameterDialog
+from abrox.gui.a_script_creator import AScriptCreator
+from abrox.gui.a_utils import createButton
 from abrox.gui import tracksave
 
 
@@ -78,7 +78,7 @@ class AComputationSettingsFrame(QScrollArea):
         # Define labels
         labels = [('Number of simulations:', 'simulations'),
                   ('Threshold:', 'threshold'),
-                  ('Percentile:', 'percentile')]
+                  ('Keep:', 'keep')]
 
         # Add labels and spinboxes to grid
         for idx, label in enumerate(labels):
@@ -230,8 +230,9 @@ class ASettingEntry(QDoubleSpinBox):
         self.setDecimals(3)
         self.setSingleStep(0.1)
         # Percentile settings
-        if self._key == 'percentile':
-            self.setRange(0.0, 1.0)
+        if self._key == 'keep':
+            self.setRange(0, 1e10)
+            self.setDecimals(0)
 
         # Threshold settings
         if self._key == 'threshold':

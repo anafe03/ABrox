@@ -25,7 +25,7 @@ class AInternalModel:
                         'distance_metric': "default",
                         'simulations': 1000,
                         'threshold': -1,
-                        'percentile': 0.05,
+                        'keep': 100,
                         'objective': 'comparison',
                         'method': 'logistic',
                         'modeltest': False,

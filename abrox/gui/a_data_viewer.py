@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt, QAbstractTableModel
-from .a_dialogs import ALoadDataDialog
-from .a_utils import createButton
+from abrox.gui.a_dialogs import ALoadDataDialog
+from abrox.gui.a_utils import createButton
 from abrox.gui import tracksave
 import pandas as pd
 

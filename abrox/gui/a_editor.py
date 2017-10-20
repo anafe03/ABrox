@@ -1,7 +1,6 @@
 from PyQt5.QtCore import QRegExp, Qt, QEvent, QRect, QSize
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import QApplication, QWidget, QPlainTextEdit
-import sys
 from abrox.gui import tracksave
 
 
