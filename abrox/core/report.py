@@ -3,8 +3,7 @@ from itertools import combinations
 import pandas as pd
 import numpy as np
 
-from abrox.core.abc_utils import toArray
-
+from abc_utils import toArray
 
 class Report:
 
@@ -58,6 +57,6 @@ class Report:
             return self.bayesFactor()
 
         if self.objective == "inference":
-            self.initParamTable()
-            return self.paramTable.describe().transpose()
+            table = self.initParamTable()
+            return table.describe().transpose()
 

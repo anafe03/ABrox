@@ -1,18 +1,16 @@
 import pandas as pd
-from itertools import chain
-
-from abrox.core.model import Model
+from model import UserDefinedModel
 
 
 class Prepare:
 
     def __init__(self, config):
         self.config = config
-        self.model = None
+        self.models = None
 
     def getObservedData(self, model):
         """
-        Import observed data or generate pseudo-observed data.
+        Read in observed data or generate pseudo-observed data.
         :return: The (pseudo) observed data
         """
 
@@ -26,44 +24,41 @@ class Prepare:
 
     def loadExternalData(self):
         """
-        Import external dataset.
-        :return: the dataset
+        Read in an external dataset, as specified by the user.
+        :return: the data set as a numpy array.
         """
         try:
             return pd.read_csv(self.config['data']['datafile'],
                                delimiter=self.config['data']['delimiter']).as_matrix()
 
-        except ImportError('Imported data could not be imported'):
+        except ImportError('Data file could not be imported'):
             return None
 
-    def buildModel(self):
+    def buildModels(self):
         """
         Generate list of models.
         :return: models
         """
-        self.model = []
+        self.models = []
         for i, modelDict in enumerate(self.config['models']):
-            self.model.append(Model(**modelDict))
+            self.models.append(UserDefinedModel(**modelDict))
 
-        modelNames = [model['name'] for model in self.config['models']]
-
-        return self.model, modelNames
+        return self.models
 
     def getSummaryFunc(self):
         """ Return instance of summary class. """
         return self.config['summary']
 
-    def flattenList(self,List):
-        return list(chain.from_iterable(List))
-
     def getMetaInfo(self):
-        """ Get number of simulations and how many should be accepted. """
+        """
+        Get information needed for the algorithms to work.
+        :return: a tuple of the five pieces of information
+        """
+
         simulations = self.config['settings']['simulations']
         keep = self.config['settings']['keep']
         objective = self.config['settings']['objective']
         nModels = len(self.config['models'])
-        parameterNames = self.flattenList([list(d.keys()) for d in self.config['models'][0]['prior']])
+        parameterNames = [list(d.keys())[0] for d in self.config['models'][0]['prior']]
 
         return simulations, keep, objective, nModels, parameterNames
-
-

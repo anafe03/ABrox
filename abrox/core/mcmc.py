@@ -1,15 +1,14 @@
 import numpy as np
 from collections import Counter, OrderedDict
 from scipy import stats
-
-from abrox.core.abc_utils import euclideanDistance
-from abrox.core.reference_table import RefTable
-from abrox.core.summary import Summary
-from abrox.core.error_check import ErrorCheck
-from abrox.core.preparation import Prepare
-from abrox.core.scale import Scaler
-from abrox.core.preprocess import Preprocess
-from abrox.core.plot import plotPosterior
+from abc_utils import euclideanDistance
+from reference_table import AbcReferenceTable
+from summary import Summary
+from error_check import ConfigurationTester
+from preparation import Prepare
+from scale import Scaler
+from preprocess import AbcPreprocesser
+from plot import plotPosterior
 
 
 class MCMC:
@@ -115,14 +114,12 @@ class MCMC:
         return density
 
 
-
-
-
 def summary(data):
     data_mean = np.mean(data, axis=0)
     diff_mean = data_mean[0] - data_mean[1]
     mean_std = np.mean(np.std(data, axis=0))
     return diff_mean / mean_std
+
 
 def simulate_Model1(params):
     n = 500
@@ -163,37 +160,19 @@ CONFIG = {
 
 if __name__ == "__main__":
 
-    errorCheck = ErrorCheck(CONFIG)
-    errorCheck.run()
+    errorCheck = ConfigurationTester(CONFIG)
 
-    prepare = Prepare(CONFIG)
+    if errorCheck.configTestPassed():
 
-    modelList = prepare.buildModel()
+        prepare = Prepare(CONFIG)
 
-    simulations, keep, objective, paramNames = prepare.getMetaInfo()
+        modelList = prepare.buildModels()
+        simulations, keep, objective, nModels, parameterNames = prepare.getMetaInfo()
+        obsData = prepare.getObservedData(modelList)
+        summaryInstance = Summary(summary)
+        sumStatObsData = summaryInstance.summarize(obsData)
+        refTable = AbcReferenceTable()
+        scaler = Scaler()
+        preprocesser = AbcPreprocesser(modelList, summaryInstance, refTable, scaler)
+        table = preprocesser.preprocess(sumStatObsData, simulations, parallel=False, jobs=4)
 
-    print("names: ", paramNames)
-
-    obsData = prepare.getObservedData(modelList)
-
-    summaryClass = Summary(summary)
-    sumStatObsData = summaryClass.summarize(obsData)
-
-    abcTable = RefTable()
-    scaler = Scaler()
-
-    preprocess = Preprocess(modelList, summaryClass, abcTable, scaler)
-
-    preprocess.run(sumStatObsData,simulations, parallel=True, jobs=4)
-
-    proposalDist = OrderedDict([("d", stats.uniform(-0.05, 0.1))])
-
-    threshold = 0.05
-    chainLength = 10000
-    mcmc = MCMC(preprocess, proposalDist, paramNames, threshold, chainLength)
-    samples, accepted = mcmc.run(np.array([0.3]))
-
-    plotter = plotPosterior(samples, paramNames)
-    # plotter.plot()
-
-    print(accepted)

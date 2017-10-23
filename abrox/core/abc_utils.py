@@ -1,9 +1,9 @@
 import numpy as np
+from itertools import chain
 
 # ABC utility functions
 
 
-# Euclidean distance
 def euclideanDistance(a,b,axis=1):
     """
     Compute euclidean distance either for each row (default)
@@ -16,16 +16,15 @@ def euclideanDistance(a,b,axis=1):
     return np.linalg.norm(a-b,axis=axis)
 
 
-# convert pandas object column to np.array
-def toArray(df,name):
+def toArray(df, name):
     """
     Convert pandas column to numpy array.
     :param df: the pandas dataframe
     :param name: the column name
-    :return: a multidimension numpy array
+    :return: a multidimensional numpy array
     """
     aList = list(df[name].values)
     if isinstance(aList[0], list):
         return np.array(aList)
     else:
-        return np.array(aList).reshape(-1,1)
+        return np.array(aList).reshape(-1, 1)

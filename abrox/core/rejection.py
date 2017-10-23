@@ -1,13 +1,13 @@
 import numpy as np
 from scipy import stats
 
-from abrox.core.reference_table import RefTable
-from abrox.core.summary import Summary
-from abrox.core.error_check import ErrorCheck
-from abrox.core.preparation import Prepare
-from abrox.core.scale import Scaler
-from abrox.core.preprocess import Preprocess
-from abrox.core.report import Report
+from reference_table import AbcReferenceTable
+from summary import Summary
+from error_check import ConfigurationTester
+from preparation import Prepare
+from scale import Scaler
+from preprocess import AbcPreprocesser
+from report import Report
 
 
 class Reject:
@@ -19,13 +19,13 @@ class Reject:
         self.obj = objective
         self.paramTable = None
 
-    def reject(self):
+    def run(self):
         """
-        Return filtered Reference Table only containing
+        Returns filtered Reference Table only containing
         rows for which the distance is < threshold.
         """
-        q = self.keep / len(self.refTable.index) * 100
-        threshold = np.percentile(self.refTable['distance'],q=q)
+        q = int((self.keep / len(self.refTable.index)) * 100)
+        threshold = np.percentile(self.refTable['distance'], q=q)
         return self.refTable[self.refTable['distance'] < threshold]
 
 
@@ -35,11 +35,13 @@ def summary(data):
     mean_std = np.mean(np.std(data, axis=0))
     return diff_mean / mean_std
 
+
 def simulate_Model1(params):
     n = 100
     first_sample = np.random.normal(0, 1, n)
     sec_sample = np.random.normal(params['d'], 1, n)
     return np.column_stack((first_sample, sec_sample))
+
 
 def simulate_Model2(params):
     n = 100
@@ -72,7 +74,7 @@ CONFIG = {
     "distance": None,
     "settings": {
         'distance_metric': 'default',
-         'fixedparameters': {'d': 0.3},
+         'fixedparameters': {'d': 0.5},
          'method': 'rejection',
          'modeltest': 0,
          'objective': 'comparison',
@@ -86,12 +88,12 @@ CONFIG = {
 
 if __name__ == "__main__":
 
-    errorCheck = ErrorCheck(CONFIG)
+    errorCheck = ConfigurationTester(CONFIG)
     errorCheck.run()
 
     prepare = Prepare(CONFIG)
 
-    modelList, modelNames = prepare.buildModel()
+    modelList, modelNames = prepare.buildModels()
 
     simulations, keep, objective, nModels, paramNames = prepare.getMetaInfo()
 
@@ -102,15 +104,15 @@ if __name__ == "__main__":
     summaryClass = Summary(summary)
     sumStatObsData = summaryClass.summarize(obsData)
 
-    abcTable = RefTable()
+    abcTable = AbcReferenceTable()
     scaler = Scaler()
 
-    preprocess = Preprocess(modelList, summaryClass, abcTable, scaler)
+    preprocesser = AbcPreprocesser(modelList, summaryClass, abcTable, scaler)
 
-    preprocess.run(sumStatObsData,simulations, parallel=True, jobs=4)
+    preprocesser.preprocess(sumStatObsData,simulations, parallel=True, jobs=4)
 
     # ABC rejection
-    rejecter = Reject(preprocess.refTable.getRefTable(), paramNames, keep, objective)
+    rejecter = Reject(preprocesser.refTable.getTable(), paramNames, keep, objective)
 
     subset = rejecter.reject()
 

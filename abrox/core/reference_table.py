@@ -1,19 +1,16 @@
 import pandas as pd
 import numpy as np
+from abc_utils import toArray
 
-from abrox.core.abc_utils import toArray
 
-
-class RefTable:
-    """ Holds the final ABC Table where each row corresponds to
-        one simulation.
-
-        Contains information about:
-         - model index
-         - summary statistics
-         - drawn parameters
-         - distance to observed data
-
+class AbcReferenceTable:
+    """
+    Holds the final ABC Table where each row corresponds to one simulation.
+    Contains information about:
+     - model index
+     - summary statistics
+     - drawn parameters
+     - distance to observed data
     """
 
     def __init__(self):
@@ -25,7 +22,7 @@ class RefTable:
         cols = ['idx','param','sumstat','distance']
         self._table = pd.DataFrame(content,columns=cols)
 
-    def getRefTable(self):
+    def getTable(self):
         """ Return Reference Table."""
         return self._table
 
@@ -44,7 +41,7 @@ class RefTable:
         return toArray(self._table,columnName)
 
     def fillRow(self, row, idx, param, sumstat):
-        """ Append a row to the table. Distance is calculated later."""
+        """Fill a row of the table. Distance is calculated later."""
 
         self._table.loc[row, 'idx'] = idx
         self._table.set_value(row, 'param', param)

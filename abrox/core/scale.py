@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class Scaler:
+class AbcScaler:
 
     def __init__(self):
         self.summaryStats = None

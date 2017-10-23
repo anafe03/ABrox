@@ -1,14 +1,13 @@
-
 class ConfigurationError(Exception):
     pass
 
 
-class ErrorCheck:
+class ConfigurationTester:
 
-    def __init__(self,config):
+    def __init__(self, config):
         self.config = config
 
-    def checkMetaStructure(self):
+    def _checkMetaStructure(self):
         """
         Checks if the necessary keys of the config dictionary are used.
         :return: None
@@ -18,7 +17,7 @@ class ErrorCheck:
             raise ConfigurationError('The configuration file should contain the following keys: \n' +
                                      ','.join(names))
 
-    def checkModelStructure(self):
+    def _checkModelStructure(self):
         """
         Checks if the model key contains the necessary information.
         :return: None
@@ -28,7 +27,7 @@ class ErrorCheck:
                 raise ConfigurationError(
                     "A model needs to be provided with three keys: 'name', 'priors', and 'simulate'")
 
-    def checkDataSetting(self):
+    def _checkDataSetting(self):
         """
         Checks if a dataset is imported, if not then the option for model testing has to be set.
         :return: None
@@ -37,7 +36,7 @@ class ErrorCheck:
             raise ConfigurationError(
                 'Either provide a dataset to be imported or run a model test by setting modeltest to True.')
 
-    def checkModelContent(self):
+    def _checkModelContent(self):
         """
         Check if model information is provided.
         :return: None
@@ -45,7 +44,7 @@ class ErrorCheck:
         if not self.config['models']:
             raise ConfigurationError('No models defined.')
 
-    def checkDistanceSettings(self):
+    def _checkDistanceSettings(self):
         """
         Check if distance function is provided.
         :return: None
@@ -55,7 +54,7 @@ class ErrorCheck:
                 raise ConfigurationError(
                     "If 'distance_metric' is set to 'custom', you have to provide your own distance function")
 
-    def checkDirectory(self):
+    def _checkDirectory(self):
         """
         Check if a directory is specified.
         :return: None
@@ -64,27 +63,33 @@ class ErrorCheck:
             raise ConfigurationError("Please provide a directory. Use '.' \
             if you want to use your current working directory")
 
-    def checkObjective(self):
+    def _checkObjective(self):
         """
         Check if objective setup is correct.
         :return: None
         """
-        # check if a method for model comparison is set
+
         if self.config['settings']['objective'] == "comparison" and len(self.config['models']) < 2:
             raise ConfigurationError('Define at least two models for comparison.')
 
         if self.config['settings']['objective'] == "inference" and len(self.config['models']) > 1:
             raise ConfigurationError('Please define only one model for parameter inference.')
 
-    def run(self):
+    def configTestPassed(self):
         """
-        Check config for errors
-        :return: None
+        Check config for possible user-defined errors. 
+        :return: True, if configuration is sane, False otherwise.
         """
-        self.checkMetaStructure()
-        self.checkModelStructure()
-        self.checkDataSetting()
-        self.checkModelContent()
-        self.checkDistanceSettings()
-        self.checkDirectory()
-        self.checkObjective()
+
+        try:
+            self._checkMetaStructure()
+            self._checkModelStructure()
+            self._checkDataSetting()
+            self._checkModelContent()
+            self._checkDistanceSettings()
+            self._checkDirectory()
+            self._checkObjective()
+            return True
+        except ConfigurationError as e:
+            print(e)
+            return False
