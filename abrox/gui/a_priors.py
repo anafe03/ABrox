@@ -5,9 +5,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib as mpl
 import numpy as np
-from scipy import stats
 from collections import OrderedDict
-import tracksave
+from abrox.gui import tracksave
 
 
 class APriorsWindow(QScrollArea):

@@ -1,12 +1,12 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
-from a_utils import *
-from a_editor import APythonTextEditor
-from a_priors import APriorsWindow
-from a_data_viewer import ADataViewer
-from a_settings import ASettingsWindow
+from abrox.gui.a_utils import *
+from abrox.gui.a_editor import APythonTextEditor
+from abrox.gui.a_priors import APriorsWindow
+from abrox.gui.a_data_viewer import ADataViewer
+from abrox.gui.a_settings import ASettingsWindow
 from abc import abstractmethod
-import tracksave
+from abrox.gui import tracksave
 
 
 class AModelTree(QTreeWidget):

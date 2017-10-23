@@ -3,13 +3,13 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import json
 from collections import OrderedDict
-import tracksave
+from abrox.gui import tracksave
 import webbrowser
-from a_tree import AModelTree
-from a_pyconsole import AConsoleWindow
-from a_console import AOutputConsole
-from a_model import AInternalModel
-from a_utils import *
+from abrox.gui.a_tree import AModelTree
+from abrox.gui.a_pyconsole import AConsoleWindow
+from abrox.gui.a_console import AOutputConsole
+from abrox.gui.a_model import AInternalModel
+from abrox.gui.a_utils import *
 
 
 class AMainWindow(QMainWindow):

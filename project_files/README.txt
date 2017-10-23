@@ -1,0 +1,1 @@
+The folders contain example project files (.bprox) and the generated python files (analysis.py). If you want to load a project and run ABC, make sure to edit the output folder in the Settings tab first. 

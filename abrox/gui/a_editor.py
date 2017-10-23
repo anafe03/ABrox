@@ -1,8 +1,7 @@
 from PyQt5.QtCore import QRegExp, Qt, QEvent, QRect, QSize
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import QApplication, QWidget, QPlainTextEdit
-import sys
-import tracksave
+from abrox.gui import tracksave
 
 
 class ALineNumberArea(QWidget):

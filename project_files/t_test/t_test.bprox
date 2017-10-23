@@ -7,7 +7,7 @@
         },
         "models": [
             {
-                "name": "Model1",
+                "name": "H1",
                 "priors": [
                     {
                         "d": "stats.cauchy(loc=0.0, scale=0.7)"
@@ -16,7 +16,7 @@
                 "simulate": "def simulate(params):\n    n = 50\n    first_sample = np.random.normal(0,1,n)\n    sec_sample = np.random.normal(params['d'],1,n)\n    return np.column_stack((first_sample,sec_sample))"
             },
             {
-                "name": "Model2",
+                "name": "H0",
                 "priors": [],
                 "simulate": "def simulate(params):\n    n = 50\n    first_sample = np.random.normal(0,1,n)\n    sec_sample = np.random.normal(0,1,n)\n    return np.column_stack((first_sample,sec_sample))"
             }
@@ -32,8 +32,8 @@
                 "d": 0.5
             },
             "percentile": 0.05,
-            "method": "logistic",
-            "outputdir": "/Users/ulf.mertens/Desktop/abrox_demo/t_test",
+            "method": "rejection",
+            "outputdir": "/Users/ulf.mertens/Seafile/Uni/approxbayes/abrox/project_files/t_test/analysis",
             "simulations": 1000.0
         }
     }
