@@ -17,7 +17,7 @@ class ASettingsWindow(QFrame):
         self._internalModel = internalModel
         self._console = console
         self._compSettingsFrame = AComputationSettingsFrame(internalModel, console)
-        self._modelTestFrame = ARunFrame(internalModel, console, outputConsole)
+        self._runFrame = ARunFrame(internalModel, console, outputConsole)
 
         self._configureLayout(QHBoxLayout())
 
@@ -26,11 +26,16 @@ class ASettingsWindow(QFrame):
 
         self.setFrameStyle(QFrame.Panel)
 
-        layout.addWidget(self._compSettingsFrame)
-        layout.addWidget(self._modelTestFrame)
-        layout.setStretchFactor(self._compSettingsFrame, 1)
-        layout.setStretchFactor(self._modelTestFrame, 2)
-
+        splitter = QSplitter()
+        splitter.addWidget(self._compSettingsFrame)
+        splitter.addWidget(self._runFrame)
+        splitter.setCollapsible(0, False)
+        splitter.setCollapsible(1, False)
+        # layout.addWidget(self._compSettingsFrame)
+        # layout.addWidget(self._runFrame)
+        #layout.setStretchFactor(self._compSettingsFrame, 1)
+        #layout.setStretchFactor(self._runFrame, 2)
+        layout.addWidget(splitter)
         self.setLayout(layout)
 
 
