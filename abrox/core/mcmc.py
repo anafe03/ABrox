@@ -18,6 +18,7 @@ class MCMC:
         self.summary = preprocess.summarizer
         self.model = preprocess.getFirstModel()
         self.scaler = preprocess.scaler
+        self.preprocess = preprocess
         self.proposal = proposal
         self.paramNames = paramNames
         self.prior = self.model.prior
@@ -55,7 +56,7 @@ class MCMC:
         :return: the accepted samples
         """
         accepted = 0
-        samples = np.empty(shape=(chainLength,len(start)))
+        samples = np.empty(shape=(self.chainLength, len(start)))
 
         samples[0,:] = start
 
@@ -80,7 +81,7 @@ class MCMC:
         sumstat = self.summary.summarize(self.model.simulate(param))
         scaledSumStat = self.scaler.transform(sumstat)
 
-        accepted = euclideanDistance(preprocess.scaledSumStatObsData,scaledSumStat,axis=0) < self.threshold
+        accepted = euclideanDistance(self.preprocess.scaledSumStatObsData,scaledSumStat,axis=0) < self.threshold
         return accepted
 
     def makeProposal(self):
@@ -115,85 +116,6 @@ class MCMC:
         return density
 
 
-
-
-
-def summary(data):
-    data_mean = np.mean(data, axis=0)
-    diff_mean = data_mean[0] - data_mean[1]
-    mean_std = np.mean(np.std(data, axis=0))
-    return diff_mean / mean_std
-
-def simulate_Model1(params):
-    n = 500
-    first_sample = np.random.normal(0, 1, n)
-    sec_sample = np.random.normal(params['d'], 1, n)
-    return np.column_stack((first_sample, sec_sample))
-
-
-CONFIG = {
-    "data": {
-        "datafile": None,
-        "delimiter": None
-    },
-    "models": [
-        {
-        "name": "Model1",
-        "prior": [
-            {"d": stats.cauchy(loc=0.0, scale=0.7)},
-        ],
-        "simulate": simulate_Model1
-        }
-    ],
-    "summary": summary,
-    "distance": None,
-    "settings": {
-        'distance_metric': 'default',
-         'fixedparameters': {'d': 0.5},
-         'method': 'rejection',
-         'modeltest': 0,
-         'objective': 'inference',
-         'outputdir': '/Users/ulf.mertens/Desktop/abrox_demo/t_test',
-         'simulations': 10000,
-         'keep': 100,
-         'threshold': -1
-    }
-}
-
-
 if __name__ == "__main__":
 
-    errorCheck = ErrorCheck(CONFIG)
-    errorCheck.run()
-
-    prepare = Prepare(CONFIG)
-
-    modelList = prepare.buildModel()
-
-    simulations, keep, objective, paramNames = prepare.getMetaInfo()
-
-    print("names: ", paramNames)
-
-    obsData = prepare.getObservedData(modelList)
-
-    summaryClass = Summary(summary)
-    sumStatObsData = summaryClass.summarize(obsData)
-
-    abcTable = RefTable()
-    scaler = Scaler()
-
-    preprocess = Preprocess(modelList, summaryClass, abcTable, scaler)
-
-    preprocess.run(sumStatObsData,simulations, parallel=True, jobs=4)
-
-    proposalDist = OrderedDict([("d", stats.uniform(-0.05, 0.1))])
-
-    threshold = 0.05
-    chainLength = 10000
-    mcmc = MCMC(preprocess, proposalDist, paramNames, threshold, chainLength)
-    samples, accepted = mcmc.run(np.array([0.3]))
-
-    plotter = plotPosterior(samples, paramNames)
-    # plotter.plot()
-
-    print(accepted)
+    pass

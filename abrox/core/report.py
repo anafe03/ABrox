@@ -40,7 +40,7 @@ class Report:
                 inverse = 1 / t
                 upperPart.append(inverse)
             except ZeroDivisionError:
-                upperPart.append(np.inf)
+                upperPart.append(len(self.table))
 
         bfMatrix = np.ones((nModels, nModels))
 

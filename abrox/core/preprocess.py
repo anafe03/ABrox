@@ -4,15 +4,18 @@ import itertools
 
 
 from abrox.core.abc_utils import euclideanDistance
+from abrox.core.reference_table import RefTable
+from abrox.core.scale import Scaler
 
 
 class Preprocess:
 
-    def __init__(self, model, summarizer, reftable, scaler):
+    def __init__(self, model, summarizer, sumStatObsData):
         self.model = model
         self.summarizer = summarizer
-        self.refTable = reftable
-        self.scaler = scaler
+        self.refTable = RefTable()
+        self.scaler = Scaler()
+        self.sumStatObsData = sumStatObsData
         self.scaledSumStatObsData = None
 
     def generateSample(self, iteration, modelindex):
@@ -65,7 +68,7 @@ class Preprocess:
 
         return self.refTable.getColumn('sumstat')
 
-    def run(self, sumStatObsData, simulations, parallel=True, jobs=4):
+    def run(self, simulations, parallel=True, jobs=4):
         """
         Generate Reference Table.
 
@@ -83,7 +86,7 @@ class Preprocess:
         # override unscaled with scaled summary statistics
         self.refTable.fillColumn(scaledSumStatTable, 'sumstat')
         # scale observed summary statistics with MAD calculated above
-        self.scaledSumStatObsData = self.scaler.transform(sumStatObsData)
+        self.scaledSumStatObsData = self.scaler.transform(self.sumStatObsData)
         # compute distance
         distance = euclideanDistance(scaledSumStatTable, self.scaledSumStatObsData)
         # store distance in table

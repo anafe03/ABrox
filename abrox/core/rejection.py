@@ -1,14 +1,6 @@
 import numpy as np
 from scipy import stats
 
-from abrox.core.reference_table import RefTable
-from abrox.core.summary import Summary
-from abrox.core.error_check import ErrorCheck
-from abrox.core.preparation import Prepare
-from abrox.core.scale import Scaler
-from abrox.core.preprocess import Preprocess
-from abrox.core.report import Report
-
 
 class Reject:
 
@@ -85,38 +77,37 @@ CONFIG = {
 
 
 if __name__ == "__main__":
+    pass
+    # errorCheck = ErrorCheck(CONFIG)
+    # errorCheck.run()
+    #
+    # prepare = Prepare(CONFIG)
+    #
+    # modelList, modelNames = prepare.buildModel()
+    #
+    # simulations, keep, objective, nModels, paramNames = prepare.getMetaInfo()
+    #
+    # obsData = prepare.getObservedData(modelList)
+    #
+    # # IMPORTANT: multiprocessing seems to only work if summary is passed directly.
+    # # Building an instance of the summary class from within a method doesn't work.
+    # summaryClass = Summary(summary)
+    # sumStatObsData = summaryClass.summarize(obsData)
+    #
+    # preprocess = Preprocess(modelList, summaryClass)
+    #
+    # preprocess.run(sumStatObsData,simulations, parallel=True, jobs=4)
+    #
+    # # ABC rejection
+    # rejecter = Reject(preprocess.refTable.getRefTable(), paramNames, keep, objective)
+    #
+    # subset = rejecter.reject()
+    #
+    # reporter = Report(subset, modelNames, paramNames, objective)
+    # print(reporter.report())
 
-    errorCheck = ErrorCheck(CONFIG)
-    errorCheck.run()
-
-    prepare = Prepare(CONFIG)
-
-    modelList, modelNames = prepare.buildModel()
-
-    simulations, keep, objective, nModels, paramNames = prepare.getMetaInfo()
-
-    obsData = prepare.getObservedData(modelList)
-
-    # IMPORTANT: multiprocessing seems to only work if summary is passed directly.
-    # Building an instance of the summary class from within a method doesn't work.
-    summaryClass = Summary(summary)
-    sumStatObsData = summaryClass.summarize(obsData)
-
-    abcTable = RefTable()
-    scaler = Scaler()
-
-    preprocess = Preprocess(modelList, summaryClass, abcTable, scaler)
-
-    preprocess.run(sumStatObsData,simulations, parallel=True, jobs=4)
-
-    # ABC rejection
-    rejecter = Reject(preprocess.refTable.getRefTable(), paramNames, keep, objective)
-
-    subset = rejecter.reject()
-
-    reporter = Report(subset, modelNames, paramNames, objective)
-    print(reporter.report())
-
+    # abc = Abc(CONFIG)
+    # abc.run()
     # TODO:
     # Sampling parameters is currently not really fast since the prior
     # distributions are the values from dicts in lists.
