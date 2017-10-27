@@ -2,6 +2,8 @@ import numpy as np
 from scipy import stats
 
 
+
+
 class Reject:
 
     def __init__(self, refTable, paramNames, keep, objective):
@@ -13,12 +15,15 @@ class Reject:
 
     def reject(self):
         """
-        Return filtered Reference Table only containing
-        rows for which the distance is < threshold.
+        Return tuple with filtered Reference Table only containing
+        rows for which the distance is < threshold and threshold itself.
+        :return: the tuple
         """
         q = self.keep / len(self.refTable.index) * 100
         threshold = np.percentile(self.refTable['distance'],q=q)
-        return self.refTable[self.refTable['distance'] < threshold]
+        subset = self.refTable[self.refTable['distance'] < threshold]
+        return subset, threshold
+
 
 
 def summary(data):

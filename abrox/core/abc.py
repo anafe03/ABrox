@@ -6,8 +6,10 @@ from abrox.core.summary import Summary
 from abrox.core.error_check import ErrorCheck
 from abrox.core.preparation import Prepare
 from abrox.core.rejection import Reject
+from abrox.core.plot import Plotter
 from abrox.core.preprocess import Preprocess
 from abrox.core.report import Report
+from abrox.core.wegmann import Wegmann
 from abrox.core.mcmc import MCMC
 
 
@@ -34,23 +36,38 @@ class Abc:
 
         preprocess.run(simulations, parallel=True, jobs=4)
 
-        if self.config['settings']['method'] == "rejection":
-            rejecter = Reject(preprocess.refTable.getRefTable(), paramNames, keep, objective)
+        rejecter = Reject(preprocess.refTable.getRefTable(), paramNames, keep, objective)
 
-            subset = rejecter.reject()
+        if self.config['settings']['method'] == "rejection":
+
+            subset, _ = rejecter.reject()
 
             reporter = Report(subset, modelNames, paramNames, objective)
             return reporter.report()
 
         if self.config['settings']['method'] == "mcmc":
-            threshold = 0.05
-            chainLength = 10000
-            proposalDist = OrderedDict([("d", stats.uniform(-0.05, 0.1))])
-            mcmc = MCMC(preprocess, proposalDist, paramNames, threshold, chainLength)
-            start = np.array([0.6])
-            samples, accepted = mcmc.run(start)
 
-            # plotter = plotPosterior(samples, paramNames)
-            # plotter.plot()
+            if self.config['settings']['type'] == "wegmann":
+                subset, threshold = rejecter.reject()
+
+                wegmann = Wegmann(subset, paramNames, threshold)
+                threshold = wegmann.threshold
+                proposal = wegmann.getProposal()
+                startingValues = wegmann.getStartingValues()
+
+            chainLength = 10000
+            burn = 100
+            # proposalDist = OrderedDict([("d", stats.uniform(-0.05, 0.1))])
+            mcmc = MCMC( preprocess = preprocess,
+                         paramNames = paramNames,
+                         chainLength = chainLength,
+                         proposal = proposal,
+                         threshold = threshold,
+                         burn = burn)
+
+            samples, accepted = mcmc.run(startingValues)
+
+            plotter = Plotter(samples, paramNames)
+            plotter.plot()
 
             return samples

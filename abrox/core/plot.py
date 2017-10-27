@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-class plotPosterior:
+class Plotter:
 
     def __init__(self, samples, paramNames):
         self.samples = samples

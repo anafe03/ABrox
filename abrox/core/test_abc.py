@@ -34,22 +34,18 @@ CONFIG = {
             {"d": stats.cauchy(loc=0.0, scale=0.7)},
         ],
         "simulate": simulate_Model1
-        },
-        {
-        "name": "Model2",
-        "prior": [
-        ],
-        "simulate": simulate_Model2
-        },
+        }
+
     ],
     "summary": summary,
     "distance": None,
     "settings": {
         'distance_metric': 'default',
-         'fixedparameters': {'d': 0.6},
+         'fixedparameters': {'d': 0.5},
          'method': 'mcmc',
+         'type': 'wegmann',
          'modeltest': 0,
-         'objective': 'comparison',
+         'objective': 'inference',
          'outputdir': '/Users/ulf.mertens/Desktop/abrox_demo/t_test',
          'simulations': 10000,
          'keep': 100,
@@ -61,7 +57,8 @@ CONFIG = {
 if __name__ == "__main__":
 
     abc = Abc(CONFIG)
-    print(abc.run())
+    out = abc.run()
+    print(len(out))
     # TODO:
     # Sampling parameters is currently not really fast since the prior
     # distributions are the values from dicts in lists.
