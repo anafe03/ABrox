@@ -47,7 +47,10 @@ class Report:
         bfMatrix[np.tril_indices(nModels, -1)] = lowerPart
         bfMatrix[np.triu_indices(nModels, 1)] = upperPart
 
-        return pd.DataFrame(bfMatrix,columns=self.modelNames)
+        df = pd.DataFrame(bfMatrix,columns=self.modelNames)
+        df['Models'] = self.modelNames
+        df.set_index('Models',inplace=True)
+        return df
 
     def report(self):
         """
