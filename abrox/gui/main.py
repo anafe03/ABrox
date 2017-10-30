@@ -2,13 +2,17 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import QLocale
 from PyQt5.QtGui import QPixmap
 from abrox.gui.a_main_window import AMainWindow
-import time
+import os
 import sys
 import ctypes
 import qdarkstyle
 
 
 __version__ = "1.0.1"
+
+# Change to script path
+PATH = os.path.dirname(os.path.abspath(__file__))
+os.chdir(PATH)
 
 
 def main(args=None):
