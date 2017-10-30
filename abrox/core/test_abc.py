@@ -41,7 +41,7 @@ CONFIG = {
     "distance": None,
     "settings": {
         'distance_metric': 'default',
-         'fixedparameters': {'d': 0.5},
+         'fixedparameters': {'d': 0.3},
          'method': 'mcmc',
          'type': 'wegmann',
          'modeltest': 0,

@@ -19,11 +19,11 @@ class MCMC:
     def metropolis(self, old):
         """basic metropolis algorithm"""
         new = old + self.makeProposal()
-        alpha = np.min([self.density(new) / self.density(old), 1])
+        accProb = np.min([self.density(new) / self.density(old), 1])
         u = np.random.uniform()
 
         cnt = 0
-        if self.checkDistance(new) and u < alpha:
+        if self.checkDistance(new) and u < accProb:
             old = new
             cnt = 1
 

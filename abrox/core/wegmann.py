@@ -23,7 +23,7 @@ class Wegmann:
 
         proposal = OrderedDict()
         for paramName, sd in zip(self.paramNames,standardDeviation):
-            proposal[paramName] = stats.uniform(-sd/2,sd)
+            proposal[paramName] = stats.uniform(loc=-sd/2, scale=sd)
 
         return proposal
 
