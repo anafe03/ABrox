@@ -17,7 +17,7 @@ class ASettingsWindow(QFrame):
         self._internalModel = internalModel
         self._console = console
         self._compSettingsFrame = AComputationSettingsFrame(internalModel, console)
-        self._modelTestFrame = ARunFrame(internalModel, console, outputConsole)
+        self._runFrame = ARunFrame(internalModel, console, outputConsole)
         self._configureLayout(QHBoxLayout())
 
     def _configureLayout(self, layout):
@@ -25,16 +25,21 @@ class ASettingsWindow(QFrame):
 
         self.setFrameStyle(QFrame.Panel)
 
-        layout.addWidget(self._compSettingsFrame)
-        layout.addWidget(self._modelTestFrame)
-        layout.setStretchFactor(self._compSettingsFrame, 1)
-        layout.setStretchFactor(self._modelTestFrame, 2)
-
+        # Use a splitter so user can stretch in and out the pane
+        splitter = QSplitter()
+        splitter.addWidget(self._compSettingsFrame)
+        splitter.addWidget(self._runFrame)
+        splitter.setCollapsible(0, False)
+        splitter.setCollapsible(1, False)
+        splitter.setStretchFactor(0, 1)
+        splitter.setStretchFactor(1, 3)
+        layout.addWidget(splitter)
         self.setLayout(layout)
 
 
 class AComputationSettingsFrame(QScrollArea):
     """Main container for settings and run."""
+
     def __init__(self, internalModel, console, parent=None):
         super(AComputationSettingsFrame, self).__init__(parent)
 
@@ -49,9 +54,9 @@ class AComputationSettingsFrame(QScrollArea):
         # Method buttons
         self._methodButtons = {"group": QButtonGroup(),
                                "buttons": {
-                                   "rj": QRadioButton("Rejection"),
-                                   "rf": QRadioButton("Random Forest"),
-                                   "mcmc": QRadioButton("MCMC")}
+                                   "rj": ARadioButton("Rejection"),
+                                   "rf": ARadioButton("Random Forest"),
+                                   "mcmc": ARadioButton("MCMC")}
                                }
         # Objective buttons
         self._objectiveButtons = {"group": QButtonGroup(),
@@ -210,10 +215,10 @@ class AComputationSettingsFrame(QScrollArea):
         # Fill layout
         for idx in range(len(firstColumn)):
             # Add first label and selector
-            mcmcBoxLayout.addWidget(QLabel(firstColumn[idx][0]), idx, 0, 1, 1)
+            mcmcBoxLayout.addWidget(QLabel(firstColumn[idx][0]), idx, 0, 1, 1, Qt.AlignRight)
             mcmcBoxLayout.addWidget(firstColumn[idx][1], idx, 1, 1, 1)
             # Add second label and selector
-            mcmcBoxLayout.addWidget(QLabel(secondColumn[idx][0]), idx, 2, 1, 1)
+            mcmcBoxLayout.addWidget(QLabel(secondColumn[idx][0]), idx, 2, 1, 1, Qt.AlignRight)
             mcmcBoxLayout.addWidget(secondColumn[idx][1], idx, 3, 1, 1)
 
         # Set layout and return ready box
@@ -324,6 +329,12 @@ class AComputationSettingsFrame(QScrollArea):
         else:
             dialog = AFixParameterDialog(self._internalModel, self.nativeParentWidget())
             dialog.exec_()
+
+    def sizeHint(self):
+        """Used to resize the frame dynamically during creation."""
+
+        screenWidth = QApplication.desktop().screenGeometry().width()
+        return QSize(int(screenWidth/3), self.height())
 
 
 class ASettingEntry(QDoubleSpinBox):
@@ -561,3 +572,19 @@ class ACheckBox(QCheckBox):
 
         self.value = value
         self.setText(value.capitalize())
+
+
+class ARadioButton(QPushButton):
+    def __init__(self, text, parent=None):
+        super(ARadioButton, self).__init__(parent)
+
+        self.setText(text)
+        self.setCheckable(True)
+
+        if text == "Rejection":
+            self.setIcon(QIcon("./icons/rejection.png"))
+        elif text == "Random Forest":
+            self.setIcon(QIcon("./icons/forest.png"))
+        else:
+            self.setIcon(QIcon("./icons/chain.png"))
+
