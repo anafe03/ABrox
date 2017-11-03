@@ -1,5 +1,5 @@
 
-class Summary:
+class ABCSummary:
     """Summary class"""
 
     def __init__(self, summary):

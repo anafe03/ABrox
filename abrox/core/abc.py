@@ -2,12 +2,12 @@ from collections import OrderedDict
 from scipy import stats
 import numpy as np
 
-from abrox.core.summary import Summary
+from abrox.core.abc_summary import ABCSummary
 from abrox.core.config_check import ConfigTester
-from abrox.core.preparation import ABCInitializer
+from abrox.core.abc_initializer import ABCInitializer
 from abrox.core.rejection import ABCRejection
 from abrox.core.plot import Plotter
-from abrox.core.preprocess import ABCPreprocess
+from abrox.core.abc_preprocess import ABCPreprocess
 from abrox.core.report import Report
 from abrox.core.wegmann import Wegmann
 from abrox.core.mcmc import MCMC
@@ -41,7 +41,7 @@ class Abc:
         simulations, keep, objective, nModels, paramNames = prepare.getMetaInfo()
         obsData = prepare.getObservedData(modelList)
 
-        summaryClass = Summary(self.config['summary'])
+        summaryClass = ABCSummary(self.config['summary'])
         sumStatObsData = summaryClass.summarize(obsData)
 
         preprocess = ABCPreprocess(modelList, summaryClass, sumStatObsData)

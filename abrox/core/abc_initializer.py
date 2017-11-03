@@ -1,7 +1,7 @@
 import pandas as pd
 from itertools import chain
 
-from abrox.core.abcmodel import ABCModel
+from abrox.core.abc_model import ABCModel
 
 
 class ABCInitializer:
