@@ -9,7 +9,6 @@ setup(
     long_description=open('README.md').read(),
     author='Ulf Mertens',
     author_email='mertens.ulf@gmail.com',
-    # scripts=['scripts/abrox-gui'],
     entry_points={
         'console_scripts': [
             'abrox-gui = abrox.gui.main:main'

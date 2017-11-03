@@ -1,9 +1,6 @@
 import numpy as np
 from scipy import stats
 
-
-
-
 class Reject:
 
     def __init__(self, refTable, paramNames, keep, objective):

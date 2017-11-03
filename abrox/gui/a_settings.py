@@ -18,7 +18,6 @@ class ASettingsWindow(QFrame):
         self._console = console
         self._compSettingsFrame = AComputationSettingsFrame(internalModel, console)
         self._modelTestFrame = ARunFrame(internalModel, console, outputConsole)
-
         self._configureLayout(QHBoxLayout())
 
     def _configureLayout(self, layout):
@@ -39,13 +38,29 @@ class AComputationSettingsFrame(QScrollArea):
     def __init__(self, internalModel, console, parent=None):
         super(AComputationSettingsFrame, self).__init__(parent)
 
+        # Private attributes
         self._internalModel = internalModel
         self._console = console
         self._output = AOuputDir(internalModel)
         self._comboWidget = QWidget()
         self._settingEntries = dict()
-        self._configureLayout(QVBoxLayout())
+        self._hyperparametersFrame = QStackedWidget()
 
+        # Method buttons
+        self._methodButtons = {"group": QButtonGroup(),
+                               "buttons": {
+                                   "rj": QRadioButton("Rejection"),
+                                   "rf": QRadioButton("Random Forest"),
+                                   "mcmc": QRadioButton("MCMC")}
+                               }
+        # Objective buttons
+        self._objectiveButtons = {"group": QButtonGroup(),
+                                  "buttons": {
+                                     "pe": QRadioButton("Parameter Estimation"),
+                                     "mc": QRadioButton("Model Comparison")}
+                               }
+
+        self._configureLayout(QVBoxLayout())
 
     def _configureLayout(self, layout):
         """Lays out main components of the frame."""
@@ -72,51 +87,138 @@ class AComputationSettingsFrame(QScrollArea):
         groupBox = QGroupBox('General Settings')
         groupBoxLayout = QVBoxLayout()
 
-        # Settings entries
+        # Define a container to hold the relevant settings
+        # for objective, method and settings panes
         containerLayout = QGridLayout()
         container = QWidget()
-        # Define labels
-        labels = [('Number of simulations:', 'simulations'),
-                  ('Threshold:', 'threshold'),
-                  ('Keep:', 'keep')]
 
-        # Add labels and spinboxes to grid
-        for idx, label in enumerate(labels):
+        # Create components
+        objectiveBox = self._createObjectiveBox()
+        methodBox = self._createMethodBox()
+        hyperBox = self._createHyperParamsBox()
 
-            # Create label and add to layout
-            labelName = labels[idx][0]
-            key = labels[idx][1]
-            containerLayout.addWidget(QLabel(labelName, self), idx, 0, 1, 1)
+        # Lay out components
+        containerLayout.addWidget(objectiveBox, 0, 0, 1, 1)
+        containerLayout.addWidget(methodBox, 0, 1, 1, 1)
+        containerLayout.addWidget(hyperBox, 1, 0, 1, 2)
 
-            # Create entry and add to layout and dict
-            entry = ASettingEntry(self._internalModel, key)
-            containerLayout.addWidget(entry, idx, 1, 1, 1)
-            self._settingEntries[key] = entry
-
-        # Add automatic threshold check button
-        self._autoCheck = QCheckBox()
-        self._autoCheck.setText('Automatic')
-        containerLayout.addWidget(self._autoCheck, 1, 2)
-
-        if self._internalModel.setting('threshold') == -1:
-            self._autoCheck.setChecked(True)
-            self._settingEntries['threshold'].setEnabled(False)
-        else:
-            self._autoCheck.setChecked(False)
-        self._autoCheck.toggled.connect(self._onAutoThreshold)
-
-        # Create objective and method choice widgets
-        objectiveChoiceWidget = AObjectiveChoiceBox(self._internalModel)
-
-        containerLayout.addWidget(objectiveChoiceWidget, idx+1, 0, 1, 1)
-
-        # Lay out container
+        # # Lay out container
         container.setLayout(containerLayout)
         groupBoxLayout.addWidget(self._output)
         groupBoxLayout.addWidget(container)
         groupBox.setLayout(groupBoxLayout)
 
         return groupBox
+
+    def _createObjectiveBox(self):
+        """Returns the ready objective group box."""
+
+        # Create objective group box
+        objectiveGroupBox = QGroupBox('Objective')
+        objectiveGroupBoxLayout = QVBoxLayout()
+
+        # Add radio buttons to group and layout
+        for button in self._objectiveButtons["buttons"].values():
+            self._objectiveButtons["group"].addButton(button)
+            objectiveGroupBoxLayout.addWidget(button)
+        self._objectiveButtons["group"].buttonClicked.connect(self._onObjective)
+
+        objectiveGroupBox.setLayout(objectiveGroupBoxLayout)
+        return objectiveGroupBox
+
+    def _createMethodBox(self):
+        """Returns the ready method group box."""
+
+        # Create group box
+        methodGroupBox = QGroupBox('Method')
+        methodGroupBoxLayout = QVBoxLayout()
+
+        # Add radio buttons to group and layout
+        for button in self._methodButtons["buttons"].values():
+            self._methodButtons["group"].addButton(button)
+            methodGroupBoxLayout.addWidget(button)
+        self._methodButtons["group"].buttonClicked.connect(self._onMethod)
+
+        methodGroupBox.setLayout(methodGroupBoxLayout)
+        return methodGroupBox
+
+    def _createHyperParamsBox(self):
+        """Returns the ready hyper parameters box."""
+
+        # Create groupbox and subboxes
+        hyperParamsBox = QGroupBox("Hyperparameters")
+        hyperParamsBoxLayout = QVBoxLayout()
+        rejectionBox = self._createRejectionBox()
+        mcmcBox = self._createMCMCBox()
+
+        # Add settings boxes to stacked widget
+        self._hyperparametersFrame.addWidget(rejectionBox)
+        self._hyperparametersFrame.addWidget(mcmcBox)
+        hyperParamsBoxLayout.addWidget(self._hyperparametersFrame)
+        hyperParamsBox.setLayout(hyperParamsBoxLayout)
+        return hyperParamsBox
+
+    def _createRejectionBox(self):
+        """Returns the ready rejection box."""
+
+        # Create rejection settings pane
+        rejectionBox = QWidget()
+        rejectionBoxLayout = QGridLayout()
+
+        # Use this for rejection
+        labels = [('Number of simulations:', 'simulations'),
+                  ('Threshold:', 'threshold'),
+                  ('Keep:', 'keep')]
+
+        for idx, label in enumerate(labels):
+
+            labelName = labels[idx][0]
+            key = labels[idx][1]
+
+            rejectionBoxLayout.addWidget(QLabel(labelName, self), idx, 0, 1, 1)
+
+            # Create entry and add to layout and dict
+            entry = ASettingEntry(self._internalModel, key)
+            rejectionBoxLayout.addWidget(entry, idx, 1, 1, 1)
+            self._settingEntries[key] = entry
+
+        # Add automatic threshold check button
+        self._autoCheck = QCheckBox()
+        self._autoCheck.setText('Automatic')
+        rejectionBoxLayout.addWidget(self._autoCheck, 1, 2)
+
+        # Set layout and return ready box
+        rejectionBox.setLayout(rejectionBoxLayout)
+        return rejectionBox
+
+    def _createMCMCBox(self):
+        """Returns the ready MCMC box."""
+
+        # Create mcmc settings pane
+        mcmcBox = QWidget()
+        mcmcBoxLayout = QGridLayout()
+
+        # Use this for mcmc
+        firstColumn = [('Number of chains:', ASettingEntry(self._internalModel, "chains")),
+                       ('Threshold:', ASettingEntry(self._internalModel, "threshold")),
+                       ('Keep:', ASettingEntry(self._internalModel, "thinning"))]
+
+        secondColumn = [("Proposal:", QComboBox()),
+                        ("Optimizer:", QComboBox()),
+                        ("Burn-in:", ASettingEntry(self._internalModel, "Burn"))]
+
+        # Fill layout
+        for idx in range(len(firstColumn)):
+            # Add first label and selector
+            mcmcBoxLayout.addWidget(QLabel(firstColumn[idx][0]), idx, 0, 1, 1)
+            mcmcBoxLayout.addWidget(firstColumn[idx][1], idx, 1, 1, 1)
+            # Add second label and selector
+            mcmcBoxLayout.addWidget(QLabel(secondColumn[idx][0]), idx, 2, 1, 1)
+            mcmcBoxLayout.addWidget(secondColumn[idx][1], idx, 3, 1, 1)
+
+        # Set layout and return ready box
+        mcmcBox.setLayout(mcmcBoxLayout)
+        return mcmcBox
 
     def _modelTestSettingsGroup(self):
         """Create and return the model test settings groupbox."""
@@ -169,6 +271,24 @@ class AComputationSettingsFrame(QScrollArea):
                 self._combo.updateItems()
         return False
 
+    def _onObjective(self, button):
+        """Triggered when objective radio button clicked."""
+
+        if button.text() == "Model Comparison":
+            self._methodButtons["buttons"]["mcmc"].setEnabled(False)
+        else:
+            self._methodButtons["buttons"]["mcmc"].setEnabled(True)
+
+    def _onMethod(self, button):
+        """Triggered when method radio button clicked."""
+
+        if button.text() in ["Rejection", "Random Forest"]:
+            # Change view to rejection settings
+            self._hyperparametersFrame.setCurrentIndex(0)
+        else:
+            # Change view to mcmc settings
+            self._hyperparametersFrame.setCurrentIndex(1)
+
     def _onModelTest(self, checked):
         """Controls the appearance of the model test frame."""
 
@@ -192,8 +312,6 @@ class AComputationSettingsFrame(QScrollArea):
         else:
             self._settingEntries['threshold'].setEnabled(True)
             self._internalModel.changeSetting('threshold', self._settingEntries['threshold'].value())
-
-        print(self._internalModel._project['Analysis']['settings'])
 
     def _onFixParameter(self):
         """Invoke a dialog for settings parameters."""
@@ -221,8 +339,8 @@ class ASettingEntry(QDoubleSpinBox):
         self._configureRange()
 
         # Set value from model
-        self.setValue(self._internalModel['settings'][key])
-        self.valueChanged.connect(self._onValueChanged)
+        #self.setValue(self._internalModel['settings'][key])
+        #self.valueChanged.connect(self._onValueChanged)
 
     def _configureRange(self):
         """Sets the range of the spinbox."""
@@ -246,8 +364,8 @@ class ASettingEntry(QDoubleSpinBox):
 
     def _onValueChanged(self, val):
         """Triggered when user changes the value fo the setting."""
-
-        self._internalModel.changeSetting(self._key, val)
+        pass
+        #self._internalModel.changeSetting(self._key, val)
 
 
 class AOuputDir(QWidget):
@@ -435,82 +553,6 @@ class AModelComboBox(QComboBox):
         for idx, model in enumerate(self._internalModel['models']):
             self.addItem(model.name)
             self.setItemIcon(idx, QIcon('./icons/model.png'))
-
-
-class AObjectiveChoiceBox(QWidget):
-    def __init__(self, internalModel, parent=None):
-        super(AObjectiveChoiceBox, self).__init__(parent)
-
-        self._internalModel = internalModel
-        self._configureLayout(QGridLayout())
-
-    def _configureLayout(self, layout):
-        """Lays out the main components."""
-
-        # Create exclusive checkbox groups
-        self.objectiveGroup = QButtonGroup()
-        self.objectiveGroup.setExclusive(True)
-        self.methodGroup = QButtonGroup()
-        self.methodGroup.setExclusive(True)
-
-        # Create widgets
-        objectiveLabel = QLabel('Objective:')
-        inferenceCheck = ACheckBox('inference')
-        comparisonCheck = ACheckBox('comparison')
-        methodLabel = QLabel('Method:')
-        rejectionCheck = ACheckBox('rejection')
-        logisticCheck = ACheckBox('logistic')
-
-        # Add checks to groups
-        self._addCheckBoxesToGroup(self.objectiveGroup, (inferenceCheck, comparisonCheck),
-                                   self._onObjectiveChanged)
-
-        self._addCheckBoxesToGroup(self.methodGroup, (rejectionCheck, logisticCheck),
-                                   self._onMethodChanged)
-
-        # Check according to model
-        if self._internalModel.objective() == "comparison":
-            comparisonCheck.setChecked(True)
-        else:
-            inferenceCheck.setChecked(True)
-
-        if self._internalModel.method() == 'logistic':
-            logisticCheck.setChecked(True)
-        else:
-            rejectionCheck.setChecked(True)
-
-        # Fill layout
-        for i, row in enumerate([(objectiveLabel, inferenceCheck, comparisonCheck),
-                                 (methodLabel, rejectionCheck, logisticCheck)]):
-            for j, widget in enumerate(row):
-                layout.addWidget(widget, i, j, 1, 1)
-
-        layout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(layout)
-
-    def _addCheckBoxesToGroup(self, group, checks, func):
-        """A helper method to add checkboxes to group."""
-
-        for check in checks:
-            group.addButton(check)
-
-        group.buttonClicked.connect(func)
-
-    def _onObjectiveChanged(self, checkBox):
-        """Triggered when objective selection changed."""
-
-        self._internalModel.addObjective(checkBox.value)
-        if checkBox.value == 'comparison':
-            for button in self.methodGroup.buttons():
-                button.setEnabled(True)
-        else:
-            for button in self.methodGroup.buttons():
-                button.setEnabled(False)
-
-    def _onMethodChanged(self, checkBox):
-        """Triggered when method selection changed."""
-
-        self._internalModel.addMethod(checkBox.value)
 
 
 class ACheckBox(QCheckBox):
