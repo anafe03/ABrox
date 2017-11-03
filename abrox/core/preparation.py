@@ -1,10 +1,10 @@
 import pandas as pd
 from itertools import chain
 
-from abrox.core.model import Model
+from abrox.core.abcmodel import ABCModel
 
 
-class Prepare:
+class ABCInitializer:
 
     def __init__(self, config):
         self.config = config
@@ -36,25 +36,24 @@ class Prepare:
         except ImportError('Imported data could not be imported'):
             return None
 
-    def buildModel(self):
+    def buildModels(self):
         """
-        Generate list of models.
-        :return: models
+        Generate a list of models.
+        :return: the list of models, and the model names
         """
         self.model = []
         for i, modelDict in enumerate(self.config['models']):
-            self.model.append(Model(**modelDict))
-
+            self.model.append(ABCModel(**modelDict))
         modelNames = [model['name'] for model in self.config['models']]
 
         return self.model, modelNames
 
     def getSummaryFunc(self):
-        """ Return instance of summary class. """
+        """Returns an instance of summary class."""
         return self.config['summary']
 
-    def flattenList(self,List):
-        return list(chain.from_iterable(List))
+    def flattenList(self, alist):
+        return list(chain.from_iterable(alist))
 
     def getMetaInfo(self):
         """ Get number of simulations and how many should be accepted. """
@@ -65,5 +64,3 @@ class Prepare:
         parameterNames = self.flattenList([list(d.keys()) for d in self.config['models'][0]['prior']])
 
         return simulations, keep, objective, nModels, parameterNames
-
-

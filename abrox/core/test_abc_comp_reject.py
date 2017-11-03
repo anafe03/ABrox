@@ -65,8 +65,3 @@ if __name__ == "__main__":
     abc = Abc(CONFIG)
     out = abc.run()
     print(out)
-    # TODO:
-    # Sampling parameters is currently not really fast since the prior
-    # distributions are the values from dicts in lists.
-    # The draw_Parameter method in Model class needs to access these
-    # values every time. I am not sure how this slows down the whole process.

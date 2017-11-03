@@ -1,7 +1,8 @@
 import numpy as np
 from scipy import stats
 
-class Reject:
+
+class ABCRejection:
 
     def __init__(self, refTable, paramNames, keep, objective):
         self.refTable = refTable
@@ -20,7 +21,6 @@ class Reject:
         threshold = np.percentile(self.refTable['distance'],q=q)
         subset = self.refTable[self.refTable['distance'] < threshold]
         return subset, threshold
-
 
 
 def summary(data):

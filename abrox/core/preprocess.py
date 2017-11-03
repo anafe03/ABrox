@@ -5,36 +5,36 @@ import itertools
 
 from abrox.core.abc_utils import euclideanDistance
 from abrox.core.reference_table import RefTable
-from abrox.core.scale import Scaler
+from abrox.core.scale import ABCScaler
 
 
-class Preprocess:
+class ABCPreprocess:
 
     def __init__(self, model, summarizer, sumStatObsData):
-        self.model = model
-        self.summarizer = summarizer
-        self.refTable = RefTable()
-        self.scaler = Scaler()
+
+        self._models = model
+        self._summarizer = summarizer
+        self._refTableWrapper = RefTable()
+        self._scaler = ABCScaler()
         self.sumStatObsData = sumStatObsData
         self.scaledSumStatObsData = None
 
-    def generateSample(self, iteration, modelindex):
+    def _generateSample(self, _, modelindex):
         """
-        Compute one simulation.
+        Run one simulation.
         1. Draw parameter from model
         2. Simulate data
         3. Compute summary statistics
         4. Add row to ABC Table
         """
-        param = self.model[modelindex].drawParameter()
-        simdata = self.model[modelindex].simulate(param)
-        sumstat = self.summarizer.summary(simdata)
+        param = self._models[modelindex].drawParameter()
+        simdata = self._models[modelindex].simulate(param)
+        sumstat = self._summarizer.summary(simdata)
         return modelindex, list(param.values()), sumstat, -1
 
     def _generateArgs(self, simulations, nModels):
         """
         Generate argument list.
-
         :param simulations:
         :param nModels:
         :return:
@@ -43,12 +43,13 @@ class Preprocess:
         modelindices = np.repeat(np.arange(nModels), simulations)
         return list(zip(iterations, modelindices))
 
-    def getFirstModel(self):
+    def _getFirstModel(self):
         """
         Get first model from list of models. This is
         necessary for parameter inference via MCMC.
         """
-        return self.model[0]
+
+        return self._models[0]
 
     def fillTable(self, simulations, parallel, jobs):
         """
@@ -57,21 +58,19 @@ class Preprocess:
         for scaling as numpy array.
         """
 
-        args = self._generateArgs(simulations, len(self.model))
-
+        args = self._generateArgs(simulations, len(self._models))
         with Pool(jobs) as pool:
 
             Starmap = pool.starmap if parallel else itertools.starmap
-            out = Starmap(self.generateSample, args) if parallel else list(Starmap(self.generateSample, args))
+            out = Starmap(self._generateSample, args) if parallel else list(Starmap(self._generateSample, args))
 
-        self.refTable.initialize(out)
+        self._refTableWrapper.initialize(out)
 
-        return self.refTable.getColumn('sumstat')
+        return self._refTableWrapper.getColumn('sumstat')
 
-    def run(self, simulations, parallel=True, jobs=4):
+    def preprocess(self, simulations, parallel=True, jobs=2):
         """
-        Generate Reference Table.
-
+        Generate the complete ABC reference table.
         :param sumStatObsData: summary statistics of observed data
         :param simulations: number of rows in the table
         :param parallel: boolean flag
@@ -79,23 +78,25 @@ class Preprocess:
         :return: None
         """
 
-        # prefill table and return unscaled summary statistics
+        # Pre-fill table and return unscaled summary statistics
         sumStatTable = self.fillTable(simulations, parallel, jobs)
-        # scale summary statistics and store MAD
-        scaledSumStatTable = self.scaler.fit_transform(sumStatTable)
-        # override unscaled with scaled summary statistics
-        self.refTable.fillColumn(scaledSumStatTable, 'sumstat')
-        # scale observed summary statistics with MAD calculated above
-        self.scaledSumStatObsData = self.scaler.transform(self.sumStatObsData)
-        # compute distance
+
+        # Scale summary statistics and store MAD
+        scaledSumStatTable = self._scaler.fit_transform(sumStatTable)
+
+        # Override unscaled with scaled summary statistics
+        self._refTableWrapper.fillColumn(scaledSumStatTable, 'sumstat')
+
+        # Scale observed summary statistics with MAD calculated above
+        self.scaledSumStatObsData = self._scaler.transform(self.sumStatObsData)
+
+        # Compute distance
         distance = euclideanDistance(scaledSumStatTable, self.scaledSumStatObsData)
-        # store distance in table
-        self.refTable.fillColumn(distance, 'distance')
 
+        # Store distance in table
+        self._refTableWrapper.fillColumn(distance, 'distance')
 
-if __name__ == "__main__":
-    pass
-
+        return self._refTableWrapper.getRefTable()
 
 
 

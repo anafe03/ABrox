@@ -6,7 +6,7 @@ class MCMC:
 
     def __init__(self, preprocess, paramNames, chainLength, proposal, threshold, burn=0):
         self.summary = preprocess.summarizer
-        self.model = preprocess.getFirstModel()
+        self.model = preprocess._getFirstModel()
         self.scaler = preprocess.scaler
         self.preprocess = preprocess
         self.proposal = proposal

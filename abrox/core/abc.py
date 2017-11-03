@@ -3,40 +3,52 @@ from scipy import stats
 import numpy as np
 
 from abrox.core.summary import Summary
-from abrox.core.error_check import ErrorCheck
-from abrox.core.preparation import Prepare
-from abrox.core.rejection import Reject
+from abrox.core.config_check import ConfigTester
+from abrox.core.preparation import ABCInitializer
+from abrox.core.rejection import ABCRejection
 from abrox.core.plot import Plotter
-from abrox.core.preprocess import Preprocess
+from abrox.core.preprocess import ABCPreprocess
 from abrox.core.report import Report
 from abrox.core.wegmann import Wegmann
 from abrox.core.mcmc import MCMC
 
 
 class Abc:
-
-    def __init__(self,config):
+    """
+    This is the class that organizes all steps required for
+    a complete ABC analysis. The constructor calls the helper 
+    class ConfigurationTester, which performs a sanity check on
+    the config dictionary supplied by the user.
+    """
+    def __init__(self, config):
         self.config = config
-        self.errorCheck()
+        self._checkConfigSanity()
 
-    def errorCheck(self):
-        check = ErrorCheck(self.config)
-        check.run()
+    def _checkConfigSanity(self):
+        """Creates and runs an instance of the config sanity tester."""
+
+        tester = ConfigTester(self.config)
+        tester.checkForErrors()
 
     def run(self):
-        prepare = Prepare(self.config)
-        modelList, modelNames = prepare.buildModel()
+        """
+        The only interface method of the class, responsible for handling
+        all pre-processing and computation steps.
+        """
+
+        prepare = ABCInitializer(self.config)
+        modelList, modelNames = prepare.buildModels()
         simulations, keep, objective, nModels, paramNames = prepare.getMetaInfo()
         obsData = prepare.getObservedData(modelList)
 
         summaryClass = Summary(self.config['summary'])
         sumStatObsData = summaryClass.summarize(obsData)
 
-        preprocess = Preprocess(modelList, summaryClass, sumStatObsData)
+        preprocess = ABCPreprocess(modelList, summaryClass, sumStatObsData)
 
-        preprocess.run(simulations, parallel=True, jobs=4)
+        table = preprocess.preprocess(simulations, parallel=True, jobs=4)
 
-        rejecter = Reject(preprocess.refTable.getRefTable(), paramNames, keep, objective)
+        rejecter = ABCRejection(table, paramNames, keep, objective)
 
         if self.config['settings']['method'] == "rejection":
 
