@@ -24,8 +24,8 @@ def toArray(df, name):
     :param name: the column name
     :return: a multidimensional numpy array
     """
-    aList = list(df[name].values)
-    if isinstance(aList[0], list):
-        return np.array(aList)
+    alist = list(df[name].values)
+    if isinstance(alist[0], list):
+        return np.array(alist)
     else:
-        return np.array(aList).reshape(-1, 1)
+        return np.array(alist).reshape(-1, 1)
