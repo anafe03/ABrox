@@ -63,21 +63,22 @@ class Abc:
                 subset, threshold = rejecter.reject()
 
                 wegmann = Wegmann(subset, paramNames, threshold)
-                threshold = wegmann.threshold
                 proposal = wegmann.getProposal()
                 startingValues = wegmann.getStartingValues()
 
             chainLength = 10000
             burn = 100
+            thin = 1
             # proposalDist = OrderedDict([("d", stats.uniform(-0.05, 0.1))])
-            mcmc = MCMC( preprocess = preprocess,
-                         paramNames = paramNames,
-                         chainLength = chainLength,
-                         proposal = proposal,
-                         threshold = threshold,
-                         burn = burn)
+            mcmc = MCMC(preprocess=preprocess,
+                        paramNames=paramNames,
+                        proposal=proposal,
+                        threshold=threshold)
 
-            samples, accepted = mcmc.run(startingValues)
+            samples, accepted = mcmc.run(start=startingValues,
+                                         chainLength=chainLength,
+                                         burn=burn,
+                                         thin=thin)
 
             plotter = Plotter(samples, paramNames)
             plotter.plot()

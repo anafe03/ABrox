@@ -4,7 +4,7 @@ from abrox.core.abc_utils import euclideanDistance
 
 class MCMC:
 
-    def __init__(self, preprocess, paramNames, chainLength, proposal, threshold, burn=0):
+    def __init__(self, preprocess, paramNames, proposal, threshold):
         self.summary = preprocess.summarizer
         self.model = preprocess._getFirstModel()
         self.scaler = preprocess.scaler
@@ -13,8 +13,6 @@ class MCMC:
         self.paramNames = paramNames
         self.prior = self.model.prior
         self.threshold = threshold
-        self.chainLength = chainLength
-        self.burn = burn
 
     def metropolis(self, old):
         """basic metropolis algorithm"""
@@ -38,26 +36,27 @@ class MCMC:
         """
         return {k: v for k, v in zip(self.paramNames, paramList)}
 
-    def run(self, start, take=1):
+    def run(self, start, chainLength=10000, burn=0, thin=1):
         """
         Start MCMC sampling.
         :param start: starting value
-        :param n: length of chain
-        :param take: thinning
+        :param chainLength: length of chain
+        :param burn: burn-in
+        :param thin: thinning
         :return: the accepted samples
         """
         accepted = 0
-        samples = np.empty(shape=(self.chainLength, len(start)))
+        samples = np.empty(shape=(chainLength, len(start)))
 
         samples[0,:] = start
 
-        for i in range(self.chainLength-1):
+        for i in range(chainLength-1):
             start, accept = self.metropolis(start)
             accepted += accept
-            if i % take is 0:
+            if i % thin is 0:
                 samples[i+1,:] = start
 
-        return samples[self.burn:,:], accepted
+        return samples[burn:,:], accepted
 
     def checkDistance(self,param):
         """
