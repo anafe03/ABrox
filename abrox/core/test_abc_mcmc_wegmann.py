@@ -9,16 +9,11 @@ def summary(data):
     mean_std = np.mean(np.std(data, axis=0))
     return diff_mean / mean_std
 
+
 def simulate_Model1(params):
-    n = 1000
+    n = 10000
     first_sample = np.random.normal(0, 1, n)
     sec_sample = np.random.normal(params['d'], 1, n)
-    return np.column_stack((first_sample, sec_sample))
-
-def simulate_Model2(params):
-    n = 1000
-    first_sample = np.random.normal(0, 1, n)
-    sec_sample = np.random.normal(0, 1, n)
     return np.column_stack((first_sample, sec_sample))
 
 
@@ -41,15 +36,12 @@ CONFIG = {
     "distance": None,
     "settings": {
         'distance_metric': 'default',
-         'fixedparameters': {'d': 0.3},
-         'method': 'mcmc',
-         'type': 'wegmann',
-         'modeltest': 0,
-         'objective': 'inference',
-         'outputdir': '/Users/ulf.mertens/Desktop/abrox_demo/t_test',
-         'simulations': 10000,
-         'keep': 100,
-         'threshold': -1
+        'objective': 'inference',
+        'method': {'algorithm': 'mcmc',
+                   'specs': {'chainLength': 10000, 'burn': 0, 'thin': 1, 'proposal': None, 'start': None}},
+        'test': {'model': 0, 'parameter': {'d': 0.2}},
+        'preprocess': {'simulations': 10000, 'keep': 100, 'threshold': -1},
+        'outputdir': '/Users/ulf.mertens/Desktop/abrox_demo/t_test'
     }
 }
 

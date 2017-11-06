@@ -1,18 +1,37 @@
 import numpy as np
 from abrox.core.abc_utils import euclideanDistance
+from abrox.core.wegmann import Wegmann
 
 
 class MCMC:
 
-    def __init__(self, preprocess, paramNames, proposal, threshold):
-        self.summary = preprocess.summarizer
+    def __init__(self, preprocess, paramNames, subset, threshold, chainLength, proposal, start, burn, thin):
+        self.summary = preprocess._summarizer
         self.model = preprocess._getFirstModel()
-        self.scaler = preprocess.scaler
+        self.scaler = preprocess._scaler
         self.preprocess = preprocess
-        self.proposal = proposal
         self.paramNames = paramNames
-        self.prior = self.model.prior
+        self.prior = self.model._priors
+        self.subset = subset
         self.threshold = threshold
+
+        self.chainLength = chainLength
+        self.proposal = proposal
+        self.start = start
+        self.burn = burn
+        self.thin = thin
+
+        if self.proposal is None: self.wegmann()
+
+    def wegmann(self):
+        """
+        Determines starting value of the chain and proposal distribution using
+        the algorithm by Wegmann.
+        :return: None
+        """
+        wegmann = Wegmann(self.subset, self.paramNames, self.threshold)
+        self.proposal = wegmann.getProposal()
+        self.start = wegmann.getStartingValues()
 
     def metropolis(self, old):
         """basic metropolis algorithm"""
@@ -36,7 +55,7 @@ class MCMC:
         """
         return {k: v for k, v in zip(self.paramNames, paramList)}
 
-    def run(self, start, chainLength=10000, burn=0, thin=1):
+    def run(self):
         """
         Start MCMC sampling.
         :param start: starting value
@@ -46,19 +65,20 @@ class MCMC:
         :return: the accepted samples
         """
         accepted = 0
-        samples = np.empty(shape=(chainLength, len(start)))
+        start = self.start
+        samples = np.empty(shape=(self.chainLength, len(start)))
 
         samples[0,:] = start
 
-        for i in range(chainLength-1):
+        for i in range(self.chainLength-1):
             start, accept = self.metropolis(start)
             accepted += accept
-            if i % thin is 0:
+            if i % self.thin is 0:
                 samples[i+1,:] = start
 
-        return samples[burn:,:], accepted
+        return samples[self.burn:,:], accepted
 
-    def checkDistance(self,param):
+    def checkDistance(self, param):
         """
         Check if distance between simulated summary statistics
         and observed summary statistics is < threshold

@@ -1,6 +1,4 @@
-from collections import OrderedDict
-from scipy import stats
-import numpy as np
+
 
 from abrox.core.abc_summary import ABCSummary
 from abrox.core.config_check import ConfigTester
@@ -9,7 +7,6 @@ from abrox.core.rejection import ABCRejection
 from abrox.core.plot import Plotter
 from abrox.core.abc_preprocess import ABCPreprocess
 from abrox.core.report import Report
-from abrox.core.wegmann import Wegmann
 from abrox.core.mcmc import MCMC
 
 
@@ -37,48 +34,47 @@ class Abc:
         """
 
         prepare = ABCInitializer(self.config)
+
         modelList, modelNames = prepare.buildModels()
-        simulations, keep, objective, nModels, paramNames = prepare.getMetaInfo()
+
         obsData = prepare.getObservedData(modelList)
 
+        simulations, keep, _, = prepare.getsimSettings()
+
+        nModels = prepare.getModelNumber()
+
+        paramNames = prepare.getParameterNames()
+
+        objective = prepare.getObjective()
+
+        algorithm, hyperParams = prepare.getAlgorithmInfo()
+
         summaryClass = ABCSummary(self.config['summary'])
+
         sumStatObsData = summaryClass.summarize(obsData)
 
         preprocess = ABCPreprocess(modelList, summaryClass, sumStatObsData)
 
         table = preprocess.preprocess(simulations, parallel=True, jobs=4)
 
-        rejecter = ABCRejection(table, paramNames, keep, objective)
+        rejecter = ABCRejection(table, keep)
 
-        if self.config['settings']['method'] == "rejection":
+        subset, threshold = rejecter.reject() # CAUTION: This should not always run!
 
-            subset, _ = rejecter.reject()
+        if algorithm == "rejection":
 
             reporter = Report(subset, modelNames, paramNames, objective)
             return reporter.report()
 
-        if self.config['settings']['method'] == "mcmc":
+        if algorithm == "mcmc":
 
-            if self.config['settings']['type'] == "wegmann":
-                subset, threshold = rejecter.reject()
-
-                wegmann = Wegmann(subset, paramNames, threshold)
-                proposal = wegmann.getProposal()
-                startingValues = wegmann.getStartingValues()
-
-            chainLength = 10000
-            burn = 100
-            thin = 1
-            # proposalDist = OrderedDict([("d", stats.uniform(-0.05, 0.1))])
             mcmc = MCMC(preprocess=preprocess,
                         paramNames=paramNames,
-                        proposal=proposal,
-                        threshold=threshold)
+                        subset=subset,
+                        threshold=threshold,
+                        **hyperParams)
 
-            samples, accepted = mcmc.run(start=startingValues,
-                                         chainLength=chainLength,
-                                         burn=burn,
-                                         thin=thin)
+            samples, accepted = mcmc.run()
 
             plotter = Plotter(samples, paramNames)
             plotter.plot()

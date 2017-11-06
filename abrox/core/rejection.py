@@ -4,12 +4,9 @@ from scipy import stats
 
 class ABCRejection:
 
-    def __init__(self, refTable, paramNames, keep, objective):
+    def __init__(self, refTable, keep):
         self.refTable = refTable
-        self.paramNames = paramNames
         self.keep = keep
-        self.obj = objective
-        self.paramTable = None
 
     def reject(self):
         """

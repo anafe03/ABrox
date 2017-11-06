@@ -20,8 +20,8 @@ class ABCInitializer:
             return self.loadExternalData()
         else:
             for i, model in enumerate(model):
-                if i == self.config['settings']['modeltest']:
-                    params = self.config['settings']['fixedparameters']
+                if i == self.config['settings']['test']['model']:
+                    params = self.config['settings']['test']['parameter']
                     return model.simulate(params)
 
     def loadExternalData(self):
@@ -55,12 +55,38 @@ class ABCInitializer:
     def flattenList(self, alist):
         return list(chain.from_iterable(alist))
 
-    def getMetaInfo(self):
+    def getsimSettings(self):
         """ Get number of simulations and how many should be accepted. """
-        simulations = self.config['settings']['simulations']
-        keep = self.config['settings']['keep']
-        objective = self.config['settings']['objective']
-        nModels = len(self.config['models'])
-        parameterNames = self.flattenList([list(d.keys()) for d in self.config['models'][0]['prior']])
+        simulations = self.config['settings']['preprocess']['simulations']
+        keep = self.config['settings']['preprocess']['keep']
+        threshold = self.config['settings']['preprocess']['threshold']
 
-        return simulations, keep, objective, nModels, parameterNames
+        return simulations, keep, threshold
+
+    def getObjective(self):
+        """
+        Returns the objective. Either comparison or inference.
+        """
+        return self.config['settings']['objective']
+
+    def getModelNumber(self):
+        """
+        Returns the number of models specified.
+        """
+        return len(self.config['models'])
+
+    def getParameterNames(self):
+        """
+        Returns parameter names of first model only!!
+        """
+        return self.flattenList([list(d.keys()) for d in self.config['models'][0]['prior']])
+
+    def getAlgorithmInfo(self):
+        """
+        Get algorithm and additional hyperparameters.
+        """
+        info = self.config['settings']['method']
+        algo = info['algorithm']
+        algoParams = info['specs']
+
+        return algo, algoParams

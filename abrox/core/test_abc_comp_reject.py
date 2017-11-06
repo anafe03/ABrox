@@ -48,9 +48,9 @@ CONFIG = {
     "distance": None,
     "settings": {
         'distance_metric': 'default',
-        'objective': 'inference',
-        'method': {'algorithm': 'rejection', 'specs':  {'proposal': None, 'start': None}},
-        'test': {'model': 0, 'parameter': {'d': 0.2}},
+        'objective': 'comparison',
+        'method': {'algorithm': 'rejection', 'specs':  {}},
+        'test': {'model': 0, 'parameter': {'d': 0.0}},
         'preprocess': {'simulations': 1000,  'keep': 100, 'threshold': -1},
         'outputdir': '/Users/ulf.mertens/Desktop/abrox_demo/t_test'
     }
