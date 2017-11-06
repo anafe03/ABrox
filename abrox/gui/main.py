@@ -4,11 +4,15 @@ from PyQt5.QtGui import QPixmap
 from abrox.gui.a_main_window import AMainWindow
 import time
 import sys
+import os
 import ctypes
 import qdarkstyle
 
-
 __version__ = "1.0.1"
+
+"""Essential for standardizing path."""
+PATH = os.path.dirname(os.path.abspath(__file__))
+os.chdir(PATH)
 
 
 def main(args=None):
@@ -42,7 +46,7 @@ def main(args=None):
     splash.setEnabled(False)
     splash.show()
     app.processEvents()
-    #time.sleep(3)
+    time.sleep(3)
 
     # =============================================================== #
     #                       CREATE MAIN WINDOW                        #
