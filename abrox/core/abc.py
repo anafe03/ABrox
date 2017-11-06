@@ -1,11 +1,12 @@
 from abrox.core.abc_summary import ABCSummary
-from abrox.core.config_check import ConfigTester
+from abrox.core.abc_config_check import ConfigTester
 from abrox.core.abc_initializer import ABCInitializer
-from abrox.core.rejection import ABCRejection
-from abrox.core.plot import Plotter
+from abrox.core.abc_rejection import ABCRejection
+from abrox.core.abc_mcmc_plot import Plotter
 from abrox.core.abc_preprocess import ABCPreProcessor
 from abrox.core.abc_report import ABCReporter
-from abrox.core.mcmc import MCMC
+from abrox.core.abc_mcmc import MCMC
+from abrox.core.abc_random_forest import ABCRandomForest
 
 
 class Abc:
@@ -76,7 +77,7 @@ class Abc:
             reporter = ABCReporter(subset, modelNames, settings['pnames'], settings['obj'])
             return reporter.report()
 
-        if settings['alg'] == "mcmc":
+        elif settings['alg'] == "mcmc":
 
             mcmc = MCMC(pp, subset, settings)
 
@@ -86,3 +87,11 @@ class Abc:
             plotter.plot()
 
             return samples
+
+        elif settings['alg'] == "rf":
+
+            rf = ABCRandomForest(refTable, pp)
+            probs = rf.run()
+
+            return probs
+

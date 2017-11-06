@@ -1,9 +1,13 @@
 import numpy as np
 from abrox.core.abc_utils import euclideanDistance
-from abrox.core.wegmann import Wegmann
+from abrox.core.abc_wegmann import Wegmann
 
 
 class MCMC:
+    """
+    Implements the MCMC sampling algorithm without likelihood.
+    """
+    #TODO - give reference to paper
 
     def __init__(self, preprocessor, subset, settings):
 

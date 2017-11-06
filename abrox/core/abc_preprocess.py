@@ -4,7 +4,7 @@ import itertools
 
 
 from abrox.core.abc_utils import euclideanDistance
-from abrox.core.reference_table import RefTable
+from abrox.core.abc_reference_table import RefTable
 from abrox.core.abc_scale import ABCScaler
 
 
