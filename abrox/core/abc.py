@@ -1,12 +1,10 @@
-
-
 from abrox.core.abc_summary import ABCSummary
 from abrox.core.config_check import ConfigTester
 from abrox.core.abc_initializer import ABCInitializer
 from abrox.core.rejection import ABCRejection
 from abrox.core.plot import Plotter
-from abrox.core.abc_preprocess import ABCPreprocess
-from abrox.core.report import Report
+from abrox.core.abc_preprocess import ABCPreProcessor
+from abrox.core.abc_report import ABCReporter
 from abrox.core.mcmc import MCMC
 
 
@@ -33,50 +31,58 @@ class Abc:
         all pre-processing and computation steps.
         """
 
-        prepare = ABCInitializer(self.config)
+        # Create an initializer instance, responsible for
+        # importing/generating data, building the models,
+        # and extracting relevant infos from config dict
+        initializer = ABCInitializer(self.config)
 
-        modelList, modelNames = prepare.buildModels()
+        # 1. Initialize models according to parameters and return
+        # a list with the models, and a list with the model names
+        # 2. Get the data as a numpy array, or simulate, if no
+        # data set specified to be imported
+        # 3. Extract the relevant settings and hyperparameeters and
+        # return them as a dictionary
+        modelList, modelNames = initializer.buildAndGetModels()
+        obsData = initializer.getOrGenerateObsData(modelList)
+        settings = initializer.extractAndGetSettings()
 
-        obsData = prepare.getObservedData(modelList)
+        # Create a wrapper over the user-defined summary function
+        # and obtain the summary statistics of the observed data
+        summarizer = ABCSummary(self.config['summary'])
+        sumStatObsData = summarizer.summarize(obsData)
 
-        simulations, keep, _, = prepare.getsimSettings()
+        # Create an instance of the abc preprocessor, responsible for
+        # generating an ABC reference table (a pandas DataFrame)
+        # which contains four columns containing the following information:
+        # Column 0: idx  - (the model index)
+        # Column 1: param - a list of sampled parameters
+        # Column 2: sumstat - a list of the summary statistics
+        # Column 3: distance - the value obtained by evaluating the distance func
+        pp = ABCPreProcessor(modelList, summarizer, sumStatObsData)
 
-        nModels = prepare.getModelNumber()
+        # TODO -> parallel and jobs must also be specified in settings!
+        refTable = pp.preprocess(settings['nsim'], parallel=True, jobs=4)
 
-        paramNames = prepare.getParameterNames()
+        # Create a rejecter instance, responsible for filtering
+        # the reference table according to the specified number 'keep'
+        # of rows to retain (retains those with smallest distance)
+        rejecter = ABCRejection(refTable, settings['keep'])
+        # TODO CAUTION: This should not always run!
+        subset, threshold = rejecter.reject()
 
-        objective = prepare.getObjective()
+        # According to the specified algorithm, run the abc
+        if settings['alg'] == "rejection":
 
-        algorithm, hyperParams = prepare.getAlgorithmInfo()
-
-        summaryClass = ABCSummary(self.config['summary'])
-
-        sumStatObsData = summaryClass.summarize(obsData)
-
-        preprocess = ABCPreprocess(modelList, summaryClass, sumStatObsData)
-
-        table = preprocess.preprocess(simulations, parallel=True, jobs=4)
-
-        rejecter = ABCRejection(table, keep)
-
-        subset, threshold = rejecter.reject() # CAUTION: This should not always run!
-
-        if algorithm == "rejection":
-
-            reporter = Report(subset, modelNames, paramNames, objective)
+            reporter = ABCReporter(subset, modelNames, settings['pnames'], settings['obj'])
             return reporter.report()
 
-        if algorithm == "mcmc":
+        if settings['alg'] == "mcmc":
 
-            mcmc = MCMC(preprocess=preprocess,
-                        paramNames=paramNames,
-                        subset=subset,
-                        threshold=threshold,
-                        **hyperParams)
+            mcmc = MCMC(pp, subset, settings)
 
             samples, accepted = mcmc.run()
 
-            plotter = Plotter(samples, paramNames)
+            plotter = Plotter(samples, settings['pnames'])
             plotter.plot()
 
             return samples

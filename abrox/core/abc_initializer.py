@@ -10,10 +10,10 @@ class ABCInitializer:
         self.config = config
         self.model = None
 
-    def getObservedData(self, model):
+    def getOrGenerateObsData(self, model):
         """
         Import observed data or generate pseudo-observed data.
-        :return: The (pseudo) observed data
+        :return: The (pseudo) observed data as a numpy array.
         """
 
         if self.config['data']['datafile'] is not None:
@@ -36,7 +36,7 @@ class ABCInitializer:
         except ImportError('Imported data could not be imported'):
             return None
 
-    def buildModels(self):
+    def buildAndGetModels(self):
         """
         Generate a list of models.
         :return: the list of models, and the model names
@@ -52,10 +52,10 @@ class ABCInitializer:
         """Returns an instance of summary class."""
         return self.config['summary']
 
-    def flattenList(self, alist):
+    def _flattenList(self, alist):
         return list(chain.from_iterable(alist))
 
-    def getsimSettings(self):
+    def getSimSettings(self):
         """ Get number of simulations and how many should be accepted. """
         simulations = self.config['settings']['preprocess']['simulations']
         keep = self.config['settings']['preprocess']['keep']
@@ -79,7 +79,7 @@ class ABCInitializer:
         """
         Returns parameter names of first model only!!
         """
-        return self.flattenList([list(d.keys()) for d in self.config['models'][0]['prior']])
+        return self._flattenList([list(d.keys()) for d in self.config['models'][0]['prior']])
 
     def getAlgorithmInfo(self):
         """
@@ -90,3 +90,30 @@ class ABCInitializer:
         algoParams = info['specs']
 
         return algo, algoParams
+
+    def extractAndGetSettings(self):
+        """Extracts the relevant preporcessing and algorithm settings."""
+
+        algo = self.config['settings']['method']['algorithm']
+        specs = self.config['settings']['method']['specs']
+        paramNames = self.getParameterNames()
+        objective = self.config['settings']['objective']
+        nModels = len(self.config['models'])
+        simulations = self.config['settings']['preprocess']['simulations']
+        keep = self.config['settings']['preprocess']['keep']
+        threshold = self.config['settings']['preprocess']['threshold']
+
+        settings = {'alg': algo,
+                    'specs': specs,
+                    'pnames': paramNames,
+                    'obj': objective,
+                    'nmodels': nModels,
+                    'nsim': simulations,
+                    'keep': keep,
+                    'tr': threshold}
+
+        return settings
+
+
+
+

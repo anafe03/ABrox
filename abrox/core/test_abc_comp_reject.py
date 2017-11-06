@@ -50,7 +50,7 @@ CONFIG = {
         'distance_metric': 'default',
         'objective': 'comparison',
         'method': {'algorithm': 'rejection', 'specs':  {}},
-        'test': {'model': 0, 'parameter': {'d': 0.0}},
+        'test': {'model': 0, 'parameter': {'d': 0.5}},
         'preprocess': {'simulations': 1000,  'keep': 100, 'threshold': -1},
         'outputdir': '/Users/ulf.mertens/Desktop/abrox_demo/t_test'
     }

@@ -23,6 +23,11 @@ class ABCModel:
                 self.currentParam[name] = dist.rvs()
         return self.currentParam
 
+    def getPriors(self):
+        """Returns the list with model priors."""
+
+        return self._priors
+
     def simulate(self, param):
         """
         Simulate data from user-defined simulate function.

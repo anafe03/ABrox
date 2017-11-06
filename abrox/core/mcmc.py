@@ -5,80 +5,66 @@ from abrox.core.wegmann import Wegmann
 
 class MCMC:
 
-    def __init__(self, preprocess, paramNames, subset, threshold, chainLength, proposal, start, burn, thin):
-        self.summary = preprocess._summarizer
-        self.model = preprocess._getFirstModel()
-        self.scaler = preprocess._scaler
-        self.preprocess = preprocess
-        self.paramNames = paramNames
-        self.prior = self.model._priors
-        self.subset = subset
-        self.threshold = threshold
+    def __init__(self, preprocessor, subset, settings):
 
-        self.chainLength = chainLength
-        self.proposal = proposal
-        self.start = start
-        self.burn = burn
-        self.thin = thin
+        self._pp = preprocessor
+        self._subset = subset
+        self._settings = settings
+        self._model = self._pp.getFirstModel()
+        self._priors = self._model.getPriors()
 
-        if self.proposal is None: self.wegmann()
+        if settings['specs']['proposal'] is None:
+            self._initWegmann()
 
-    def wegmann(self):
+    def run(self):
+        """Runs an ABC-MCMC sampling chain."""
+
+        # Extract settings
+        chainLength = self._settings['specs']['chl']
+        thin = self._settings['specs']['thin']
+        burn = self._settings['specs']['burn']
+        start = self._settings['specs']['start']
+        accepted = 0
+
+        # Pre-initialize an array to hold samples
+        samples = np.empty(shape=(chainLength, len(start)))
+        samples[0, :] = start
+
+        for i in range(chainLength-1):
+            start, accept = self._metropolis(start)
+            accepted += accept
+            if i % thin is 0:
+                samples[i+1, :] = start
+
+        return samples[burn:, :], accepted
+
+    def _initWegmann(self):
         """
         Determines starting value of the chain and proposal distribution using
         the algorithm by Wegmann.
         :return: None
         """
-        wegmann = Wegmann(self.subset, self.paramNames, self.threshold)
-        self.proposal = wegmann.getProposal()
-        self.start = wegmann.getStartingValues()
 
-    def metropolis(self, old):
-        """basic metropolis algorithm"""
-        new = old + self.makeProposal()
-        accProb = np.min([self.density(new) / self.density(old), 1])
+        wegmann = Wegmann(self._subset, self._settings['pnames'],
+                          self._settings['tr'])
+        self._settings['specs']['proposal'] = wegmann.getProposal()
+        self._settings['specs']['start'] = wegmann.getStartingValues()
+
+    def _metropolis(self, old):
+        """Implements a single step of the metropolis algorithm."""
+
+        new = old + self._propose()
+        accProb = np.min([self._density(new) / self._density(old), 1])
         u = np.random.uniform()
 
         cnt = 0
-        if self.checkDistance(new) and u < accProb:
+        if self._distance(new) and u < accProb:
             old = new
             cnt = 1
 
         return old, cnt
 
-    def listToDict(self,paramList):
-        """
-        Convert a list of parameters to dictionary.
-        Necessary since model.simulate() only accepts dict.
-        :param paramList: list of parameters
-        :return: the dictionary
-        """
-        return {k: v for k, v in zip(self.paramNames, paramList)}
-
-    def run(self):
-        """
-        Start MCMC sampling.
-        :param start: starting value
-        :param chainLength: length of chain
-        :param burn: burn-in
-        :param thin: thinning
-        :return: the accepted samples
-        """
-        accepted = 0
-        start = self.start
-        samples = np.empty(shape=(self.chainLength, len(start)))
-
-        samples[0,:] = start
-
-        for i in range(self.chainLength-1):
-            start, accept = self.metropolis(start)
-            accepted += accept
-            if i % self.thin is 0:
-                samples[i+1,:] = start
-
-        return samples[self.burn:,:], accepted
-
-    def checkDistance(self, param):
+    def _distance(self, param):
         """
         Check if distance between simulated summary statistics
         and observed summary statistics is < threshold
@@ -86,37 +72,48 @@ class MCMC:
         :return: True if smaller than threshold False otherwise
         """
 
-        param = self.listToDict(param)
+        # Get parameters in the desired form
+        param = self._listToDict(param)
 
-        sumstat = self.summary.summarize(self.model.simulate(param))
-        scaledSumStat = self.scaler.transform(sumstat)
+        # Simulate dataset, compute summary, and scale it
+        sumStat = self._pp.summarizer.summarize(self._model.simulate(param))
+        scaledSumStat = self._pp.scaler.transform(sumStat)
 
-        accepted = euclideanDistance(self.preprocess.scaledSumStatObsData,scaledSumStat,axis=0) < self.threshold
+        # Decide whether to accept sample or not
+        dist = euclideanDistance(self._pp.scaledSumStatObsData, scaledSumStat, axis=0)
+        accepted = dist < self._settings['tr']
         return accepted
 
-    def makeProposal(self):
-        """
-        Generate proposed values according to proposal distributions
-        :return: Proposed values
-        """
-        proposedValue = []
-        for paramName, proposal in self.proposal.items():
-            proposedValue.append(proposal.rvs())
-        return np.array(proposedValue)
-
-    def density(self,value):
+    def _density(self, value):
         """
         Return overall density as sum of individual log densities
         :param value: the value(s) the density is evaluated on
         :return: the overall density
         """
+
         density = 0
-        for prior in self.prior:
+        for prior in self._priors:
             for dist in prior.values():
                 density += dist.logpdf(value)
         return density
 
+    def _propose(self):
+        """
+        Generate proposed values according to proposal distributions
+        :return: Proposed values
+        """
 
-if __name__ == "__main__":
+        proposedValue = []
+        for paramName, proposal in self._settings['specs']['proposal'].items():
+            proposedValue.append(proposal.rvs())
+        return np.array(proposedValue)
 
-    pass
+    def _listToDict(self, paramList):
+        """
+        Convert a list of parameters to a dictionary.
+        Necessary since model.simulate() only accepts dict.
+        :param paramList: list of parameters
+        :return: the created dictionary
+        """
+
+        return {k: v for k, v in zip(self._settings['pnames'], paramList)}

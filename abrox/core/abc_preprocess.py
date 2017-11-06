@@ -8,14 +8,17 @@ from abrox.core.reference_table import RefTable
 from abrox.core.abc_scale import ABCScaler
 
 
-class ABCPreprocess:
+class ABCPreProcessor:
 
     def __init__(self, model, summarizer, sumStatObsData):
 
+        # Private attributes
         self._models = model
-        self._summarizer = summarizer
         self._refTableWrapper = RefTable()
-        self._scaler = ABCScaler()
+
+        # Public attributes
+        self.summarizer = summarizer
+        self.scaler = ABCScaler()
         self.sumStatObsData = sumStatObsData
         self.scaledSumStatObsData = None
 
@@ -29,7 +32,7 @@ class ABCPreprocess:
         """
         param = self._models[modelindex].drawParameter()
         simdata = self._models[modelindex].simulate(param)
-        sumstat = self._summarizer.summary(simdata)
+        sumstat = self.summarizer.summary(simdata)
         return modelindex, list(param.values()), sumstat, -1
 
     def _generateArgs(self, simulations, nModels):
@@ -43,7 +46,7 @@ class ABCPreprocess:
         modelindices = np.repeat(np.arange(nModels), simulations)
         return list(zip(iterations, modelindices))
 
-    def _getFirstModel(self):
+    def getFirstModel(self):
         """
         Get first model from list of models. This is
         necessary for parameter inference via MCMC.
@@ -82,13 +85,13 @@ class ABCPreprocess:
         sumStatTable = self.fillTable(simulations, parallel, jobs)
 
         # Scale summary statistics and store MAD
-        scaledSumStatTable = self._scaler.fit_transform(sumStatTable)
+        scaledSumStatTable = self.scaler.fit_transform(sumStatTable)
 
         # Override unscaled with scaled summary statistics
         self._refTableWrapper.fillColumn(scaledSumStatTable, 'sumstat')
 
         # Scale observed summary statistics with MAD calculated above
-        self.scaledSumStatObsData = self._scaler.transform(self.sumStatObsData)
+        self.scaledSumStatObsData = self.scaler.transform(self.sumStatObsData)
 
         # Compute distance
         distance = euclideanDistance(scaledSumStatTable, self.scaledSumStatObsData)

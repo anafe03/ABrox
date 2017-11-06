@@ -6,7 +6,7 @@ import numpy as np
 from abrox.core.abc_utils import toArray
 
 
-class Report:
+class ABCReporter:
 
     def __init__(self, table, modelNames, paramNames, objective):
         self.table = table
@@ -24,6 +24,7 @@ class Report:
         Compute Bayes factor matrix.
         :return: Bayes factor matrix
         """
+
         nModels = len(self.modelNames)
         counterDict = {idx: 0 for idx in range(nModels)}
 
@@ -49,7 +50,7 @@ class Report:
 
         df = pd.DataFrame(bfMatrix,columns=self.modelNames)
         df['Models'] = self.modelNames
-        df.set_index('Models',inplace=True)
+        df.set_index('Models', inplace=True)
         return df
 
     def report(self):
@@ -61,6 +62,6 @@ class Report:
             return self.bayesFactor()
 
         if self.objective == "inference":
-            self.initParamTable()
-            return self.paramTable.describe().transpose()
+            table = self.initParamTable()
+            return table.describe().transpose()
 
