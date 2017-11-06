@@ -48,14 +48,11 @@ CONFIG = {
     "distance": None,
     "settings": {
         'distance_metric': 'default',
-         'fixedparameters': {'d': 0.2},
-         'method': 'rejection',
-         'modeltest': 0,
-         'objective': 'comparison',
-         'outputdir': '/Users/ulf.mertens/Desktop/abrox_demo/t_test',
-         'simulations': 1000,
-         'keep': 100,
-         'threshold': -1
+        'objective': 'inference',
+        'method': {'algorithm': 'rejection', 'specs':  {'proposal': None, 'start': None}},
+        'test': {'model': 0, 'parameter': {'d': 0.2}},
+        'preprocess': {'simulations': 1000,  'keep': 100, 'threshold': -1},
+        'outputdir': '/Users/ulf.mertens/Desktop/abrox_demo/t_test'
     }
 }
 
