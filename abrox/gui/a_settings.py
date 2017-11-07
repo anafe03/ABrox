@@ -8,7 +8,7 @@ from abrox.gui.a_script_creator import AScriptCreator
 from abrox.gui.a_utils import createButton
 from abrox.gui import tracksave
 
-
+# TODO: You silly fool :). Use OrdereredDict!
 class ASettingsWindow(QFrame):
     """Main container for the output settings and run."""
     def __init__(self, internalModel, console, outputConsole, parent=None):
@@ -66,7 +66,6 @@ class AComputationSettingsFrame(QScrollArea):
                                }
 
         self._configureLayout(QVBoxLayout())
-        print("HALAOALAO")
 
     def _configureLayout(self, layout):
         """Lays out main components of the frame."""

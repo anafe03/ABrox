@@ -6,6 +6,7 @@ from abrox.core.abc_mcmc_plot import Plotter
 from abrox.core.abc_preprocess import ABCPreProcessor
 from abrox.core.abc_report import ABCReporter
 from abrox.core.abc_mcmc import MCMC
+from abrox.core.abc_neural_net import ABCNeuralNet
 from abrox.core.abc_random_forest import ABCRandomForest
 
 
@@ -93,6 +94,13 @@ class Abc:
 
             rf = ABCRandomForest(refTable, pp)
             probs = rf.run()
+
+            return probs
+
+        elif settings['alg'] == "nn":
+
+            nn = ABCNeuralNet(refTable, pp)
+            probs = nn.run()
 
             return probs
 
