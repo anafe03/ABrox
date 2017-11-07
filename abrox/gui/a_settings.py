@@ -66,6 +66,7 @@ class AComputationSettingsFrame(QScrollArea):
                                }
 
         self._configureLayout(QVBoxLayout())
+        print("HALAOALAO")
 
     def _configureLayout(self, layout):
         """Lays out main components of the frame."""

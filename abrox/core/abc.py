@@ -68,6 +68,7 @@ class Abc:
         # the reference table according to the specified number 'keep'
         # of rows to retain (retains those with smallest distance)
         rejecter = ABCRejection(refTable, settings['keep'])
+
         # TODO CAUTION: This should not always run!
         subset, threshold = rejecter.reject()
 

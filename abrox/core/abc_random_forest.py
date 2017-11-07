@@ -16,7 +16,7 @@ class ABCRandomForest:
 
         # Create a classifier
         # TODO according to user-specified settings
-        # TODO 2: Implement random forest without sklearn dependecy
+        # TODO 2: Implement random forest without sklearn dependency
         rf = RandomForestClassifier(n_estimators=100)
 
         # Extract sum stats and model indices from ref table
@@ -43,7 +43,7 @@ class ABCRandomForest:
         nfolds controls the split of the data.
         """
 
-        # Makse sure dimensions agree
+        # Make sure dimensions agree
         assert X.shape[0] == y.shape[0], "Number of observations should equal" \
                                          "number of labels."
 
