@@ -1,7 +1,10 @@
+import numpy as np
+
 from abrox.core.abc_summary import ABCSummary
 from abrox.core.abc_config_check import ConfigTester
 from abrox.core.abc_initializer import ABCInitializer
 from abrox.core.abc_rejection import ABCRejection
+from abrox.core.abc_crossval import ABCCv
 from abrox.core.abc_mcmc_plot import Plotter
 from abrox.core.abc_preprocess import ABCPreProcessor
 from abrox.core.abc_report import ABCReporter
@@ -76,8 +79,12 @@ class Abc:
         # According to the specified algorithm, run the abc
         if settings['alg'] == "rejection":
 
-            reporter = ABCReporter(subset, modelNames, settings['pnames'], settings['obj'])
-            return reporter.report()
+            if True: # if user wants cross validation (TODO)
+                crossval = ABCCv(refTable,settings['keep'])
+                return crossval.report()
+            else:
+                reporter = ABCReporter(subset, modelNames, settings['pnames'], settings['obj'])
+                return reporter.report()
 
         elif settings['alg'] == "mcmc":
 
