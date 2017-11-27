@@ -80,8 +80,9 @@ class Abc:
         if settings['alg'] == "rejection":
 
             if True: # if user wants cross validation (TODO)
-                crossval = ABCCv(refTable,settings['keep'])
-                return crossval.report()
+                crossval = ABCCv(refTable,settings['keep'],settings['obj'])
+                output = crossval.report()
+                return output
             else:
                 reporter = ABCReporter(subset, modelNames, settings['pnames'], settings['obj'])
                 return reporter.report()
