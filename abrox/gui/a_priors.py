@@ -84,6 +84,10 @@ class APriorSpecifier(QFrame):
                     'params': OrderedDict([('a', -1), ('loc', 0), ('scale', 1)]),
                     'func': 'stats.gamma'
                     }),
+        ('Inverse Gamma', {
+                    'params': OrderedDict([('a', -1), ('loc', 0), ('scale', 1)]),
+                    'func': 'stats.invgamma'
+                    }),
         ('Geometric', {
                     'params': OrderedDict([('p', -1), ('loc', 0)]),
                     'func': 'stats.geom'
