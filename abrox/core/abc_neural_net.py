@@ -27,7 +27,8 @@ class ABCNeuralNet:
         # TODO 2: Implement random forest without sklearn dependency
 
         model = Sequential()
-        model.add(Dense(20, input_dim=sumStat.shape[1], kernel_initializer='glorot_uniform', activation='relu'))
+        model.add(Dense(1000, input_dim=sumStat.shape[1], kernel_initializer='glorot_uniform', activation='relu'))
+        model.add(Dense(100, kernel_initializer='glorot_uniform', activation='relu'))
         model.add(Dense(1, kernel_initializer='glorot_uniform', activation='sigmoid'))
         # Compile model
         model.compile(loss='binary_crossentropy', optimizer='adam')
@@ -38,7 +39,7 @@ class ABCNeuralNet:
         # print(accuracies)
 
         # Fit on summary statistics (the more the better)
-        model.fit(sumStat, indices, batch_size=1, epochs=2, shuffle=True, validation_split=0.2)
+        model.fit(sumStat, indices, batch_size=64, epochs=2, shuffle=True, validation_split=0.2)
 
         # Predict probabilities of models on summary obs
         sumStatTest = np.array(self._pp.scaledSumStatObsData).reshape(1, -1)
