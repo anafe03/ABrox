@@ -9,7 +9,7 @@ from abrox.core.abc_mcmc_plot import Plotter
 from abrox.core.abc_preprocess import ABCPreProcessor
 from abrox.core.abc_report import ABCReporter
 from abrox.core.abc_mcmc import MCMC
-from abrox.core.abc_neural_net import ABCNeuralNet
+# from abrox.core.abc_neural_net import ABCNeuralNet
 from abrox.core.abc_random_forest import ABCRandomForest
 
 
@@ -66,7 +66,10 @@ class Abc:
         pp = ABCPreProcessor(modelList, summarizer, sumStatObsData)
 
         # TODO -> parallel and jobs must also be specified in settings!
-        refTable = pp.preprocess(settings['nsim'], parallel=True, jobs=4)
+        #if settings['extref']:
+        #    refTable = read_external()
+        #else:
+        refTable = pp.preprocess(settings['nsim'], parallel=False, jobs=4)
 
         # Create a rejecter instance, responsible for filtering
         # the reference table according to the specified number 'keep'
@@ -79,8 +82,8 @@ class Abc:
         # According to the specified algorithm, run the abc
         if settings['alg'] == "rejection":
 
-            if True: # if user wants cross validation (TODO)
-                crossval = ABCCv(refTable,settings['keep'],settings['obj'])
+            if settings['cv']:
+                crossval = ABCCv(refTable,settings['keep'],settings['obj'],settings['cv'],modelNames)
                 output = crossval.report()
                 return output
             else:
