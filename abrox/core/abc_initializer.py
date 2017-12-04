@@ -48,6 +48,11 @@ class ABCInitializer:
         keep = self.config['settings']['preprocess']['keep']
         threshold = self.config['settings']['preprocess']['threshold']
 
+        if not self.config['settings']['cv']:
+            cv = False
+        else:
+            cv = self.config['settings']['cv']['n']
+
         settings = {'alg': algo,
                     'specs': specs,
                     'pnames': paramNames,
@@ -55,7 +60,8 @@ class ABCInitializer:
                     'nmodels': nModels,
                     'nsim': simulations,
                     'keep': keep,
-                    'tr': threshold}
+                    'tr': threshold,
+                    'cv': cv}
 
         return settings
 
