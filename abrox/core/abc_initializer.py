@@ -47,6 +47,7 @@ class ABCInitializer:
         simulations = self.config['settings']['preprocess']['simulations']
         keep = self.config['settings']['preprocess']['keep']
         threshold = self.config['settings']['preprocess']['threshold']
+        outputdir = self.config['settings']['outputdir']
 
         if not self.config['settings']['cv']:
             cv = False
@@ -61,6 +62,7 @@ class ABCInitializer:
                     'nsim': simulations,
                     'keep': keep,
                     'tr': threshold,
+                    'outputdir': outputdir,
                     'cv': cv}
 
         return settings
