@@ -48,6 +48,7 @@ class ABCInitializer:
         keep = self.config['settings']['preprocess']['keep']
         threshold = self.config['settings']['preprocess']['threshold']
         outputdir = self.config['settings']['outputdir']
+        extref = self.config['settings']['extref']
 
         if not self.config['settings']['cv']:
             cv = False
@@ -62,6 +63,7 @@ class ABCInitializer:
                     'nsim': simulations,
                     'keep': keep,
                     'tr': threshold,
+                    'extref': extref,
                     'outputdir': outputdir,
                     'cv': cv}
 

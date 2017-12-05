@@ -1,6 +1,7 @@
-import numpy as np
+import sys
 
 from abrox.core.abc_summary import ABCSummary
+from abrox.core.abc_utils import read_external
 from abrox.core.abc_config_check import ConfigTester
 from abrox.core.abc_initializer import ABCInitializer
 from abrox.core.abc_rejection import ABCRejection
@@ -66,10 +67,11 @@ class Abc:
         pp = ABCPreProcessor(modelList, summarizer, sumStatObsData)
 
         # TODO -> parallel and jobs must also be specified in settings!
-        #if settings['extref']:
-        #    refTable = read_external()
-        #else:
-        refTable = pp.preprocess(settings['nsim'], parallel=False, jobs=4)
+        if settings['extref']:
+            refTable = read_external(settings['extref'])
+        else:
+            refTable = pp.preprocess(settings['nsim'], parallel=True, jobs=4)
+
 
         # Create a rejecter instance, responsible for filtering
         # the reference table according to the specified number 'keep'

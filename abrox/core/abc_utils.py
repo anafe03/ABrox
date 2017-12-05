@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 # ABC utility functions
 
@@ -74,7 +75,31 @@ def cross_val(X, y, classifier, nfolds=5):
     return np.array(accs)
 
 
-def accuracy(self, y, yhat):
+def accuracy(y, yhat):
     """A utility function to compute the accuracy of the classifier"""
 
     return np.sum(y == yhat) / len(y)
+
+
+def read_external(path):
+    """
+    Read external reference table as csv and convert to ABrox ref table.
+    :param path: path to file
+    :return: reference table as pandas dataframe.
+    """
+    dfRaw = pd.read_csv(path,sep=",")
+
+    paramCols = [col for col in dfRaw if col.startswith('p')]
+    sumstatCols = [col for col in dfRaw if col.startswith('s')]
+
+    refTable = pd.DataFrame(index=dfRaw.index,columns=['idx','param','sumstat'])
+    refTable['idx'] = dfRaw['idx']
+    refTable['param'] = dfRaw[paramCols].as_matrix().tolist()
+
+    sumstatArray = dfRaw[sumstatCols].as_matrix().tolist()
+    sumstats = [np.array(sumstatList) for sumstatList in sumstatArray]
+    refTable['sumstat'] = sumstats
+
+    refTable['distance'] = dfRaw['distance']
+
+    return refTable
