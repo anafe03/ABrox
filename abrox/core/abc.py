@@ -84,7 +84,7 @@ class Abc:
 
             if settings['cv']:
                 crossval = ABCCv(refTable,settings['keep'],settings['obj'],settings['cv'],modelNames)
-                output = crossval.report()
+                output = crossval.report(settings['outputdir'])
                 return output
             else:
                 reporter = ABCReporter(subset, modelNames, settings['pnames'], settings['obj'])

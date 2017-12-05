@@ -126,7 +126,7 @@ class ABCCv:
 
             return estimatedParams
 
-    def report(self):
+    def report(self, outputdir):
         """
         Compute the prediction error if the objective is inference.
         Compute the confusion matrix if the objective is comparison.
@@ -138,25 +138,26 @@ class ABCCv:
             actual = pd.Series(true[:,0],name="Actual")
             predicted = pd.Series(predictions[:,0], name="Predicted")
             confusionMatrix = pd.crosstab(actual,predicted)
-            self.plotConfusion(confusionMatrix.as_matrix())
+            self.saveConfusion(confusionMatrix.as_matrix(),outputdir)
+
             return confusionMatrix
 
         if self.objective == "inference":
             self.estimatedParams = self.compute()
             self.trueParams = self.paramArray[self.picks,:]
-            print("Mean", np.mean(self.trueParams))
-            print("Min", np.min(self.trueParams))
-            print("Max", np.max(self.trueParams))
-            print("SD", np.std(self.trueParams))
-            self.plotEstimates()
+            self.saveEstimates(outputdir)
             SumSqDiff = np.sum((self.estimatedParams - self.trueParams)**2,axis=0)
             Variance = np.var(self.trueParams,axis=0)
 
             return np.float(SumSqDiff / Variance)
 
-    def plotConfusion(self, confusionMatrix):
-
-        pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/ulf.mertens/Desktop/cv_comparison.pdf")
+    def saveConfusion(self, confusionMatrix, outputdir):
+        """
+        Generate heatmap of confusion matrix showing results of cv for model comparison.
+        :param confusionMatrix: confusion matrix as numpy array.
+        :return: None
+        """
+        pdf = matplotlib.backends.backend_pdf.PdfPages(outputdir + '/cv_comparison.pdf')
 
         fig = plt.figure()
         plt.clf()
@@ -180,9 +181,12 @@ class ABCCv:
         pdf.savefig()
         pdf.close()
 
-    def plotEstimates(self):
-
-        pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/ulf.mertens/Desktop/cv_inference.pdf")
+    def saveEstimates(self, outputdir):
+        """
+        Generate multiple plots showing results of cv for parameter inference.
+        :return: None
+        """
+        pdf = matplotlib.backends.backend_pdf.PdfPages(outputdir + '/cv_inference.pdf')
         for i,col in enumerate(self.estimatedParams.T):
             plt.scatter(self.estimatedParams[:, i], self.trueParams[:, i], alpha=0.5)
             plt.xlabel('Estimated parameter')
