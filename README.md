@@ -1,16 +1,18 @@
 ![Logo](abrox/gui/icons/readme_logo.png)
 
-# ABrox
+# Approximate Bayes rocks!
 
 `ABrox` is a python package for Approximate Bayesian Computation accompanied by a user-friendly graphical interface. 
-
-In the current version, we use the ABC rejection algorithm with a local regression adjustment for the
-case of parameter inference, and local logistic (multinomial) regression for model comparison. 
 
 ## Features
 
 * Model comparison via approximate Bayes factors
+    + rejection
+    + random forest
 * Parameter inference
+    + rejection
+    + MCMC
+ * Cross-validation
 
 ## Installation
 
