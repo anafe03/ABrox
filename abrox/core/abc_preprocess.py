@@ -28,7 +28,7 @@ class ABCPreProcessor:
         1. Draw parameter from model
         2. Simulate data
         3. Compute summary statistics
-        4. Add row to ABC Table
+        4. Add row to reference Table
         """
         param = self._models[modelindex].drawParameter()
         simdata = self._models[modelindex].simulate(param)
