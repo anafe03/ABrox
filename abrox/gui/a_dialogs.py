@@ -1,5 +1,7 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
+from abrox.gui.a_utils import createDialogYesNoButtons, createButton
+from abrox.gui import tracksave
 
 
 class ALoadDataDialog(QDialog):
@@ -24,7 +26,7 @@ class ALoadDataDialog(QDialog):
 
         # Create a group box and buttons box
         groupBox = self._createGroupBox()
-        buttonsBox = self._createButtonsBox()
+        buttonsBox = createDialogYesNoButtons(self._onOk, self._onCancel)
 
         # Configure layout
         dialogLayout.addWidget(groupBox)
@@ -64,16 +66,6 @@ class ALoadDataDialog(QDialog):
 
         # Return the group
         return buttonGroup
-
-    def _createButtonsBox(self):
-        """Creates the no and cancel buttons."""
-
-        # Create OK and Cancel buttons
-        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
-                                   Qt.Horizontal)
-        buttons.accepted.connect(self._onOk)
-        buttons.rejected.connect(self._onCancel)
-        return buttons
 
     def _onOk(self):
         """Load data using pandas."""
@@ -125,7 +117,7 @@ class AFixParameterDialog(QDialog):
 
         # Create a group box and buttons box
         groupBox = self._createGroupBox()
-        buttonsBox = self._createButtonsBox()
+        buttonsBox = createDialogYesNoButtons(self._onOk, self._onCancel, self._onReset)
 
         # Configure layout
         dialogLayout.addWidget(groupBox)
@@ -177,18 +169,6 @@ class AFixParameterDialog(QDialog):
         # Return the group
         return buttonGroup
 
-    def _createButtonsBox(self):
-        """Creates the no and cancel buttons."""
-
-        # Create OK, Cancel, and Reset buttons
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel | QDialogButtonBox.Reset,
-            Qt.Horizontal)
-        buttons.accepted.connect(self._onOk)
-        buttons.rejected.connect(self._onCancel)
-        buttons.button(QDialogButtonBox.Reset).clicked.connect(self._onReset)
-        return buttons
-
     def _onOk(self):
         """Add fixed parameters to internal model and close."""
 
@@ -231,3 +211,228 @@ class ASmartSpinBox(QDoubleSpinBox):
         """Returns a key: value tuple."""
 
         return self.key, self.value()
+
+
+class ARejectionSettingsDialog(QDialog):
+    """
+    Represents a pop-up for specifying the settings
+    of the rejection algorithm.
+    """
+
+    def __init__(self, internalModel, parent=None):
+        super(ARejectionSettingsDialog, self).__init__(parent)
+
+        self._internalModel = internalModel
+        self._simEntry = [
+            QLabel('Number of simulations:'),
+            ASettingEntry(self._internalModel, 'simulations')
+        ]
+        self._refTableWidget = ARefTableDir(internalModel)
+        self._initDialog(QVBoxLayout())
+
+    def _initDialog(self, dialogLayout):
+        """Configures dialog."""
+
+        # Set title
+        self.setWindowTitle('Rejection settings')
+
+        # Create a group box and buttons box
+        refTableBox = self._createReferenceTableSettingsBox()
+        buttonsBox = createDialogYesNoButtons(self._onOk, self._onCancel)
+
+        # Configure layout
+        dialogLayout.addWidget(refTableBox)
+        dialogLayout.addWidget(buttonsBox)
+        self.setLayout(dialogLayout)
+        self.adjustSize()
+
+    def _createReferenceTableSettingsBox(self):
+        """Creates a reference table."""
+
+        # Create objective group box
+        refGroupBox = QGroupBox('Reference Table Settings')
+        refGroupBoxLayout = QGridLayout()
+
+        # Add number of simulations label and entry
+        refGroupBoxLayout.addWidget(self._simEntry[0], 0, 0, 1, 1)
+        refGroupBoxLayout.addWidget(self._simEntry[1], 0, 1, 1, 1)
+
+        # Add use external reference table layout and modify external selector
+        useExtRadio = QCheckBox("Use external reference table")
+        refGroupBoxLayout.addWidget(useExtRadio, 1, 0, 1, 1)
+
+        # Toggle, if specified in model
+        if self._internalModel.externalReference() is not None:
+            useExtRadio.setChecked(True)
+            self._toggleExt(True)
+        else:
+            useExtRadio.setChecked(False)
+            self._toggleExt(False)
+
+        # Connect toggle event to method
+        useExtRadio.toggled.connect(self._onRadio)
+
+        # Add file selector entry to layout
+        refGroupBoxLayout.addWidget(self._refTableWidget, 2, 0, 1, 2)
+        refGroupBox.setLayout(refGroupBoxLayout)
+        return refGroupBox
+
+    def _toggleExt(self, enabled):
+        """A helper function to toggle selected dir or not."""
+
+        self._refTableWidget.setEnabled(enabled)
+        self._simEntry[0].setEnabled(not enabled)
+        self._simEntry[1].setEnabled(not enabled)
+
+    def _createGroupBox(self):
+        """Creates a box with parameters."""
+
+        # Create rejection settings pane
+        rejectionBox = QWidget()
+        rejectionBoxLayout = QGridLayout()
+
+        # Use this for rejection
+        labels = [('Number of simulations:', 'simulations'),
+                  ('Threshold:', 'threshold'),
+                  ('Keep:', 'keep'),
+                  ('Cross Validation:', 'cv')]
+
+        for idx, label in enumerate(labels):
+            labelName = labels[idx][0]
+            key = labels[idx][1]
+
+            rejectionBoxLayout.addWidget(QLabel(labelName, self), idx, 0, 1, 1)
+
+            # Create entry and add to layout and dict
+            entry = ASettingEntry(self._internalModel, key)
+            rejectionBoxLayout.addWidget(entry, idx, 1, 1, 1)
+            self._settingEntries[key] = entry
+
+        # Add automatic threshold check button
+        self._autoCheck = QCheckBox()
+        self._autoCheck.setText('Automatic')
+        rejectionBoxLayout.addWidget(self._autoCheck, 1, 2)
+
+        # Set layout and return ready box
+        rejectionBox.setLayout(rejectionBoxLayout)
+        return rejectionBox
+
+    def _onRadio(self, checked):
+        """Activated when user decides to add external reference."""
+
+        if checked:
+            self._toggleExt(True)
+        else:
+            self._toggleExt(False)
+
+    def _onOk(self):
+        """Called when user presses ok. Update method settings."""
+
+        self.close()
+
+    def _onCancel(self):
+        """Called when user presses cancel. Accepted stays False."""
+        self.close()
+
+
+class ASettingEntry(QDoubleSpinBox):
+    """Derives from a basic line edit to include a key, corresponding to the model setting."""
+
+    def __init__(self, internalModel, key, parent=None):
+        super(ASettingEntry, self).__init__(parent)
+
+        self._internalModel = internalModel
+        self._key = key
+
+        # Adjust spinbox range
+        self._configureRange()
+
+        # Set value from model
+        #self.setValue(self._internalModel['settings'][key])
+        #self.valueChanged.connect(self._onValueChanged)
+
+    def _configureRange(self):
+        """Sets the range of the spinbox."""
+
+        self.setDecimals(3)
+        self.setSingleStep(0.1)
+        # Percentile settings
+        if self._key == 'keep':
+            self.setRange(0, 1e10)
+            self.setDecimals(0)
+        # Threshold settings
+        if self._key == 'threshold':
+            self.setRange(0.0, 1e10)
+
+        # N simulations settings
+        if self._key == 'simulations':
+            self.setRange(0, 1e10)
+            self.setSingleStep(10)
+            self.setDecimals(0)
+        # Cross-validation settings
+        if self._key == 'cv':
+            self.setRange(0, 1e6)
+            self.setSingleStep(10)
+            self.setDecimals(0)
+
+    def _onValueChanged(self, val):
+        """Triggered when user changes the value fo the setting."""
+        pass
+
+
+class ARefTableDir(QWidget):
+    """Reference table file for specifying the location of the ref table."""
+
+    def __init__(self, internalModel, parent=None):
+        super(ARefTableDir, self).__init__(parent)
+
+        self._internalModel = internalModel
+        self._configureLayout(QHBoxLayout())
+
+    def _configureLayout(self, layout):
+        """Creates and sets the layout."""
+
+        # Create edit for path
+        self._path = QLineEdit()
+        self._path.setPlaceholderText('Ref. table location...')
+        # TODO - add path, if existing
+        self._path.textChanged.connect(self._onEdit)
+
+        # Create button for dir
+        self._button = createButton("", './icons/load.png', 'Select reference table file...',
+                                    self._onOpen, Qt.NoFocus, True, True)
+
+        # Add widgets to layout
+        layout.addWidget(self._button)
+        layout.addWidget(self._path)
+        layout.setSpacing(0)
+        self.setLayout(layout)
+
+    def _onOpen(self):
+        """Opens up a file dialog for choosing an output folder."""
+
+        # Create file dialog
+        loadedFileName = QFileDialog.getOpenFileName(self, 'Select reference table file...',
+                                                     '', "Text Files (*.csv *.txt)")
+
+        # If user has selected something
+        if loadedFileName[0]:
+            # Update entry
+            self._path.setText(loadedFileName[0])
+            # Update internal model
+            self._internalModel.changeSetting('ref_table', {
+                            'simulations': None,
+                            'extref': loadedFileName[0]})
+            # Modify save flag
+            tracksave.saved = False
+
+    def _onEdit(self, text):
+        """Triggered when user types into dir edit."""
+
+        # Update internal model with typed stuff
+        self._internalModel.changeSetting('ref_table', {
+                            'simulations': None,
+                            'extref': text})
+        # Modify save flag
+        tracksave.saved = False
+

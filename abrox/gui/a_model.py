@@ -9,6 +9,9 @@ class AInternalModel:
     """This class represents the internal model for an approximate bayesian estimation."""
     def __init__(self):
 
+        # Initialize defaults
+        self._methodDefaults = AInternalModel._initMethodDefault()
+
         # Create an analysis skeleton as a dict
         self._project = OrderedDict([
             ('Analysis',
@@ -23,20 +26,51 @@ class AInternalModel:
                     ('settings', {
                         'outputdir': "",
                         'distance_metric': "default",
-                        'simulations': 1000,
-                        'threshold': -1,
-                        'keep': 100,
                         'objective': 'comparison',
-                        'method': 'logistic',
-                        'modeltest': False,
-                        'fixedparameters': OrderedDict()
-                    }
-                    )
+                        'method': copy.deepcopy(self._methodDefaults['rj']),
+                        'test': {'model': None, 'fixed': OrderedDict()},
+                        'ref_table': {
+                            'simulations': 10000,
+                            'extref': None
+                        },
+                    })
                     ]
                 )
              )
             ]
         )
+
+    @staticmethod
+    def _initMethodDefault():
+        """Returns a dictionary with the method default settings."""
+
+        return {
+            'mcmc': {'algorithm': 'specs',
+                     'specs': OrderedDict([
+                         ('keep', 100),
+                         ('threshold', None),
+                         ('chl', 10000),
+                         ('burn', 0),
+                         ('thin', 1),
+                         ('proposal', None),
+                         ('start', None)])
+                     },
+            'rj': {'algorithm': 'rejection',
+                   'specs': OrderedDict([
+                       ('keep', 100),
+                       ('threshold', None),
+                       ('cv', 100)])
+                   },
+            'rf': {'algorithm': 'randomforest',
+                   'specs': OrderedDict([
+                       ('n_estimators', 200),
+                       ('max_depth', None),
+                       ('criterion', 'gini'),
+                       ('min_samples_split', 2),
+                       ('min_samples_leaf', 1),
+                       ('oob_score', False)])
+                   }
+        }
 
     def deleteModel(self, nameToRemove):
         """Interface function to remove a model."""
@@ -83,8 +117,8 @@ class AInternalModel:
     def addObjective(self, objective):
         self._project['Analysis']['settings']['objective'] = objective
 
-    def addMethod(self, method):
-        self._project['Analysis']['settings']['method'] = method
+    def addMethod(self, methodDict):
+        self._project['Analysis']['settings']['method'] = methodDict
 
     def addDataFileAndDelimiter(self, datafile, delim):
 
@@ -95,23 +129,23 @@ class AInternalModel:
         self._project['Analysis']['settings']['outputdir'] = dirPath
 
     def addModelIndexForTest(self, idx):
-        self._project['Analysis']['settings']['modeltest'] = idx
+        self._project['Analysis']['settings']['test']['model'] = idx
 
     def addFixedParameters(self, listOfTuples):
 
-        self._project['Analysis']['settings']['fixedparameters'] = OrderedDict(listOfTuples)
+        self._project['Analysis']['settings']['test']['fixed'] = OrderedDict(listOfTuples)
 
     def selectedModelForTest(self):
 
         # Make sure a model is selected
-        if self._project['Analysis']['settings']['modeltest'] is False or \
+        if self._project['Analysis']['settings']['test']['model'] is None or \
                                                               not self.selectedModelIndexValid():
             raise IndexError('No valid model selected for test!')
-        idx = self._project['Analysis']['settings']['modeltest']
+        idx = self._project['Analysis']['settings']['test']['model']
         return self._project['Analysis']['models'][idx]
 
     def selectedModelIndexValid(self):
-        return False if self._project['Analysis']['settings']['modeltest'] < 0 else True
+        return False if self._project['Analysis']['settings']['test']['model'] < 0 else True
 
     def dataFile(self):
         return self._project['Analysis']['data']['datafile']
@@ -123,7 +157,7 @@ class AInternalModel:
 
     def modelTest(self):
 
-        return self._project['Analysis']['settings']['modeltest']
+        return self._project['Analysis']['settings']['test']['model']
 
     def summary(self):
         """Returns the summary function code as a string."""
@@ -163,13 +197,23 @@ class AInternalModel:
     def outputDir(self):
         return self._project['Analysis']['settings']['outputdir']
 
+    def externalReference(self):
+        return self._project['Analysis']['settings']['ref_table']['extref']
+
+    def simulations(self):
+        return self._project['Analysis']['settings']['ref_table']['simulations']
+
     def models(self):
         """Returns the model list."""
 
         return self._project['Analysis']['models']
 
+    def methodDefaults(self, method):
+
+        return copy.deepcopy(self._methodDefaults[method]['specs'])
+
     def fixedParameters(self):
-        return self._project['Analysis']['settings']['fixedparameters']
+        return self._project['Analysis']['settings']['test']['fixed']
 
     def fileWithPathName(self):
         """
@@ -248,7 +292,7 @@ class AInternalModel:
             return False
 
         # ===== Check if data loaded when not doing a model test ===== #
-        if self._project['Analysis']['settings']['modeltest'] is False and \
+        if self._project['Analysis']['settings']['test']['model'] is None and \
            not self._project['Analysis']['data']['datafile']:
 
             text = 'Since you are not performing a model test, ' \

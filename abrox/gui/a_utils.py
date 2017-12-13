@@ -1,5 +1,6 @@
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QAction, QPushButton, QToolButton
+from PyQt5.QtWidgets import QAction, QPushButton, QToolButton, QDialogButtonBox
+from PyQt5.QtCore import Qt
 
 
 def addActionsToMenu(menu, actions):
@@ -50,3 +51,23 @@ def createButton(label, iconPath=None, toolText=None, func=None,
         button.setStatusTip(toolText)
     button.setEnabled(enabled)
     return button
+
+
+def createDialogYesNoButtons(yesFunc, noFunc, resetFunc=None):
+    """Creates the no and cancel buttons of a dialog."""
+
+    # Create OK and Cancel buttons
+    if resetFunc is not None:
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok |
+                                   QDialogButtonBox.Cancel |
+                                   QDialogButtonBox.Reset,
+                                   Qt.Horizontal)
+    else:
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok |
+                                   QDialogButtonBox.Cancel,
+                                   Qt.Horizontal)
+    buttons.accepted.connect(yesFunc)
+    buttons.rejected.connect(noFunc)
+    if resetFunc is not None:
+        buttons.button(QDialogButtonBox.Reset).clicked.connect(resetFunc)
+    return buttons

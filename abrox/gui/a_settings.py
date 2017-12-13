@@ -1,14 +1,15 @@
+import pickle
+from collections import OrderedDict
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-import pickle
 from abrox.gui.a_process_manager import AProcessManager
-from abrox.gui.a_dialogs import AFixParameterDialog
+from abrox.gui.a_dialogs import *
 from abrox.gui.a_script_creator import AScriptCreator
 from abrox.gui.a_utils import createButton
 from abrox.gui import tracksave
 
-# TODO: You silly fool :). Use OrdereredDict!
+
 class ASettingsWindow(QFrame):
     """Main container for the output settings and run."""
     def __init__(self, internalModel, console, outputConsole, parent=None):
@@ -49,21 +50,20 @@ class AComputationSettingsFrame(QScrollArea):
         self._output = AOuputDir(internalModel)
         self._comboWidget = QWidget()
         self._settingEntries = dict()
-        self._hyperparametersFrame = QStackedWidget()
 
-        # Method buttons
+        # Method buttons (must be ordered)
         self._methodButtons = {"group": QButtonGroup(),
-                               "buttons": {
-                                   "rj": ARadioButton("Rejection"),
-                                   "rf": ARadioButton("Random Forest"),
-                                   "mcmc": ARadioButton("MCMC")}
+                               "buttons": OrderedDict([
+                                   ("rj", ARadioPushButton("Rejection")),
+                                   ("rf", ARadioPushButton("Random Forest")),
+                                   ("mcmc", ARadioPushButton("MCMC"))])
                                }
         # Objective buttons
         self._objectiveButtons = {"group": QButtonGroup(),
-                                  "buttons": {
-                                     "pe": QRadioButton("Parameter Estimation"),
-                                     "mc": QRadioButton("Model Comparison")}
-                               }
+                                  "buttons": OrderedDict([
+                                      ("pe", QRadioButton("Parameter Estimation")),
+                                      ("mc", QRadioButton("Model Comparison"))])
+                                  }
 
         self._configureLayout(QVBoxLayout())
 
@@ -100,12 +100,10 @@ class AComputationSettingsFrame(QScrollArea):
         # Create components
         objectiveBox = self._createObjectiveBox()
         methodBox = self._createMethodBox()
-        hyperBox = self._createHyperParamsBox()
 
         # Lay out components
         containerLayout.addWidget(objectiveBox, 0, 0, 1, 1)
         containerLayout.addWidget(methodBox, 0, 1, 1, 1)
-        containerLayout.addWidget(hyperBox, 1, 0, 1, 2)
 
         # # Lay out container
         container.setLayout(containerLayout)
@@ -255,8 +253,8 @@ class AComputationSettingsFrame(QScrollArea):
         self._modelTest.clicked.connect(self._onModelTest)
         self._modelTest.setText('Model Test')
 
-        # Use not False, since model test is an index otherwise
-        if self._internalModel.modelTest() is not False:
+        # Use not None, since model test is an index otherwise
+        if self._internalModel.modelTest() is not None:
             self._modelTest.click()
 
         # Set layout of group box and return it
@@ -285,14 +283,18 @@ class AComputationSettingsFrame(QScrollArea):
             self._methodButtons["buttons"]["mcmc"].setEnabled(True)
 
     def _onMethod(self, button):
-        """Triggered when method radio button clicked."""
+        """
+        Triggered when method button called. Show settings dialog according
+        to user selection.
+        """
 
-        if button.text() in ["Rejection", "Random Forest"]:
-            # Change view to rejection settings
-            self._hyperparametersFrame.setCurrentIndex(0)
-        else:
-            # Change view to mcmc settings
-            self._hyperparametersFrame.setCurrentIndex(1)
+        if button.text() == "Rejection":
+            dialog = ARejectionSettingsDialog(self._internalModel, self.nativeParentWidget())
+            dialog.exec_()
+        elif button.text() == "Random Forest":
+            print('Show random forest dialog')
+        elif button.text() == "MCMC":
+            print('Show MCMC dialog')
 
     def _onModelTest(self, checked):
         """Controls the appearance of the model test frame."""
@@ -337,48 +339,6 @@ class AComputationSettingsFrame(QScrollArea):
         return QSize(int(screenWidth/3), self.height())
 
 
-class ASettingEntry(QDoubleSpinBox):
-    """Derives from a basic line edit to include a key, corresponding to the model setting."""
-
-    def __init__(self, internalModel, key, parent=None):
-        super(ASettingEntry, self).__init__(parent)
-
-        self._internalModel = internalModel
-        self._key = key
-
-        # Adjust spinbox range
-        self._configureRange()
-
-        # Set value from model
-        #self.setValue(self._internalModel['settings'][key])
-        #self.valueChanged.connect(self._onValueChanged)
-
-    def _configureRange(self):
-        """Sets the range of the spinbox."""
-
-        self.setDecimals(3)
-        self.setSingleStep(0.1)
-        # Percentile settings
-        if self._key == 'keep':
-            self.setRange(0, 1e10)
-            self.setDecimals(0)
-
-        # Threshold settings
-        if self._key == 'threshold':
-            self.setRange(0.0, 1e10)
-
-        # Particles settings
-        if self._key == 'simulations':
-            self.setRange(0, 1e10)
-            self.setSingleStep(10)
-            self.setDecimals(0)
-
-    def _onValueChanged(self, val):
-        """Triggered when user changes the value fo the setting."""
-        pass
-        #self._internalModel.changeSetting(self._key, val)
-
-
 class AOuputDir(QWidget):
     """Main output dir widget for specifying output location."""
     def __init__(self, internalModel, parent=None):
@@ -418,14 +378,14 @@ class AOuputDir(QWidget):
         if dirPath:
             # Update entry
             self._path.setText(dirPath)
-            self._internalModel.addOutputDir(dirPath)
+            self._internalModel.changeSetting('outputdir', dirPath)
             # Modify save flag
             tracksave.saved = False
 
     def _onEdit(self, text):
         """Triggered when user types into dir edit."""
 
-        self._internalModel.addOutputDir(text)
+        self._internalModel.changeSetting('outputdir', text)
 
 
 class ARunFrame(QScrollArea):
@@ -574,10 +534,12 @@ class ACheckBox(QCheckBox):
         self.setText(value.capitalize())
 
 
-class ARadioButton(QPushButton):
+class ARadioPushButton(QPushButton):
     def __init__(self, text, parent=None):
-        super(ARadioButton, self).__init__(parent)
+        super(ARadioPushButton, self).__init__(parent)
 
+        # Use nicer style for checked state
+        self.setStyleSheet("QPushButton:checked{background-color: #3daee9; color: white;}")
         self.setText(text)
         self.setCheckable(True)
 
