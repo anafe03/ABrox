@@ -59,7 +59,7 @@ class AComputationSettingsFrame(QScrollArea):
         # Objective buttons
         self._objectiveButtons = {"group": QButtonGroup(),
                                   "buttons": OrderedDict([
-                                      ("estimation", QRadioButton("Parameter Estimation")),
+                                      ("inference", QRadioButton("Parameter Estimation")),
                                       ("comparison", QRadioButton("Model Comparison"))])
                                   }
 
@@ -221,8 +221,10 @@ class AComputationSettingsFrame(QScrollArea):
 
         if button.text() == "Model Comparison":
             self._methodButtons["buttons"]["mcmc"].setEnabled(False)
+            self._internalModel.addObjective('comparison')
         else:
             self._methodButtons["buttons"]["mcmc"].setEnabled(True)
+            self._internalModel.addObjective('inference')
 
     def _onMethod(self, button):
         """

@@ -18,7 +18,7 @@ class AMainWindow(QMainWindow):
         super(AMainWindow, self).__init__(parent)
 
         self._internalModel = AInternalModel()
-        self._mdiArea = QMdiArea()
+        self._mdiArea = AMdiArea()
         self._console = AConsoleWindow()
         self._outputConsole = AOutputConsole(self._internalModel)
         self._tree = AModelTree(self._mdiArea, self._internalModel,
@@ -119,11 +119,6 @@ class AMainWindow(QMainWindow):
     def _configureMain(self):
         """Set up the workspace for editing code."""
 
-        self._mdiArea.setViewMode(QMdiArea.TabbedView)
-        self._mdiArea.setTabsClosable(True)
-        self._mdiArea.setTabsMovable(True)
-        self._mdiArea.setBackground(QColor(35, 38, 41))
-        self._mdiArea.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setCentralWidget(self._mdiArea)
 
     def _configureConsole(self):
@@ -177,7 +172,7 @@ class AMainWindow(QMainWindow):
 
         # Create a dialog
         loadName = QFileDialog.getOpenFileName(self, 'Select a project file to open...',
-                                                     "", "bprox File (*.bprox)")
+                                                     "", "Abrox File (*.abrox)")
         # Check if something loaded
         if loadName[0]:
 
@@ -213,7 +208,7 @@ class AMainWindow(QMainWindow):
         """Save the current settings."""
 
         saveName = QFileDialog.getSaveFileName(self, "Save current project as...",
-                                                     "", "bprox File (*.bprox)")
+                                                     "", "Abrox File (*.abrox)")
         # If user has chosen something
         if saveName[0]:
             # Get project as dict
@@ -298,21 +293,6 @@ class AMainWindow(QMainWindow):
             QMainWindow.closeEvent(self, event)
 
 
-class FastDmStatus(QStatusBar):
-
-    def __init__(self, parent=None):
-        super(FastDmStatus, self).__init__(parent)
-
-        self._label = QLabel("Ready")
-        self.setStyleSheet("border: 1px solid #535b68")
-        self.addPermanentWidget(self._label)
-
-    def changeStatus(self, txt):
-        """Changes status to text."""
-
-        self._label.setText(txt)
-
-
 class AStartUp(QWidget):
 
     def __init__(self, parent=None):
@@ -358,3 +338,35 @@ class ATabController(QTabWidget):
 
         screenHeight = QApplication.desktop().screenGeometry().height()
         return QSize(self.width(), screenHeight/3.5)
+
+
+class AMdiArea(QMdiArea):
+
+    def __init__(self, parent=None):
+        super(AMdiArea, self).__init__(parent)
+
+        self.setViewMode(QMdiArea.TabbedView)
+        self.setTabsClosable(True)
+        self.setTabsMovable(True)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self._pixmap = QPixmap('icons/readme_logo.png')
+
+    def paintEvent(self, event):
+        """Draws our custom background."""
+        painter = QPainter()
+        painter.begin(self.viewport())
+        painter.fillRect(event.rect(), QColor(35, 38, 41))
+        x = int(self.width() / 2 - self._pixmap.width() / 2)
+        y = int(self.height() /2 - self._pixmap.height() / 2)
+        painter.drawPixmap(x, y, self._pixmap)
+        painter.end()
+
+
+
+
+
+
+
+
+
+

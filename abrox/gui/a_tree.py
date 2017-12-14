@@ -492,7 +492,6 @@ class AMdiWindow(QMdiSubWindow):
         self.setWindowIcon(QIcon('icons/icon.ico'))
         self.setWindowFlags(Qt.SubWindow)
         self.sizeGrip = QSizeGrip(self)
-        self.setStyleSheet("")
 
     def closeEvent(self, event):
         """Re-implement the close event to simply hide widget."""
