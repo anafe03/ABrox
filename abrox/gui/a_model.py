@@ -29,7 +29,7 @@ class AInternalModel:
                         'objective': 'comparison',
                         'method': copy.deepcopy(self._methodDefaults['rj']),
                         'test': {'model': None, 'fixed': OrderedDict()},
-                        'ref_table': {
+                        'reftable': {
                             'simulations': 10000,
                             'extref': None
                         },
@@ -65,10 +65,9 @@ class AInternalModel:
                    'specs': OrderedDict([
                        ('n_estimators', 200),
                        ('max_depth', None),
-                       ('criterion', 'gini'),
                        ('min_samples_split', 2),
                        ('min_samples_leaf', 1),
-                       ('oob_score', False)])
+                       ('criterion', 'gini')])
                    }
         }
 
@@ -118,7 +117,10 @@ class AInternalModel:
         self._project['Analysis']['settings']['objective'] = objective
 
     def addRefTable(self, refDict):
-        self._project['Analysis']['settings']['ref_table'] = refDict
+        self._project['Analysis']['settings']['reftable'] = refDict
+
+    def addMethod(self, methodDict):
+        self._project['Analysis']['settings']['method'] = methodDict
 
     def addMethodSpecs(self, specsDict):
         self._project['Analysis']['settings']['method']['specs'] = specsDict
@@ -194,22 +196,22 @@ class AInternalModel:
     def objective(self):
         return self._project['Analysis']['settings']['objective']
 
-    def method(self):
-        return self._project['Analysis']['settings']['method']
-
     def outputDir(self):
         return self._project['Analysis']['settings']['outputdir']
 
     def externalReference(self):
-        return self._project['Analysis']['settings']['ref_table']['extref']
+        return self._project['Analysis']['settings']['reftable']['extref']
 
     def simulations(self):
-        return self._project['Analysis']['settings']['ref_table']['simulations']
+        return self._project['Analysis']['settings']['reftable']['simulations']
 
     def models(self):
         """Returns the model list."""
 
         return self._project['Analysis']['models']
+
+    def method(self):
+        return self._project['Analysis']['settings']['method']
 
     def algorithm(self):
         return self._project['Analysis']['settings']['method']['algorithm']

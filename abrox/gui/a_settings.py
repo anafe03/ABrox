@@ -54,15 +54,15 @@ class AComputationSettingsFrame(QScrollArea):
         # Method buttons (must be ordered)
         self._methodButtons = {"group": QButtonGroup(),
                                "buttons": OrderedDict([
-                                   ("rj", ARadioPushButton("Rejection")),
-                                   ("rf", ARadioPushButton("Random Forest")),
+                                   ("rejection", ARadioPushButton("Rejection")),
+                                   ("randomforest", ARadioPushButton("Random Forest")),
                                    ("mcmc", ARadioPushButton("MCMC"))])
                                }
         # Objective buttons
         self._objectiveButtons = {"group": QButtonGroup(),
                                   "buttons": OrderedDict([
-                                      ("pe", QRadioButton("Parameter Estimation")),
-                                      ("mc", QRadioButton("Model Comparison"))])
+                                      ("estimation", QRadioButton("Parameter Estimation")),
+                                      ("comparison", QRadioButton("Model Comparison"))])
                                   }
 
         self._configureLayout(QVBoxLayout())
@@ -126,6 +126,9 @@ class AComputationSettingsFrame(QScrollArea):
             objectiveGroupBoxLayout.addWidget(button)
         self._objectiveButtons["group"].buttonClicked.connect(self._onObjective)
 
+        # Select one that applies
+        self._objectiveButtons['buttons'][self._internalModel.objective()].click()
+
         objectiveGroupBox.setLayout(objectiveGroupBoxLayout)
         return objectiveGroupBox
 
@@ -142,6 +145,8 @@ class AComputationSettingsFrame(QScrollArea):
             methodGroupBoxLayout.addWidget(button)
         self._methodButtons["group"].buttonClicked.connect(self._onMethod)
 
+        # Select one that applies
+        self._methodButtons['buttons'][self._internalModel.algorithm()].setChecked(True)
         methodGroupBox.setLayout(methodGroupBoxLayout)
         return methodGroupBox
 
@@ -160,68 +165,6 @@ class AComputationSettingsFrame(QScrollArea):
         hyperParamsBoxLayout.addWidget(self._hyperparametersFrame)
         hyperParamsBox.setLayout(hyperParamsBoxLayout)
         return hyperParamsBox
-
-    def _createRejectionBox(self):
-        """Returns the ready rejection box."""
-
-        # Create rejection settings pane
-        rejectionBox = QWidget()
-        rejectionBoxLayout = QGridLayout()
-
-        # Use this for rejection
-        labels = [('Number of simulations:', 'simulations'),
-                  ('Threshold:', 'threshold'),
-                  ('Keep:', 'keep')]
-
-        for idx, label in enumerate(labels):
-
-            labelName = labels[idx][0]
-            key = labels[idx][1]
-
-            rejectionBoxLayout.addWidget(QLabel(labelName, self), idx, 0, 1, 1)
-
-            # Create entry and add to layout and dict
-            entry = ASettingEntry(self._internalModel, key)
-            rejectionBoxLayout.addWidget(entry, idx, 1, 1, 1)
-            self._settingEntries[key] = entry
-
-        # Add automatic threshold check button
-        self._autoCheck = QCheckBox()
-        self._autoCheck.setText('Automatic')
-        rejectionBoxLayout.addWidget(self._autoCheck, 1, 2)
-
-        # Set layout and return ready box
-        rejectionBox.setLayout(rejectionBoxLayout)
-        return rejectionBox
-
-    def _createMCMCBox(self):
-        """Returns the ready MCMC box."""
-
-        # Create mcmc settings pane
-        mcmcBox = QWidget()
-        mcmcBoxLayout = QGridLayout()
-
-        # Use this for mcmc
-        firstColumn = [('Number of chains:', ASettingEntry(self._internalModel, "chains")),
-                       ('Threshold:', ASettingEntry(self._internalModel, "threshold")),
-                       ('Keep:', ASettingEntry(self._internalModel, "thinning"))]
-
-        secondColumn = [("Proposal:", QComboBox()),
-                        ("Optimizer:", QComboBox()),
-                        ("Burn-in:", ASettingEntry(self._internalModel, "Burn"))]
-
-        # Fill layout
-        for idx in range(len(firstColumn)):
-            # Add first label and selector
-            mcmcBoxLayout.addWidget(QLabel(firstColumn[idx][0]), idx, 0, 1, 1, Qt.AlignRight)
-            mcmcBoxLayout.addWidget(firstColumn[idx][1], idx, 1, 1, 1)
-            # Add second label and selector
-            mcmcBoxLayout.addWidget(QLabel(secondColumn[idx][0]), idx, 2, 1, 1, Qt.AlignRight)
-            mcmcBoxLayout.addWidget(secondColumn[idx][1], idx, 3, 1, 1)
-
-        # Set layout and return ready box
-        mcmcBox.setLayout(mcmcBoxLayout)
-        return mcmcBox
 
     def _modelTestSettingsGroup(self):
         """Create and return the model test settings groupbox."""
@@ -292,9 +235,11 @@ class AComputationSettingsFrame(QScrollArea):
             dialog = ARejectionSettingsDialog(self._internalModel, self.nativeParentWidget())
             dialog.exec_()
         elif button.text() == "Random Forest":
-            print('Show random forest dialog')
+            dialog = ARandomForestSettingsDialog(self._internalModel, self.nativeParentWidget())
+            dialog.exec_()
         elif button.text() == "MCMC":
-            print('Show MCMC dialog')
+            dialog = AMCMCSettingsDialog(self._internalModel, self.nativeParentWidget())
+            dialog.exec_()
 
     def _onModelTest(self, checked):
         """Controls the appearance of the model test frame."""
@@ -309,16 +254,6 @@ class AComputationSettingsFrame(QScrollArea):
         else:
             self._comboWidget.setEnabled(False)
             self._internalModel.addModelIndexForTest(False)
-
-    def _onAutoThreshold(self, checked):
-        """Activated when user checks/unchecks auto threshold."""
-
-        if checked:
-            self._internalModel.changeSetting('threshold', -1)
-            self._settingEntries['threshold'].setEnabled(False)
-        else:
-            self._settingEntries['threshold'].setEnabled(True)
-            self._internalModel.changeSetting('threshold', self._settingEntries['threshold'].value())
 
     def _onFixParameter(self):
         """Invoke a dialog for settings parameters."""
