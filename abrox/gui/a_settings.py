@@ -143,6 +143,7 @@ class AComputationSettingsFrame(QScrollArea):
         for button in self._methodButtons["buttons"].values():
             self._methodButtons["group"].addButton(button)
             methodGroupBoxLayout.addWidget(button)
+        self._methodButtons['group'].setExclusive(True)
         self._methodButtons["group"].buttonClicked.connect(self._onMethod)
 
         # Select one that applies
@@ -240,6 +241,9 @@ class AComputationSettingsFrame(QScrollArea):
         elif button.text() == "MCMC":
             dialog = AMCMCSettingsDialog(self._internalModel, self.nativeParentWidget())
             dialog.exec_()
+
+        # Make sure selected is current, even if user has
+        self._methodButtons['buttons'][self._internalModel.algorithm()].setChecked(True)
 
     def _onModelTest(self, checked):
         """Controls the appearance of the model test frame."""
@@ -477,6 +481,7 @@ class ARadioPushButton(QPushButton):
         self.setStyleSheet("QPushButton:checked{background-color: #3daee9; color: white;}")
         self.setText(text)
         self.setCheckable(True)
+        self.setFocusPolicy(Qt.NoFocus)
 
         if text == "Rejection":
             self.setIcon(QIcon("./icons/rejection.png"))

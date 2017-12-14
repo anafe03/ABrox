@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-from collections import OrderedDict
+import abc
 from abrox.gui.a_utils import createDialogYesNoButtons, createButton
 from abrox.gui import tracksave
 
@@ -214,42 +214,22 @@ class ASmartSpinBox(QDoubleSpinBox):
         return self.key, self.value()
 
 
-class ARejectionSettingsDialog(QDialog):
+class ASettingsDialog(QDialog):
     """
-    Represents a pop-up for specifying the settings
-    of the rejection algorithm.
+    Represents an abstract pop-up for specifying the settings
+    of an algorithm algorithm. Concerete instances of this class
+    should implement the two abstract methods specified below.
     """
 
     def __init__(self, internalModel, parent=None):
-        super(ARejectionSettingsDialog, self).__init__(parent)
+        super(ASettingsDialog, self).__init__(parent)
 
         self._internalModel = internalModel
+        self._refTableWidget = ARefTableDir(internalModel)
         self._simEntry = [
             QLabel('Number of simulations:'),
             ASettingEntry(self._internalModel, 'simulations', True)
         ]
-        self._settingsEntries = {
-            'keep': (QLabel('Keep:'), ASettingEntry(self._internalModel, 'keep', True)),
-            'threshold': (QLabel('Threshold:'), ASettingEntry(self._internalModel, 'threshold')),
-            'cv': (QLabel('Cross Validation Samples:'), ASettingEntry(self._internalModel, 'cv', True))
-        }
-        self._refTableWidget = ARefTableDir(internalModel)
-        self._initDialog(QVBoxLayout())
-
-    def _initDialog(self, dialogLayout):
-        """Configures dialog."""
-
-        self.setWindowTitle('Rejection Settings')
-
-        refTableBox = self._createReferenceTableSettingsBox()
-        settingsBox = self._createAlgorithmSettingsBox()
-        buttonsBox = createDialogYesNoButtons(self._onOk, self._onCancel)
-
-        dialogLayout.addWidget(refTableBox)
-        dialogLayout.addWidget(settingsBox)
-        dialogLayout.addWidget(buttonsBox)
-        self.setLayout(dialogLayout)
-        self.adjustSize()
 
     def _createReferenceTableSettingsBox(self):
         """Creates a reference table."""
@@ -282,6 +262,105 @@ class ARejectionSettingsDialog(QDialog):
         refGroupBox.setLayout(refGroupBoxLayout)
         return refGroupBox
 
+    @abc.abstractmethod
+    def _createAlgorithmSettingsBox(self):
+        """Lays out the specific settings of the algorithm."""
+        raise NotImplementedError("This method needs to be implemented.")
+
+    @abc.abstractmethod
+    def _algorithm(self):
+        """Returns the name of the algorithm (rejection, mcmc...)"""
+        raise NotImplementedError("This method needs to be implemented.")
+
+    def _initDialog(self, dialogLayout):
+        """Configures dialog."""
+
+        refTableBox = self._createReferenceTableSettingsBox()
+        settingsBox = self._createAlgorithmSettingsBox()
+        buttonsBox = createDialogYesNoButtons(self._onOk, self._onCancel)
+
+        dialogLayout.addWidget(refTableBox)
+        dialogLayout.addWidget(settingsBox)
+        dialogLayout.addWidget(buttonsBox)
+        self.setLayout(dialogLayout)
+        self.adjustSize()
+
+    def _onOk(self):
+        """Called when user presses ok. Update method settings."""
+
+        if not self._refTableWidget.val() and not self._simEntry[1].isEnabled():
+            # User has not specified path to external
+            self._refTableWidget.warn()
+            return
+        method, ref = self._collect()
+        self._internalModel.addMethod(method)
+        self._internalModel.addRefTable(ref)
+        tracksave.saved = False
+        self.close()
+
+    def _onCancel(self):
+        """Called when user presses cancel. Accepted stays False."""
+        self.close()
+
+    def _toggleExt(self, enabled):
+        """A helper function to toggle selected dir or not."""
+
+        self._refTableWidget.setEnabled(enabled)
+        self._simEntry[0].setEnabled(not enabled)
+        self._simEntry[1].setEnabled(not enabled)
+
+    def _toggleSetting(self, enabled, key):
+        """A helper to toggle settings on/off."""
+
+        self._settingsEntries[key][0].setEnabled(not enabled)
+        self._settingsEntries[key][1].setEnabled(not enabled)
+
+    def _onExt(self, checked):
+        """Activated when user decides to add external reference."""
+
+        self._toggleExt(checked)
+
+    def _collect(self):
+        """Collects values from entries and updates internal model."""
+
+        methodSpecs = self._internalModel.algorithmDefaultSpecs(self._algorithm())
+        # Update values (order does not matter, since methodSpecs is an orderedDict
+        for key in self._settingsEntries.keys():
+            if not self._settingsEntries[key][1].isEnabled():
+                # User has deselected, value is None
+                methodSpecs[key] = None
+            else:
+                # User has selected, use given value
+                methodSpecs[key] = self._settingsEntries[key][1].val()
+
+        refTableSpecs = {
+            'simulations': int(self._simEntry[1].val()),
+            'extref': self._refTableWidget.val()
+        }
+        method = {
+            'algorithm': self._algorithm(),
+            'specs': methodSpecs
+        }
+        return method, refTableSpecs
+
+
+class ARejectionSettingsDialog(ASettingsDialog):
+    """
+    Represents a pop-up for specifying the settings
+    of the rejection algorithm.
+    """
+
+    def __init__(self, internalModel, parent=None):
+        super(ARejectionSettingsDialog, self).__init__(internalModel, parent)
+
+        self.setWindowTitle('Rejection Settings')
+        self._settingsEntries = {
+            'keep': (QLabel('Keep:'), ASettingEntry(self._internalModel, 'keep', True)),
+            'threshold': (QLabel('Threshold:'), ASettingEntry(self._internalModel, 'threshold')),
+            'cv': (QLabel('Cross Validation Samples:'), ASettingEntry(self._internalModel, 'cv', True))
+        }
+        self._initDialog(QVBoxLayout())
+
     def _createAlgorithmSettingsBox(self):
         """Called after reference table settings created."""
 
@@ -296,7 +375,7 @@ class ARejectionSettingsDialog(QDialog):
             specs = self._internalModel.algorithmSpecs()
         else:
             # Show default settings
-            specs = self._internalModel.algorithmDefaultSpecs('rj')
+            specs = self._internalModel.algorithmDefaultSpecs('rejection')
 
         for idx, key in enumerate(keys):
             # Add label and entry
@@ -330,23 +409,8 @@ class ARejectionSettingsDialog(QDialog):
         rejectionBox.setLayout(rejectionBoxLayout)
         return rejectionBox
 
-    def _toggleExt(self, enabled):
-        """A helper function to toggle selected dir or not."""
-
-        self._refTableWidget.setEnabled(enabled)
-        self._simEntry[0].setEnabled(not enabled)
-        self._simEntry[1].setEnabled(not enabled)
-
-    def _toggleSetting(self, enabled, key):
-        """A helper to toggle settings on/off."""
-
-        self._settingsEntries[key][0].setEnabled(not enabled)
-        self._settingsEntries[key][1].setEnabled(not enabled)
-
-    def _onExt(self, checked):
-        """Activated when user decides to add external reference."""
-
-        self._toggleExt(checked)
+    def _algorithm(self):
+        return "rejection"
 
     def _onAuto(self, checked):
         """Activated when user toggles the automatic threshold setting"""
@@ -358,64 +422,17 @@ class ARejectionSettingsDialog(QDialog):
 
         self._toggleSetting(checked, 'cv')
 
-    def _collect(self):
-        """Collects values from entries and updates internal model."""
 
-        methodSpecs = self._internalModel.algorithmDefaultSpecs('rj')
-        # Update values (order does not matter, since methodSpecs is an orderedDict
-        for key in self._settingsEntries.keys():
-            if not self._settingsEntries[key][1].isEnabled():
-                # User has deselected, value is None
-                methodSpecs[key] = None
-            else:
-                # User has selected, use given value
-                methodSpecs[key] = self._settingsEntries[key][1].val()
-
-        refTableSpecs = {
-            'simulations': self._simEntry[1].val(),
-            'extref': self._refTableWidget.val()
-        }
-
-        method = {
-            'algorithm': 'rejection',
-            'specs': methodSpecs
-        }
-
-        return method, refTableSpecs
-
-    def _onOk(self):
-        """Called when user presses ok. Update method settings."""
-
-        if not self._refTableWidget.val() and not self._simEntry[1].isEnabled():
-            # User has not specified path to external
-            self._refTableWidget.warn()
-            return
-        method, ref = self._collect()
-        self._internalModel.addMethod(method)
-        self._internalModel.addRefTable(ref)
-        tracksave.saved = False
-        self.close()
-
-    def _onCancel(self):
-        """Called when user presses cancel. Accepted stays False."""
-        self.close()
-
-
-class AMCMCSettingsDialog(QDialog):
+class AMCMCSettingsDialog(ASettingsDialog):
     """
     Represents a pop-up for specifying the settings
     of the MCMC algorithm.
     """
 
     def __init__(self, internalModel, parent=None):
-        super(AMCMCSettingsDialog, self).__init__(parent)
+        super(AMCMCSettingsDialog, self).__init__(internalModel, parent)
 
-        self._internalModel = internalModel
-        self._simEntry = [
-            QLabel('Number of simulations:'),
-            ASettingEntry(self._internalModel, 'simulations', True)
-        ]
-
+        self.setWindowTitle('MCMC Settings')
         self._settingsEntries = {
             'keep': (QLabel('Keep:'), ASettingEntry(self._internalModel, 'keep', True)),
             'threshold': (QLabel('Threshold:'), ASettingEntry(self._internalModel, 'threshold')),
@@ -425,54 +442,7 @@ class AMCMCSettingsDialog(QDialog):
             'proposal': (QLabel('Proposal Distribution:'), QSpinBox()),
             'start': (QLabel('Optimizer:'), QSpinBox()),
         }
-        self._refTableWidget = ARefTableDir(internalModel)
         self._initDialog(QVBoxLayout())
-
-    def _initDialog(self, dialogLayout):
-        """Configures dialog."""
-
-        self.setWindowTitle('MCMC Settings')
-
-        refTableBox = self._createReferenceTableSettingsBox()
-        settingsBox = self._createAlgorithmSettingsBox()
-        buttonsBox = createDialogYesNoButtons(self._onOk, self._onCancel)
-
-        dialogLayout.addWidget(refTableBox)
-        dialogLayout.addWidget(settingsBox)
-        dialogLayout.addWidget(buttonsBox)
-        self.setLayout(dialogLayout)
-        self.adjustSize()
-
-    def _createReferenceTableSettingsBox(self):
-        """Creates a reference table."""
-
-        refGroupBox = QGroupBox('Reference Table Settings')
-        refGroupBoxLayout = QGridLayout()
-
-        # Add number of simulations label and entry
-        refGroupBoxLayout.addWidget(self._simEntry[0], 0, 0, 1, 1)
-        refGroupBoxLayout.addWidget(self._simEntry[1], 0, 1, 1, 1)
-
-        self._simEntry[1].setValue(self._internalModel.simulations())
-
-        useExtCheck = QCheckBox("Use external reference table")
-        refGroupBoxLayout.addWidget(useExtCheck, 1, 0, 1, 1)
-
-        # Toggle, if specified in model
-        if self._internalModel.externalReference() is not None:
-            useExtCheck.setChecked(True)
-            self._toggleExt(True)
-        else:
-            useExtCheck.setChecked(False)
-            self._toggleExt(False)
-
-        # Connect toggle event to method
-        useExtCheck.toggled.connect(self._onExt)
-
-        # Add file selector entry to layout
-        refGroupBoxLayout.addWidget(self._refTableWidget, 2, 0, 1, 2)
-        refGroupBox.setLayout(refGroupBoxLayout)
-        return refGroupBox
 
     def _createAlgorithmSettingsBox(self):
         """Called after reference table settings created."""
@@ -536,23 +506,8 @@ class AMCMCSettingsDialog(QDialog):
         mcmcBox.setLayout(mcmcBoxLayout)
         return mcmcBox
 
-    def _toggleExt(self, enabled):
-        """A helper function to toggle selected dir or not."""
-
-        self._refTableWidget.setEnabled(enabled)
-        self._simEntry[0].setEnabled(not enabled)
-        self._simEntry[1].setEnabled(not enabled)
-
-    def _toggleSetting(self, enabled, key):
-        """A helper to toggle settings on/off."""
-
-        self._settingsEntries[key][0].setEnabled(not enabled)
-        self._settingsEntries[key][1].setEnabled(not enabled)
-
-    def _onExt(self, checked):
-        """Activated when user decides to add external reference."""
-
-        self._toggleExt(checked)
+    def _algorithm(self):
+        return "mcmc"
 
     def _onAuto(self, checked):
         """Activated when user toggles the automatic threshold setting"""
@@ -571,61 +526,17 @@ class AMCMCSettingsDialog(QDialog):
         # TODO - add options, not it does nothing
         pass
 
-    def _collect(self):
-        """Collects values from entries and updates internal model."""
 
-        methodSpecs = self._internalModel.algorithmDefaultSpecs('mcmc')
-        # Update values (order does not matter, since methodSpecs is an orderedDict
-        for key in self._settingsEntries.keys():
-            if not self._settingsEntries[key][1].isEnabled():
-                # User has deselected, value is None
-                methodSpecs[key] = None
-            else:
-                # User has selected, use given value
-                methodSpecs[key] = self._settingsEntries[key][1].val()
-
-        refTableSpecs = {
-            'simulations': int(self._simEntry[1].val()),
-            'extref': self._refTableWidget.val()
-        }
-        method = {
-            'algorithm': 'mcmc',
-            'specs': methodSpecs
-        }
-        return method, refTableSpecs
-
-    def _onOk(self):
-        """Called when user presses ok. Update method settings."""
-
-        if not self._refTableWidget.val() and not self._simEntry[1].isEnabled():
-            # User has not specified path to external
-            self._refTableWidget.warn()
-            return
-        method, ref = self._collect()
-        self._internalModel.addMethod(method)
-        self._internalModel.addRefTable(ref)
-        self.close()
-
-    def _onCancel(self):
-        """Called when user presses cancel. Accepted stays False."""
-        self.close()
-
-
-class ARandomForestSettingsDialog(QDialog):
+class ARandomForestSettingsDialog(ASettingsDialog):
     """
     Represents a pop-up for specifying the settings
     of the Random Forest ABC algorithm.
     """
 
     def __init__(self, internalModel, parent=None):
-        super(ARandomForestSettingsDialog, self).__init__(parent)
+        super(ARandomForestSettingsDialog, self).__init__(internalModel, parent)
 
-        self._internalModel = internalModel
-        self._simEntry = [
-            QLabel('Number of simulations:'),
-            ASettingEntry(self._internalModel, 'simulations', True)
-        ]
-
+        self.setWindowTitle('Random Forest Settings')
         self._settingsEntries = {
             'n_estimators': (QLabel('Number of Trees:'),
                              ASettingEntry(self._internalModel, 'ntree', True)),
@@ -638,54 +549,7 @@ class ARandomForestSettingsDialog(QDialog):
             'criterion': (QLabel('Criterion:'),
                           AComboBox(['gini', 'entropy']))
         }
-        self._refTableWidget = ARefTableDir(internalModel)
         self._initDialog(QVBoxLayout())
-
-    def _initDialog(self, dialogLayout):
-        """Configures dialog."""
-
-        self.setWindowTitle('MCMC Settings')
-
-        refTableBox = self._createReferenceTableSettingsBox()
-        settingsBox = self._createAlgorithmSettingsBox()
-        buttonsBox = createDialogYesNoButtons(self._onOk, self._onCancel)
-
-        dialogLayout.addWidget(refTableBox)
-        dialogLayout.addWidget(settingsBox)
-        dialogLayout.addWidget(buttonsBox)
-        self.setLayout(dialogLayout)
-        self.adjustSize()
-
-    def _createReferenceTableSettingsBox(self):
-        """Creates a reference table."""
-
-        refGroupBox = QGroupBox('Reference Table Settings')
-        refGroupBoxLayout = QGridLayout()
-
-        # Add number of simulations label and entry
-        refGroupBoxLayout.addWidget(self._simEntry[0], 0, 0, 1, 1)
-        refGroupBoxLayout.addWidget(self._simEntry[1], 0, 1, 1, 1)
-
-        self._simEntry[1].setValue(self._internalModel.simulations())
-
-        useExtCheck = QCheckBox("Use external reference table")
-        refGroupBoxLayout.addWidget(useExtCheck, 1, 0, 1, 1)
-
-        # Toggle, if specified in model
-        if self._internalModel.externalReference() is not None:
-            useExtCheck.setChecked(True)
-            self._toggleExt(True)
-        else:
-            useExtCheck.setChecked(False)
-            self._toggleExt(False)
-
-        # Connect toggle event to method
-        useExtCheck.toggled.connect(self._onExt)
-
-        # Add file selector entry to layout
-        refGroupBoxLayout.addWidget(self._refTableWidget, 2, 0, 1, 2)
-        refGroupBox.setLayout(refGroupBoxLayout)
-        return refGroupBox
 
     def _createAlgorithmSettingsBox(self):
         """Called after reference table settings created."""
@@ -700,7 +564,7 @@ class ARandomForestSettingsDialog(QDialog):
             specs = self._internalModel.algorithmSpecs()
         else:
             # Show default settings
-            specs = self._internalModel.algorithmDefaultSpecs('rf')
+            specs = self._internalModel.algorithmDefaultSpecs('randomforest')
 
         for idx, key in enumerate(keys):
             # Add label and entry
@@ -724,67 +588,13 @@ class ARandomForestSettingsDialog(QDialog):
         rfBox.setLayout(rfBoxLayout)
         return rfBox
 
-    def _toggleExt(self, enabled):
-        """A helper function to toggle selected dir or not."""
-
-        self._refTableWidget.setEnabled(enabled)
-        self._simEntry[0].setEnabled(not enabled)
-        self._simEntry[1].setEnabled(not enabled)
-
-    def _toggleSetting(self, enabled, key):
-        """A helper to toggle settings on/off."""
-
-        self._settingsEntries[key][0].setEnabled(not enabled)
-        self._settingsEntries[key][1].setEnabled(not enabled)
-
-    def _onExt(self, checked):
-        """Activated when user decides to add external reference."""
-
-        self._toggleExt(checked)
+    def _algorithm(self):
+        return "randomforest"
 
     def _onMaxDepth(self, checked):
         """Activated when user toggles the max depth automatic setting"""
 
         self._toggleSetting(checked, 'max_depth')
-
-    def _collect(self):
-        """Collects values from entries and updates internal model."""
-
-        methodSpecs = self._internalModel.algorithmDefaultSpecs('rf')
-        # Update values (order does not matter, since methodSpecs is an orderedDict
-        for key in self._settingsEntries.keys():
-            if not self._settingsEntries[key][1].isEnabled():
-                # User has deselected, value is None
-                methodSpecs[key] = None
-            else:
-                # User has selected, use given value
-                methodSpecs[key] = self._settingsEntries[key][1].val()
-
-        refTableSpecs = {
-            'simulations': int(self._simEntry[1].val()),
-            'extref': self._refTableWidget.val()
-        }
-        method = {
-            'algorithm': 'randomforest',
-            'specs': methodSpecs
-        }
-        return method, refTableSpecs
-
-    def _onOk(self):
-        """Called when user presses ok. Update method settings."""
-
-        if not self._refTableWidget.val() and not self._simEntry[1].isEnabled():
-            # User has not specified path to external
-            self._refTableWidget.warn()
-            return
-        method, ref = self._collect()
-        self._internalModel.addMethod(method)
-        self._internalModel.addRefTable(ref)
-        self.close()
-
-    def _onCancel(self):
-        """Called when user presses cancel. Accepted stays False."""
-        self.close()
 
 
 class ASettingEntry(QDoubleSpinBox):

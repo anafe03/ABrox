@@ -27,7 +27,7 @@ class AInternalModel:
                         'outputdir': "",
                         'distance_metric': "default",
                         'objective': 'comparison',
-                        'method': copy.deepcopy(self._methodDefaults['rj']),
+                        'method': copy.deepcopy(self._methodDefaults['rejection']),
                         'test': {'model': None, 'fixed': OrderedDict()},
                         'reftable': {
                             'simulations': 10000,
@@ -55,20 +55,20 @@ class AInternalModel:
                          ('proposal', None),
                          ('start', None)])
                      },
-            'rj': {'algorithm': 'rejection',
-                   'specs': OrderedDict([
-                       ('keep', 100),
-                       ('threshold', None),
-                       ('cv', 100)])
-                   },
-            'rf': {'algorithm': 'randomforest',
-                   'specs': OrderedDict([
-                       ('n_estimators', 200),
-                       ('max_depth', None),
-                       ('min_samples_split', 2),
-                       ('min_samples_leaf', 1),
-                       ('criterion', 'gini')])
-                   }
+            'rejection': {'algorithm': 'rejection',
+                       'specs': OrderedDict([
+                           ('keep', 100),
+                           ('threshold', None),
+                           ('cv', 100)])
+                       },
+            'randomforest': {'algorithm': 'randomforest',
+                       'specs': OrderedDict([
+                           ('n_estimators', 200),
+                           ('max_depth', None),
+                           ('min_samples_split', 2),
+                           ('min_samples_leaf', 1),
+                           ('criterion', 'gini')])
+                       }
         }
 
     def deleteModel(self, nameToRemove):
