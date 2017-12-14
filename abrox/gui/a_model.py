@@ -117,8 +117,11 @@ class AInternalModel:
     def addObjective(self, objective):
         self._project['Analysis']['settings']['objective'] = objective
 
-    def addMethod(self, methodDict):
-        self._project['Analysis']['settings']['method'] = methodDict
+    def addRefTable(self, refDict):
+        self._project['Analysis']['settings']['ref_table'] = refDict
+
+    def addMethodSpecs(self, specsDict):
+        self._project['Analysis']['settings']['method']['specs'] = specsDict
 
     def addDataFileAndDelimiter(self, datafile, delim):
 
@@ -208,7 +211,13 @@ class AInternalModel:
 
         return self._project['Analysis']['models']
 
-    def methodDefaults(self, method):
+    def algorithm(self):
+        return self._project['Analysis']['settings']['method']['algorithm']
+
+    def algorithmSpecs(self):
+        return self._project['Analysis']['settings']['method']['specs']
+
+    def algorithmDefaultSpecs(self, method):
 
         return copy.deepcopy(self._methodDefaults[method]['specs'])
 

@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
+from collections import OrderedDict
 from abrox.gui.a_utils import createDialogYesNoButtons, createButton
 from abrox.gui import tracksave
 
@@ -227,21 +228,25 @@ class ARejectionSettingsDialog(QDialog):
             QLabel('Number of simulations:'),
             ASettingEntry(self._internalModel, 'simulations')
         ]
+        self._settingsEntries = {
+            'keep': (QLabel('Keep:'), ASettingEntry(self._internalModel, 'keep')),
+            'threshold': (QLabel('Threshold:'), ASettingEntry(self._internalModel, 'threshold')),
+            'cv': (QLabel('Cross Validation Samples:'), ASettingEntry(self._internalModel, 'cv'))
+        }
         self._refTableWidget = ARefTableDir(internalModel)
         self._initDialog(QVBoxLayout())
 
     def _initDialog(self, dialogLayout):
         """Configures dialog."""
 
-        # Set title
-        self.setWindowTitle('Rejection settings')
+        self.setWindowTitle('Rejection Settings')
 
-        # Create a group box and buttons box
         refTableBox = self._createReferenceTableSettingsBox()
+        settingsBox = self._createAlgorithmSettingsBox()
         buttonsBox = createDialogYesNoButtons(self._onOk, self._onCancel)
 
-        # Configure layout
         dialogLayout.addWidget(refTableBox)
+        dialogLayout.addWidget(settingsBox)
         dialogLayout.addWidget(buttonsBox)
         self.setLayout(dialogLayout)
         self.adjustSize()
@@ -249,7 +254,6 @@ class ARejectionSettingsDialog(QDialog):
     def _createReferenceTableSettingsBox(self):
         """Creates a reference table."""
 
-        # Create objective group box
         refGroupBox = QGroupBox('Reference Table Settings')
         refGroupBoxLayout = QGridLayout()
 
@@ -257,25 +261,72 @@ class ARejectionSettingsDialog(QDialog):
         refGroupBoxLayout.addWidget(self._simEntry[0], 0, 0, 1, 1)
         refGroupBoxLayout.addWidget(self._simEntry[1], 0, 1, 1, 1)
 
-        # Add use external reference table layout and modify external selector
-        useExtRadio = QCheckBox("Use external reference table")
-        refGroupBoxLayout.addWidget(useExtRadio, 1, 0, 1, 1)
+        useExtCheck = QCheckBox("Use external reference table")
+        refGroupBoxLayout.addWidget(useExtCheck, 1, 0, 1, 1)
 
         # Toggle, if specified in model
         if self._internalModel.externalReference() is not None:
-            useExtRadio.setChecked(True)
+            useExtCheck.setChecked(True)
             self._toggleExt(True)
         else:
-            useExtRadio.setChecked(False)
+            useExtCheck.setChecked(False)
             self._toggleExt(False)
 
         # Connect toggle event to method
-        useExtRadio.toggled.connect(self._onRadio)
+        useExtCheck.toggled.connect(self._onExt)
 
         # Add file selector entry to layout
         refGroupBoxLayout.addWidget(self._refTableWidget, 2, 0, 1, 2)
         refGroupBox.setLayout(refGroupBoxLayout)
         return refGroupBox
+
+    def _createAlgorithmSettingsBox(self):
+        """Called after reference table settings created."""
+
+        rejectionBox = QGroupBox('Algorithm Settings')
+        rejectionBoxLayout = QGridLayout()
+
+        # Use list in order to show in order
+        keys = ['keep', 'threshold', 'cv']
+
+        if self._internalModel.algorithm() == "rejection":
+            # Show settings already selected
+            specs = self._internalModel.algorithmSpecs()
+        else:
+            # Show default settings
+            specs = self._internalModel.algorithmDefaultSpecs('rj')
+
+        for idx, key in enumerate(keys):
+            # Add label and entry
+            rejectionBoxLayout.addWidget(self._settingsEntries[key][0], idx, 0, 1, 1)
+            rejectionBoxLayout.addWidget(self._settingsEntries[key][1], idx, 1, 1, 1)
+
+            # Set settings value according to model
+            if specs[key] is not None:
+                self._settingsEntries[key][1].setValue(specs[key])
+
+        # Add automatic threshold checkbutton
+        autoCheck = QCheckBox()
+        autoCheck.setText('Automatic')
+
+        if specs['threshold'] is None:
+            autoCheck.setChecked(True)
+            self._toggleSetting(True, 'threshold')
+        autoCheck.toggled.connect(self._onAuto)
+        rejectionBoxLayout.addWidget(autoCheck, 1, 2)
+
+        # Add cross validation checkbutton
+        cvCheck = QCheckBox()
+        cvCheck.setText('No CV')
+        if specs['cv'] is None:
+            autoCheck.setChecked(True)
+            self._toggleSetting(False, 'cv')
+
+        cvCheck.toggled.connect(self._onCv)
+        rejectionBoxLayout.addWidget(cvCheck, 2, 2)
+
+        rejectionBox.setLayout(rejectionBoxLayout)
+        return rejectionBox
 
     def _toggleExt(self, enabled):
         """A helper function to toggle selected dir or not."""
@@ -284,49 +335,43 @@ class ARejectionSettingsDialog(QDialog):
         self._simEntry[0].setEnabled(not enabled)
         self._simEntry[1].setEnabled(not enabled)
 
-    def _createGroupBox(self):
-        """Creates a box with parameters."""
+    def _toggleSetting(self, enabled, key):
+        """A helper to toggle settings on/off."""
 
-        # Create rejection settings pane
-        rejectionBox = QWidget()
-        rejectionBoxLayout = QGridLayout()
+        self._settingsEntries[key][0].setEnabled(not enabled)
+        self._settingsEntries[key][1].setEnabled(not enabled)
 
-        # Use this for rejection
-        labels = [('Number of simulations:', 'simulations'),
-                  ('Threshold:', 'threshold'),
-                  ('Keep:', 'keep'),
-                  ('Cross Validation:', 'cv')]
-
-        for idx, label in enumerate(labels):
-            labelName = labels[idx][0]
-            key = labels[idx][1]
-
-            rejectionBoxLayout.addWidget(QLabel(labelName, self), idx, 0, 1, 1)
-
-            # Create entry and add to layout and dict
-            entry = ASettingEntry(self._internalModel, key)
-            rejectionBoxLayout.addWidget(entry, idx, 1, 1, 1)
-            self._settingEntries[key] = entry
-
-        # Add automatic threshold check button
-        self._autoCheck = QCheckBox()
-        self._autoCheck.setText('Automatic')
-        rejectionBoxLayout.addWidget(self._autoCheck, 1, 2)
-
-        # Set layout and return ready box
-        rejectionBox.setLayout(rejectionBoxLayout)
-        return rejectionBox
-
-    def _onRadio(self, checked):
+    def _onExt(self, checked):
         """Activated when user decides to add external reference."""
 
-        if checked:
-            self._toggleExt(True)
-        else:
-            self._toggleExt(False)
+        self._toggleExt(checked)
+
+    def _onAuto(self, checked):
+        """Activated when user toggles the automatic threshold setting"""
+
+        self._toggleSetting(checked, 'threshold')
+
+    def _onCv(self, checked):
+        """Activated when user decides to click the no cv checkbutton."""
+
+        self._toggleSetting(checked, 'cv')
+
+    def _collect(self):
+        """Collects values from entries and updates internal model."""
+
+        methodSpecs = self._internalModel.algorithmDefaultSpecs('rj')
+        # Update values (order does not matter, since methodSpecs is an orderedDict
+        for key in self._settingsEntries.keys():
+            methodSpecs[key] = self._settingsEntries[key][1].value()
+        refTableSpecs = {
+            'simulations': self._simEntry[1].value()
+            'extref':
+        }
 
     def _onOk(self):
         """Called when user presses ok. Update method settings."""
+
+        # Update model
 
         self.close()
 
@@ -347,37 +392,30 @@ class ASettingEntry(QDoubleSpinBox):
         # Adjust spinbox range
         self._configureRange()
 
-        # Set value from model
-        #self.setValue(self._internalModel['settings'][key])
-        #self.valueChanged.connect(self._onValueChanged)
-
     def _configureRange(self):
         """Sets the range of the spinbox."""
 
-        self.setDecimals(3)
-        self.setSingleStep(0.1)
-        # Percentile settings
         if self._key == 'keep':
+            # Keep settings
             self.setRange(0, 1e10)
             self.setDecimals(0)
-        # Threshold settings
-        if self._key == 'threshold':
-            self.setRange(0.0, 1e10)
 
-        # N simulations settings
-        if self._key == 'simulations':
+        elif self._key == 'threshold':
+            # Threshold settings
+            self.setSingleStep(0.1)
+            self.setDecimals(3)
+            self.setRange(0.0, 1.0)
+
+        elif self._key == 'simulations':
+            # N simulations settings
             self.setRange(0, 1e10)
             self.setSingleStep(10)
             self.setDecimals(0)
-        # Cross-validation settings
-        if self._key == 'cv':
-            self.setRange(0, 1e6)
+        elif self._key == 'cv':
+            # Cross-validation settings
+            self.setRange(0, 1e10)
             self.setSingleStep(10)
             self.setDecimals(0)
-
-    def _onValueChanged(self, val):
-        """Triggered when user changes the value fo the setting."""
-        pass
 
 
 class ARefTableDir(QWidget):

@@ -549,4 +549,3 @@ class ARadioPushButton(QPushButton):
             self.setIcon(QIcon("./icons/forest.png"))
         else:
             self.setIcon(QIcon("./icons/chain.png"))
-
