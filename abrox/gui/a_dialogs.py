@@ -175,8 +175,8 @@ class AFixParameterDialog(QDialog):
 
         # Get an list of 2-tuples (key, value) of checkboxes
         fixedParams = [spin.keyValue() for spin in self._spinBoxes]
-        # Add to internal model
         self._internalModel.addFixedParameters(fixedParams)
+        tracksave.saved = False
         # Close dialog
         self.close()
 

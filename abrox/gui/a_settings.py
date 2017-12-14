@@ -125,7 +125,7 @@ class AComputationSettingsFrame(QScrollArea):
         self._objectiveButtons["group"].buttonClicked.connect(self._onObjective)
 
         # Select one that applies
-        self._objectiveButtons['buttons'][self._internalModel.objective()].click()
+        self._objectiveButtons['buttons'][self._internalModel.objective()].setChecked(True)
 
         objectiveGroupBox.setLayout(objectiveGroupBoxLayout)
         return objectiveGroupBox
@@ -225,6 +225,7 @@ class AComputationSettingsFrame(QScrollArea):
         else:
             self._methodButtons["buttons"]["mcmc"].setEnabled(True)
             self._internalModel.addObjective('inference')
+        tracksave.saved = False
 
     def _onMethod(self, button):
         """
@@ -257,7 +258,7 @@ class AComputationSettingsFrame(QScrollArea):
             self._internalModel.addModelIndexForTest(self._combo.currentIndex())
         else:
             self._comboWidget.setEnabled(False)
-            self._internalModel.addModelIndexForTest(False)
+            self._internalModel.addModelIndexForTest(None)
 
     def _onFixParameter(self):
         """Invoke a dialog for settings parameters."""
@@ -266,7 +267,7 @@ class AComputationSettingsFrame(QScrollArea):
         if not self._internalModel.models():
             msg = QMessageBox()
             text = 'Project should contain at least one model.'
-            msg.critical(self, 'Error loading data file...', text)
+            msg.critical(self, 'Error fixing parameter...', text)
         else:
             dialog = AFixParameterDialog(self._internalModel, self.nativeParentWidget())
             dialog.exec_()
@@ -329,6 +330,9 @@ class AOuputDir(QWidget):
 
 class ARunFrame(QScrollArea):
     """Main container for the model testing"""
+
+    DEBUG = True
+
     def __init__(self, internalModel, console, outputConsole, parent=None):
         super(ARunFrame, self).__init__(parent)
 
@@ -385,8 +389,9 @@ class ARunFrame(QScrollArea):
             scriptCreator = AScriptCreator(self._internalModel)
             scriptName = scriptCreator.createScript()
 
-            # Start a python process in e separate thread
-            self._processManager.startAbc(scriptName)
+            if not ARunFrame.DEBUG:
+                # Start a python process in e separate thread
+                self._processManager.startAbc(scriptName)
 
     def _onStop(self):
         """Kill python thread and subprocess inside."""

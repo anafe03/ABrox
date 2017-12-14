@@ -1,5 +1,6 @@
 import pprint
 import datetime
+from collections import OrderedDict
 
 
 class AScriptCreator:
@@ -129,10 +130,11 @@ class AScriptCreator:
             # Write settings
             outfile.write('{}"settings": {{\n'.format(self.tab()))
             # Format settings dict using pprint
-            projectDict['settings']['fixedparameters'] = dict(projectDict['settings']['fixedparameters'])
-            settings = pprint.pformat(dict(projectDict['settings'])) \
-                .replace('{', "", 1)
+            self._orderedDictToDict(projectDict['settings'])
+
+            settings = pprint.pformat(dict(projectDict['settings'])).replace('{', "", 1)
             settings = self._rreplace(settings, '}', '', count=1)
+
             # Indent output of pprint with 8 spaces
             settings = ''.join(['{}{}'.format(self.tab(2), l) for l in settings.splitlines(True)])
             outfile.write(settings)
@@ -150,6 +152,15 @@ class AScriptCreator:
                '{}abc.run()\n'.format(self.tab(), self.tab(), self.tab())
 
         outfile.write(call)
+
+    def _orderedDictToDict(self, d):
+        """Converts all instances of OrderedDict to dict recursively."""
+
+        for k, v in d.items():
+            if isinstance(v, dict):
+                if isinstance(v, OrderedDict):
+                    d[k] = dict(v)
+                self._orderedDictToDict(d[k])
 
     def _rreplace(self, s, old, new, count=1):
         """A helper function to replace strings backwards."""

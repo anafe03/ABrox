@@ -7,6 +7,7 @@ from collections import OrderedDict
 
 class AInternalModel:
     """This class represents the internal model for an approximate bayesian estimation."""
+
     def __init__(self):
 
         # Initialize defaults
