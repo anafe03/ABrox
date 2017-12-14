@@ -720,12 +720,3 @@ class AComboBox(QComboBox):
 
     def setValue(self, val):
         self.setCurrentText(val.upper())
-
-
-
-
-
-
-
-
-

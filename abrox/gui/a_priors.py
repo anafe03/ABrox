@@ -137,6 +137,7 @@ class APriorPlot(QFrame):
         self.canvas.setMinimumSize(self.canvas.size())
         FigureCanvas.updateGeometry(self)
         self._configureStyle()
+        self.figure.gca().xaxis.grid(True)
         self._configurePlotter(QVBoxLayout())
 
     def _configureStyle(self):

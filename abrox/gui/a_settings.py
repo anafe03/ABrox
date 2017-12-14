@@ -1,7 +1,5 @@
 import pickle
 from collections import OrderedDict
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from abrox.gui.a_process_manager import AProcessManager
 from abrox.gui.a_dialogs import *
@@ -25,7 +23,7 @@ class ASettingsWindow(QFrame):
         """Lays out main components of the frame."""
 
         self.setFrameStyle(QFrame.Panel)
-
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         # Use a splitter so user can stretch in and out the pane
         splitter = QSplitter()
         splitter.addWidget(self._compSettingsFrame)
@@ -482,6 +480,7 @@ class ARadioPushButton(QPushButton):
         self.setText(text)
         self.setCheckable(True)
         self.setFocusPolicy(Qt.NoFocus)
+        self.setToolTip("Click to configure...")
 
         if text == "Rejection":
             self.setIcon(QIcon("./icons/rejection.png"))

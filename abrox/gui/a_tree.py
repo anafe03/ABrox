@@ -249,7 +249,6 @@ class ADataNode(ABaseNode):
         """Displays the data editor table."""
         if self.subWindow in mdiArea.subWindowList():
             mdiArea.setActiveSubWindow(self.subWindow)
-            self.subWindow.show()
         else:
             self.subWindow = AMdiWindow()
             self.subWindow.setWindowIcon(self.icon(0))
@@ -332,7 +331,6 @@ class APriorsNode(ABaseNode):
 
         if self.subWindow in mdiArea.subWindowList():
             mdiArea.setActiveSubWindow(self.subWindow)
-            self.subWindow.show()
         else:
             self.subWindow = AMdiWindow()
             self.subWindow.setWindowIcon(self.icon(0))
@@ -489,8 +487,12 @@ class AMdiWindow(QMdiSubWindow):
         super(AMdiWindow, self).__init__(parent)
 
         self.setOption(QMdiSubWindow.RubberBandMove)
+        self.setOption(QMdiSubWindow.RubberBandResize)
         self.setAttribute(Qt.WA_DeleteOnClose, True)
         self.setWindowIcon(QIcon('icons/icon.ico'))
+        self.setWindowFlags(Qt.SubWindow)
+        self.sizeGrip = QSizeGrip(self)
+        self.setStyleSheet("")
 
     def closeEvent(self, event):
         """Re-implement the close event to simply hide widget."""

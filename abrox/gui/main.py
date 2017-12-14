@@ -36,7 +36,7 @@ def main(args=None):
     app = QApplication(sys.argv)
     app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
     app.setOrganizationName("Heidelberg University")
-    app.setApplicationName("bprox")
+    app.setApplicationName("abrox")
 
     # =============================================================== #
     #                       CREATE SPLASH SCREEN                      #
