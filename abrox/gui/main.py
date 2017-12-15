@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import QLocale
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QFontDatabase
 from abrox.gui.a_main_window import AMainWindow
 import os
 import sys
@@ -35,6 +35,9 @@ def main(args=None):
     # =============================================================== #
     app = QApplication(sys.argv)
     app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
+    font = QFontDatabase.systemFont(QFontDatabase.GeneralFont)
+    font.setPointSize(font.pointSize() + 1)
+    app.setFont(font)
     app.setOrganizationName("Heidelberg University")
     app.setApplicationName("abrox")
 

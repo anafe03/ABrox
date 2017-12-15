@@ -1,6 +1,6 @@
 from PyQt5.QtCore import QRegExp, Qt, QEvent, QRect, QSize
 from PyQt5.QtGui import *
-from PyQt5.QtWidgets import QApplication, QWidget, QPlainTextEdit
+from PyQt5.QtWidgets import QApplication, QWidget, QPlainTextEdit, QTextEdit
 from abrox.gui import tracksave
 
 
@@ -31,6 +31,8 @@ class APythonTextEditor(QPlainTextEdit):
     keyPressEvent method to handle TAB press as four whitespaces.
     """
 
+    HIGHLIGHT = QColor(46, 50, 53)
+
     def __init__(self, internalModel, codeToInsert, functionName,
                        modelName=None, fontFamily="Monospaced",
                        fontSize=12, parent=None):
@@ -48,6 +50,7 @@ class APythonTextEditor(QPlainTextEdit):
 
         # Connect callbacks for line-numbers update
         self.blockCountChanged.connect(self.updateLineNumberAreaWidth)
+        self.cursorPositionChanged.connect(self.highlightCurrentLine)
         self.updateRequest.connect(self.updateLineNumberArea)
         self.updateLineNumberAreaWidth(0)
         self._highlighter = APythonHighlighter(self.document())
@@ -158,6 +161,16 @@ class APythonTextEditor(QPlainTextEdit):
 
         if rect.contains(self.viewport().rect()):
             self.updateLineNumberAreaWidth(0)
+
+    def highlightCurrentLine(self):
+        """Draws a borderless rectangle around the current line."""
+
+        selection = QTextEdit.ExtraSelection()
+        selection.format.setBackground(APythonTextEditor.HIGHLIGHT)
+        selection.format.setProperty(QTextFormat.FullWidthSelection, True)
+        selection.cursor = self.textCursor()
+        selection.cursor.clearSelection()
+        self.setExtraSelections([selection])
 
     def event(self, event):
         """Re-implement key-press event to insert 4 whitespaces instead of a tab."""
