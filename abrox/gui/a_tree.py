@@ -343,6 +343,8 @@ class APriorsNode(ABaseNode):
         """Called from AModelNode on name change."""
 
         if self.subWindow is not None:
+            print('Changing model name')
+            print(text)
             self._internalModel.renameModel(self.parent().oldName, text)
             self.subWindow.setWindowTitle(text + ' Priors')
             self.priorsWindow.changeModelName(text)

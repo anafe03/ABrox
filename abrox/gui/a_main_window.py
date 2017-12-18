@@ -239,7 +239,8 @@ class AMainWindow(QMainWindow):
         """Triggered when about menu item clicked."""
 
         text = 'ABrox developed by Ulf Mertens & Stefan Radev (2017).\n' \
-               'Dark style by https://github.com/ColinDuquesnoy.\n\n' \
+               'Dark style by https://github.com/ColinDuquesnoy.\n' \
+               'ABrox Logo by Maximilian Knapp.\n\n'\
                'ABrox is a free software distributed under the GNU 3.0 licence. ' \
                'The developers take absolutely no responsibility for the use of this program ' \
                'or sloppy data analysis in general. ' \
