@@ -76,7 +76,7 @@ class Abc:
         # Create a rejecter instance, responsible for filtering
         # the reference table according to the specified number 'keep'
         # of rows to retain (retains those with smallest distance)
-        rejecter = ABCRejection(refTable, settings['keep'])
+        rejecter = ABCRejection(refTable, settings['specs']['keep'])
 
         # TODO CAUTION: This should not always run!
         subset, threshold = rejecter.reject()
@@ -84,17 +84,23 @@ class Abc:
         # According to the specified algorithm, run the abc
         if settings['alg'] == "rejection":
 
-            if settings['cv']:
-                crossval = ABCCv(refTable,settings['keep'],settings['obj'],settings['cv'],modelNames)
+            if settings['specs']['cv'] is not None:
+
+                crossval = ABCCv(refTable,settings['specs']['keep'],
+                                 settings['obj'],
+                                 settings['specs']['cv'],
+                                 modelNames)
+
                 output = crossval.report(settings['outputdir'])
                 return output
             else:
+
                 reporter = ABCReporter(subset, modelNames, settings['pnames'], settings['obj'])
                 return reporter.report()
 
         elif settings['alg'] == "mcmc":
 
-            mcmc = MCMC(pp, subset, settings)
+            mcmc = MCMC(pp, subset, threshold, settings)
 
             samples, accepted = mcmc.run()
 

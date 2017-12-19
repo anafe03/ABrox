@@ -1,4 +1,6 @@
 import numpy as np
+import pandas as pd
+
 from abrox.core.abc_utils import euclideanDistance
 from abrox.core.abc_wegmann import Wegmann
 
@@ -9,10 +11,11 @@ class MCMC:
     """
     #TODO - give reference to paper
 
-    def __init__(self, preprocessor, subset, settings):
+    def __init__(self, preprocessor, subset, threshold, settings):
 
         self._pp = preprocessor
         self._subset = subset
+        self.threshold = threshold
         self._settings = settings
         self._model = self._pp.getFirstModel()
         self._priors = self._model.getPriors()
@@ -40,6 +43,9 @@ class MCMC:
             if i % thin is 0:
                 samples[i+1, :] = start
 
+        df = pd.DataFrame(samples[burn:, :], columns=self._settings['pnames'])
+
+        print(df.describe().transpose())
         return samples[burn:, :], accepted
 
     def _initWegmann(self):
@@ -49,8 +55,7 @@ class MCMC:
         :return: None
         """
 
-        wegmann = Wegmann(self._subset, self._settings['pnames'],
-                          self._settings['tr'])
+        wegmann = Wegmann(self._subset, self._settings['pnames'])
         self._settings['specs']['proposal'] = wegmann.getProposal()
         self._settings['specs']['start'] = wegmann.getStartingValues()
 
@@ -85,7 +90,7 @@ class MCMC:
 
         # Decide whether to accept sample or not
         dist = euclideanDistance(self._pp.scaledSumStatObsData, scaledSumStat, axis=0)
-        accepted = dist < self._settings['tr']
+        accepted = dist < self.threshold
         return accepted
 
     def _density(self, value):

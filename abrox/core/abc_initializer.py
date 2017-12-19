@@ -21,7 +21,7 @@ class ABCInitializer:
         else:
             for i, model in enumerate(model):
                 if i == self.config['settings']['test']['model']:
-                    params = self.config['settings']['test']['parameter']
+                    params = self.config['settings']['test']['fixed']
                     return model.simulate(params)
 
     def buildAndGetModels(self):
@@ -44,28 +44,18 @@ class ABCInitializer:
         paramNames = self._getParameterNames()
         objective = self.config['settings']['objective']
         nModels = len(self.config['models'])
-        simulations = self.config['settings']['preprocess']['simulations']
-        keep = self.config['settings']['preprocess']['keep']
-        threshold = self.config['settings']['preprocess']['threshold']
+        reftable = self.config['settings']['reftable']
         outputdir = self.config['settings']['outputdir']
-        extref = self.config['settings']['extref']
-
-        if not self.config['settings']['cv']:
-            cv = False
-        else:
-            cv = self.config['settings']['cv']['n']
 
         settings = {'alg': algo,
                     'specs': specs,
                     'pnames': paramNames,
                     'obj': objective,
                     'nmodels': nModels,
-                    'nsim': simulations,
-                    'keep': keep,
-                    'tr': threshold,
-                    'extref': extref,
-                    'outputdir': outputdir,
-                    'cv': cv}
+                    'nsim': reftable['simulations'],
+                    'extref': reftable['extref'],
+                    'outputdir': outputdir
+                    }
 
         return settings
 

@@ -36,12 +36,18 @@ CONFIG = {
     "distance": None,
     "settings": {
         'distance_metric': 'default',
-        'objective': 'inference',
         'method': {'algorithm': 'mcmc',
-                   'specs': {'chl': 10000, 'burn': 0, 'thin': 1, 'proposal': None, 'start': None}},
-        'test': {'model': 0, 'parameter': {'d': 0.2}},
-        'preprocess': {'simulations': 10000, 'keep': 100, 'threshold': -1},
-        'outputdir': '/Users/ulf.mertens/Desktop/abrox_demo/t_test'
+                   'specs': {'burn': 0,
+                             'chl': 10000,
+                             'keep': 100,
+                             'proposal': None,
+                             'start': None,
+                             'thin': 1,
+                             'threshold': None}},
+        'objective': 'inference',
+        'outputdir': '/Users/ulf.mertens/Desktop/abrox_demo/t_test',
+        'reftable': {'extref': None, 'simulations': 10000},
+        'test': {'fixed': {'d': 0.3}, 'model': 0}
     }
 }
 

@@ -7,10 +7,9 @@ from abrox.core.abc_utils import toArray
 
 class Wegmann:
 
-    def __init__(self, subset, paramNames, threshold):
+    def __init__(self, subset, paramNames):
         self.paramArray = toArray(subset,'param')
         self.paramNames = paramNames
-        self.threshold = threshold
 
     def getProposal(self):
         """
