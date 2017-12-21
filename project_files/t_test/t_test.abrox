@@ -1,0 +1,50 @@
+[ABrox Project File]
+{
+    "Analysis": {
+        "data": {
+            "delimiter": null,
+            "datafile": null
+        },
+        "models": [
+            {
+                "name": "H1",
+                "priors": [
+                    {
+                        "d": "stats.cauchy(loc=0.0, scale=0.7)"
+                    }
+                ],
+                "simulate": "def simulate(params):\n    n = 100\n    first_sample = np.random.normal(0, 1, n)\n    sec_sample = np.random.normal(params['d'], 1, n)\n    return np.column_stack((first_sample, sec_sample))"
+            },
+            {
+                "name": "H0",
+                "priors": [],
+                "simulate": "def simulate(params):\n    n = 100\n    first_sample = np.random.normal(0, 1, n)\n    sec_sample = np.random.normal(0, 1, n)\n    return np.column_stack((first_sample, sec_sample))"
+            }
+        ],
+        "summary": "def summary(data):\n    data_mean = np.mean(data, axis=0)\n    diff_mean = data_mean[0] - data_mean[1]\n    mean_std = np.mean(np.std(data, axis=0))\n    return diff_mean / mean_std",
+        "distance": "def distance(simSummary, obsSummary):\n    # write your code here\n    pass",
+        "settings": {
+            "method": {
+                "algorithm": "rejection",
+                "specs": {
+                    "keep": 100,
+                    "threshold": null,
+                    "cv": null
+                }
+            },
+            "reftable": {
+                "extref": null,
+                "simulations": 10000
+            },
+            "objective": "comparison",
+            "outputdir": "/Users/ulf.mertens/Seafile/Uni/approxbayes/abrox/project_files/t_test/analysis",
+            "test": {
+                "model": 0,
+                "fixed": {
+                    "d": 0.5
+                }
+            },
+            "distance_metric": "default"
+        }
+    }
+}
