@@ -4,6 +4,7 @@ from PyQt5.QtGui import *
 
 
 class AConsoleWindow(QTextEdit):
+    BGCOLOR = QColor(211, 211, 211, 25)
 
     def __init__(self, parent=None, font=None):
         super(AConsoleWindow, self).__init__(parent)
@@ -16,6 +17,22 @@ class AConsoleWindow(QTextEdit):
             font.setFamily('Consolas')
             font.setPointSize(10)
         self.setFont(font)
+
+    def paintEvent(self, event):
+        """Draws background lines behind text."""
+
+        painter = QPainter()
+        painter.begin(self.viewport())
+        brush = QBrush(AConsoleWindow.BGCOLOR)
+        brush.setStyle(Qt.CrossPattern)
+        painter.setBrush(brush)
+        painter.fillRect(event.rect(), brush)
+        painter.end()
+        QTextEdit.paintEvent(self, event)
+
+
+
+
 
 
 class AOutputConsole(QWidget):
