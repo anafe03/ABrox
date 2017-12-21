@@ -85,7 +85,12 @@ class MCMC:
         param = self._listToDict(param)
 
         # Simulate dataset, compute summary, and scale it
-        sumStat = self._pp.summarizer.summarize(self._model.simulate(param))
+        try:
+            simulation = self._model.simulate(param)
+        except ValueError:
+            return False
+
+        sumStat = self._pp.summarizer.summarize(simulation)
         scaledSumStat = self._pp.scaler.transform(sumStat)
 
         # Decide whether to accept sample or not
@@ -102,8 +107,8 @@ class MCMC:
 
         density = 0
         for prior in self._priors:
-            for dist in prior.values():
-                density += dist.logpdf(value)
+            for i, dist in enumerate(prior.values()):
+                density += dist.logpdf(value[i])
         return density
 
     def _propose(self):

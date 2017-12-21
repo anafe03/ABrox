@@ -22,7 +22,7 @@ class Wegmann:
 
         proposal = OrderedDict()
         for paramName, sd in zip(self.paramNames,standardDeviation):
-            proposal[paramName] = stats.uniform(loc=-sd/2, scale=sd)
+            proposal[paramName] = stats.uniform(loc=-sd/10, scale=(sd/10)*2)
 
         return proposal
 
@@ -38,4 +38,4 @@ class Wegmann:
         Pick a random row index from the subset reference table.
         :return: the index
         """
-        return np.random.choice(self.paramArray.shape[0], 1, replace=False)
+        return np.random.choice(self.paramArray.shape[0], 1, replace=False)[0]

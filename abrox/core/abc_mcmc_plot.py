@@ -17,6 +17,12 @@ class Plotter:
 
     def plot(self):
         df = self.toPandas()
-        df.plot(kind='hist')
+
+        for column in df:
+            plt.hist(df[column])
+            plt.title("Posterior")
+            plt.xlabel(column)
+            plt.ylabel("Frequency")
+
         plt.show()
 
