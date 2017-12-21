@@ -8,12 +8,15 @@ def summary(data):
     """
     mean, variance, skew, kurtosis
     """
-    return list(stats.describe(data))[2:]
+    # list(stats.describe(data))[2:]
+    Mean = np.mean(data)
+    Sd = np.std(data)
+    return np.array([Mean,Sd])
 
 
 def simulate_Model1(params):
     n = 1000
-    return np.random.normal(params['mean'],1,size=n)
+    return np.random.normal(params['mean'],params['sd'],size=n)
 
 
 CONFIG = {
@@ -26,7 +29,7 @@ CONFIG = {
         "name": "Model1",
         "prior": [
             {'mean': stats.norm(loc=0.0, scale=5)},
-            #{'sd': stats.uniform(loc=0.0001,scale=10)}
+            {'sd': stats.uniform(loc=0.0001,scale=10)}
         ],
         "simulate": simulate_Model1
         }
@@ -47,7 +50,7 @@ CONFIG = {
         'objective': 'inference',
         'outputdir': '/Users/ulf.mertens/Desktop/abrox_demo/t_test',
         'reftable': {'extref': None, 'simulations': 10000},
-        'test': {'fixed': {'mean': -1}, 'model': 0}
+        'test': {'fixed': {'mean': 3, 'sd': 2}, 'model': 0}
     }
 }
 
