@@ -198,6 +198,7 @@ class AMainWindow(QMainWindow):
                     # Update tree
                     self._tree.updateProject()
                     # Modify save flag
+                    self._outputConsole.write('Loaded project {}'.format(loadName[0]))
                     tracksave.saved = True
                 else:
                     QMessageBox.critical(self, 'Error loading file',

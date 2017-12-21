@@ -24,7 +24,7 @@ class ConfigTester:
         :return: None
         """
         for i, modelDict in enumerate(self.config['models']):
-            if set(modelDict.keys()) != {'name', 'prior', 'simulate'}:
+            if set(modelDict.keys()) != {'name', 'priors', 'simulate'}:
                 raise ConfigurationError(
                     "A model needs to be provided with three keys: 'name', 'priors', and 'simulate'")
 

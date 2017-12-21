@@ -59,7 +59,7 @@ class AScriptCreator:
         imports = '# Required imports\n' \
                   'import numpy as np\n' \
                   'from scipy import stats\n' \
-                  'from abrox.core.algorithm import Abc\n\n\n'
+                  'from abrox.core.abc import Abc\n\n\n'
 
         outfile.write(imports)
 
@@ -90,9 +90,9 @@ class AScriptCreator:
             outfile.write('CONFIG = {\n')
             # Write data file and delimiter
             outfile.write('{}"data": {{\n'.format(self.tab()))
-            outfile.write('{}"datafile": "{}",\n'.format(self.tab(2),
+            outfile.write('{}"datafile": {},\n'.format(self.tab(2),
                                                         projectDict['data']['datafile']))
-            outfile.write('{}"delimiter": "{}"\n'.format(self.tab(2),
+            outfile.write('{}"delimiter": {}\n'.format(self.tab(2),
                                                         projectDict['data']['delimiter']))
             outfile.write('{}}},\n'.format(self.tab()))
 

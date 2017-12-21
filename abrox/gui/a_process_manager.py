@@ -56,17 +56,17 @@ class AProcessManager:
 
     def _onAbcStarted(self):
 
-        self._outputConsole.write('ABC started...')
+        self._outputConsole.write('ABC computation running...')
         self._parent.signalAbcStarted()
 
     def _onAbcFinished(self):
 
-        self._outputConsole.write('ABC finished.')
+        self._outputConsole.write('ABC computation finished.')
         self._parent.signalAbcFinished(self._abcProcess.error)
 
     def _onAbcAborted(self):
 
-        self._outputConsole.writeWarning('ABC aborted.')
+        self._outputConsole.writeWarning('ABC aborted bu user.')
         self._parent.signalAbcAborted()
 
     def _onConsoleLog(self, text):
@@ -92,9 +92,10 @@ class APythonAbcProcess(QObject):
         super(APythonAbcProcess, self).__init__()
 
         self._flag = flag
-        self.__p = None  # keep a reference of process
+        self._scriptName = None
         self.aborted = False
         self.error = False
+        self.__p = None  # keep a reference of process
 
     def run(self):
         """Initializes a subprocess starting abc."""

@@ -1,7 +1,7 @@
 import sys
 
 from abrox.core.abc_summary import ABCSummary
-from abrox.core.abc_utils import read_external
+from abrox.core.abc_utils import read_external, pickle_results
 from abrox.core.abc_config_check import ConfigTester
 from abrox.core.abc_initializer import ABCInitializer
 from abrox.core.abc_rejection import ABCRejection
@@ -99,8 +99,8 @@ class Abc:
             mcmc = MCMC(pp, subset, threshold, settings)
             samples, accepted = mcmc.run()
 
-            # plotter = Plotter(samples, settings['pnames'])
-            # plotter.plot()
+            plotter = Plotter(samples, settings['pnames'])
+            plotter.plot()
 
             output = samples
 
@@ -109,4 +109,5 @@ class Abc:
             rf = ABCRandomForest(refTable, pp, settings)
             output = rf.run()
 
+        pickle_results(output, settings['outputdir'])
         return output

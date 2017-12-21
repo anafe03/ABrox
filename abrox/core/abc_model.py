@@ -4,7 +4,7 @@ import sys
 class ABCModel:
     """Defines a model in a format suitable for ABC."""
 
-    def __init__(self, name, prior, simulate):
+    def __init__(self, name, priors, simulate):
         """
         Constructor requires following information:
         :param name: string - the internal name of the model
@@ -13,7 +13,7 @@ class ABCModel:
         """
         self.name = name
         self.currentParam = OrderedDict()
-        self._priors = prior
+        self._priors = priors
         self._simulateFunc = simulate
 
     def drawParameter(self):

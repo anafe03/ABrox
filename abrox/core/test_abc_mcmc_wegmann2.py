@@ -27,7 +27,7 @@ CONFIG = {
     "models": [
         {
         "name": "Model1",
-        "prior": [
+        "priors": [
             {'mean': stats.norm(loc=0.0, scale=5)},
             {'sd': stats.uniform(loc=0.0001,scale=10)}
         ],
@@ -59,4 +59,4 @@ if __name__ == "__main__":
 
     abc = Abc(CONFIG)
     out = abc.run()
-    print(len(out))
+    print(out)

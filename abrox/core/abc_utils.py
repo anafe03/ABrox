@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pickle
 
 # ABC utility functions
 
@@ -103,3 +104,10 @@ def read_external(path):
     refTable['distance'] = dfRaw['distance']
 
     return refTable
+
+
+def pickle_results(output, outputdir):
+    """Pickles the output file and fail gently if not successful."""
+
+    with open(outputdir + '/_results.p', 'wb+') as outfile:
+        pickle.dump(output, outfile, pickle.HIGHEST_PROTOCOL)

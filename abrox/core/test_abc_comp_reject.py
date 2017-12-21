@@ -22,6 +22,8 @@ def simulate_Model2(params):
     return np.column_stack((first_sample, sec_sample))
 
 
+
+
 CONFIG = {
     "data": {
         "datafile": None,
@@ -30,15 +32,14 @@ CONFIG = {
     "models": [
         {
             "name": "Model1",
-            "prior": [
+            "priors": [
                 {"d": stats.cauchy(loc=0.0, scale=0.7)},
         ],
             "simulate": simulate_Model1
         },
         {
             "name": "Model2",
-            "prior": [
-                {},
+            "priors": [
             ],
             "simulate": simulate_Model2
         }
@@ -51,7 +52,7 @@ CONFIG = {
         'method': {'algorithm': 'rejection',
                    'specs': {'cv': None, 'keep': 100, 'threshold': None}},
         'objective': 'comparison',
-        'outputdir': '/Users/ulf.mertens/Desktop/abrox_demo/t_test',
+        'outputdir': '.',
         'reftable': {'extref': None, 'simulations': 10000},
         'test': {'fixed': {'d': 0.5}, 'model': 0}
     }

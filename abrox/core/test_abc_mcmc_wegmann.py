@@ -25,7 +25,7 @@ CONFIG = {
     "models": [
         {
         "name": "Model1",
-        "prior": [
+        "priors": [
             {"d": stats.cauchy(loc=0.0, scale=0.7)},
         ],
         "simulate": simulate_Model1
@@ -45,7 +45,7 @@ CONFIG = {
                              'thin': 1,
                              'threshold': None}},
         'objective': 'inference',
-        'outputdir': '/Users/ulf.mertens/Desktop/abrox_demo/t_test',
+        'outputdir': '.',
         'reftable': {'extref': None, 'simulations': 10000},
         'test': {'fixed': {'d': 0.3}, 'model': 0}
     }
@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
     abc = Abc(CONFIG)
     out = abc.run()
-    print(len(out))
+    print(out)
     # TODO:
     # Sampling parameters is currently not really fast since the prior
     # distributions are the values from dicts in lists.

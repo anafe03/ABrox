@@ -16,7 +16,7 @@ class ABCInitializer:
         :return: The (pseudo) observed data as a numpy array.
         """
 
-        if self.config['data']['datafile'] is not None:
+        if self.config['data']['datafile']:
             return self._loadExternalData()
         else:
             for i, model in enumerate(model):
@@ -70,19 +70,17 @@ class ABCInitializer:
         """
         Returns parameter names of first model only!!
         """
-        return self._flattenList([list(d.keys()) for d in self.config['models'][0]['prior']])
+        return self._flattenList([list(d.keys()) for d in self.config['models'][0]['priors']])
 
     def _loadExternalData(self):
         """
         Import external dataset.
         :return: the dataset
         """
-        try:
-            return pd.read_csv(self.config['data']['datafile'],
-                               delimiter=self.config['data']['delimiter']).as_matrix()
 
-        except ImportError('Imported data could not be imported'):
-            return None
+        return pd.read_csv(self.config['data']['datafile'], engine='python',
+                            delimiter=self.config['data']['delimiter']).as_matrix()
+
 
 
 

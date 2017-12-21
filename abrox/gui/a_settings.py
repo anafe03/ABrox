@@ -1,4 +1,5 @@
 import pickle
+import traceback
 from collections import OrderedDict
 from PyQt5.QtGui import *
 from abrox.gui.a_process_manager import AProcessManager
@@ -331,7 +332,7 @@ class AOuputDir(QWidget):
 class ARunFrame(QScrollArea):
     """Main container for the model testing"""
 
-    DEBUG = True
+    DEBUG = False
 
     def __init__(self, internalModel, console, outputConsole, parent=None):
         super(ARunFrame, self).__init__(parent)
@@ -387,11 +388,15 @@ class ARunFrame(QScrollArea):
 
             # Create an executable python script in the output dir
             scriptCreator = AScriptCreator(self._internalModel)
-            scriptName = scriptCreator.createScript()
 
-            if not ARunFrame.DEBUG:
-                # Start a python process in e separate thread
-                self._processManager.startAbc(scriptName)
+            try:
+                scriptName = scriptCreator.createScript()
+                if not ARunFrame.DEBUG:
+                    # Start a python process in e separate thread
+                    self._processManager.startAbc(scriptName)
+            except (TypeError, IOError, IndexError, FileNotFoundError) as e:
+                self._outputConsole.writeError('ERROR during ABC execution!')
+                self._outputConsole.writeError(traceback.format_exc())
 
     def _onStop(self):
         """Kill python thread and subprocess inside."""
@@ -438,15 +443,19 @@ class ARunFrame(QScrollArea):
         """Called when algorithm finished."""
 
         # Get dict name
-        name = self._internalModel.outputDir() + '/' + 'save.p'
+        name = self._internalModel.outputDir() + '/' + '_results.p'
 
         # Unpickle
-        unpickled = pickle.load(open(name, 'rb'))
+        try:
+            unpickled = pickle.load(open(name, 'rb+'))
 
-        # Push to console and write to output console
-        self._console.addResults(unpickled)
-        self._outputConsole.write('You can access your results by typing '
-                                  '<strong>results</strong> in the Python console.')
+            # Push to console and write to output console
+            self._console.addResults(unpickled)
+            self._outputConsole.write('You can access your results by typing '
+                                      '<strong>results</strong> in the Python console.')
+        except pickle.UnpicklingError as e:
+            self._outputConsole.writeError('ERROR loading results.')
+            self._outputConsole.writeError(traceback.format_exc())
 
 
 class AModelComboBox(QComboBox):
