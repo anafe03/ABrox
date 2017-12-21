@@ -359,7 +359,7 @@ class AMdiArea(QMdiArea):
         painter.begin(self.viewport())
         painter.fillRect(event.rect(), QColor(35, 38, 41))
         x = int(self.width() / 2 - self._pixmap.width() / 2)
-        y = int(self.height() /2 - self._pixmap.height() / 2)
+        y = int(self.height() / 2 - self._pixmap.height() / 2)
         painter.drawPixmap(x, y, self._pixmap)
         painter.end()
 

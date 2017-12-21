@@ -31,10 +31,6 @@ class AConsoleWindow(QTextEdit):
         QTextEdit.paintEvent(self, event)
 
 
-
-
-
-
 class AOutputConsole(QWidget):
 
     greeting = '<font color="#dce582"> {} Welcome to ABrox! {}</font><br>'.\
