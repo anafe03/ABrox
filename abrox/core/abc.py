@@ -10,7 +10,6 @@ from abrox.core.abc_mcmc_plot import Plotter
 from abrox.core.abc_preprocess import ABCPreProcessor
 from abrox.core.abc_report import ABCReporter
 from abrox.core.abc_mcmc import MCMC
-# from abrox.core.abc_neural_net import ABCNeuralNet
 from abrox.core.abc_random_forest import ABCRandomForest
 
 
@@ -72,7 +71,6 @@ class Abc:
         else:
             refTable = pp.preprocess(settings['nsim'], parallel=True, jobs=4)
 
-
         # Create a rejecter instance, responsible for filtering
         # the reference table according to the specified number 'keep'
         # of rows to retain (retains those with smallest distance)
@@ -85,41 +83,30 @@ class Abc:
         if settings['alg'] == "rejection":
 
             if settings['specs']['cv'] is not None:
-
-                crossval = ABCCv(refTable,settings['specs']['keep'],
-                                 settings['obj'],
-                                 settings['specs']['cv'],
-                                 modelNames)
-
+                crossval = ABCCv(refTable, settings['specs']['keep'],
+                                           settings['obj'],
+                                           settings['specs']['cv'],
+                                           modelNames)
                 output = crossval.report(settings['outputdir'])
-                return output
             else:
-
-                reporter = ABCReporter(subset, modelNames, settings['pnames'], settings['obj'])
-                return reporter.report()
+                reporter = ABCReporter(subset, modelNames,
+                                               settings['pnames'],
+                                               settings['obj'])
+                output = reporter.report()
 
         elif settings['alg'] == "mcmc":
 
             mcmc = MCMC(pp, subset, threshold, settings)
-
             samples, accepted = mcmc.run()
 
-            plotter = Plotter(samples, settings['pnames'])
-            plotter.plot()
+            # plotter = Plotter(samples, settings['pnames'])
+            # plotter.plot()
 
-            return samples
+            output = samples
 
-        elif settings['alg'] == "rf":
+        else:
 
-            rf = ABCRandomForest(refTable, pp)
-            probs = rf.run()
+            rf = ABCRandomForest(refTable, pp, settings)
+            output = rf.run()
 
-            return probs
-
-        elif settings['alg'] == "nn":
-
-            nn = ABCNeuralNet(refTable, pp)
-            probs = nn.run()
-
-            return probs
-
+        return output

@@ -6,10 +6,11 @@ from abrox.core.abc_utils import toArray
 class ABCRandomForest:
     """Implements a random forest for ABC model selection."""
 
-    def __init__(self, refTable, preprocessor):
+    def __init__(self, refTable, preprocessor, settings):
 
         self._refTable = refTable
         self._pp = preprocessor
+        self._settings = settings
 
     def run(self):
         """Runs according to settings (these must be specified by user.)"""

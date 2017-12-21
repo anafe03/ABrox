@@ -15,8 +15,8 @@ class MCMC:
 
         self._pp = preprocessor
         self._subset = subset
-        self.threshold = threshold
         self._settings = settings
+        self._settings['specs']['threshold'] = threshold
         self._model = self._pp.getFirstModel()
         self._priors = self._model.getPriors()
 
@@ -45,7 +45,6 @@ class MCMC:
 
         df = pd.DataFrame(samples[burn:, :], columns=self._settings['pnames'])
 
-        print(df.describe().transpose())
         return samples[burn:, :], accepted
 
     def _initWegmann(self):
@@ -95,7 +94,7 @@ class MCMC:
 
         # Decide whether to accept sample or not
         dist = euclideanDistance(self._pp.scaledSumStatObsData, scaledSumStat, axis=0)
-        accepted = dist < self.threshold
+        accepted = dist < self._settings['specs']['threshold']
         return accepted
 
     def _density(self, value):

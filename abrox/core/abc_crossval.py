@@ -174,7 +174,7 @@ class ABCCv:
                             horizontalalignment='center',
                             verticalalignment='center')
 
-        cb = fig.colorbar(res)
+        fig.colorbar(res)
         plt.xticks(range(width), self.modelNames)
         plt.yticks(range(height), self.modelNames)
         plt.title('Confusion matrix')
