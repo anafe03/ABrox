@@ -26,7 +26,7 @@ CONFIG = {
     "models": [
         {
             "name": "Model1",
-            "prior": [
+            "priors": [
                 {"d": stats.cauchy(loc=0.0, scale=0.7)},
         ],
             "simulate": simulate_Model1
