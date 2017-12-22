@@ -45,7 +45,7 @@ class MCMC:
 
         df = pd.DataFrame(samples[burn:, :], columns=self._settings['pnames'])
 
-        return samples[burn:, :], accepted
+        return df, accepted
 
     def _initWegmann(self):
         """
