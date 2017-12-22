@@ -62,6 +62,5 @@ class ABCReporter:
             return self.bayesFactor()
 
         if self.objective == "inference":
-            table = self.initParamTable()
-            return table.describe().transpose()
+            return self.initParamTable()
 
