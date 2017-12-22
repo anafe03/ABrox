@@ -32,14 +32,14 @@ CONFIG = {
     "models": [
         {
             "name": "Model1",
-            "prior": [
+            "priors": [
                 {"d": stats.cauchy(loc=0.0, scale=0.7)},
         ],
             "simulate": simulate_Model1
         },
         {
             "name": "Model2",
-            "prior": [
+            "priors": [
                 {},
             ],
             "simulate": simulate_Model2
@@ -51,10 +51,10 @@ CONFIG = {
     "settings": {
         'distance_metric': 'default',
         'objective': 'comparison',
-        'method': {'algorithm': 'rf', 'specs':  {}},
-        'test': {'model': 0, 'parameter': {'d': 0.4}},
-        'preprocess': {'simulations': 10000,  'keep': 100, 'threshold': -1},
-        'outputdir': '/Users/ulf.mertens/Desktop/abrox_demo/t_test'
+        'method': {'algorithm': 'randomforest', 'specs':  {}},
+        'test': {'fixed': {'d': 0.5}, 'model': 0},
+        'outputdir': '.',
+        'reftable': {'extref': None, 'simulations': 10000},
     }
 }
 

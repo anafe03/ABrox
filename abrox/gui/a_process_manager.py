@@ -69,20 +69,24 @@ class AProcessManager:
         self._outputConsole.writeWarning('ABC aborted bu user.')
         self._parent.signalAbcAborted()
 
-    def _onConsoleLog(self, text):
+    def _onConsoleLog(self, text, error):
         """
         Triggered when subprocess reads from temporary output file
         which stores the output of the abc core algorithm.
         """
 
-        self._outputConsole.write(text)
+        if not error:
+            self._outputConsole.write(text)
+        else:
+            self._outputConsole.writeError('ERROR during ABC execution.')
+            self._outputConsole.writeError(text)
 
 
 class APythonAbcProcess(QObject):
     abcFinished = pyqtSignal()
     abcAborted = pyqtSignal()
     abcStarted = pyqtSignal()
-    consoleLog = pyqtSignal(str)
+    consoleLog = pyqtSignal(str, bool)
 
     def __init__(self, flag):
         """
@@ -123,14 +127,15 @@ class APythonAbcProcess(QObject):
 
         # Return read pointer to temp file to start
         f.seek(0)
-        # Read log
-        self.consoleLog.emit(f.read().decode('utf-8'))
-        # Close temporary file - removes it
-        f.close()
 
         # Check return
         if self.__p.returncode != 0:
             self.error = True
+            self.consoleLog.emit(f.read().decode('utf-8'), True)
+        else:
+            self.consoleLog.emit(f.read().decode('utf-8'), False)
+        # Close temporary file - removes it
+        f.close()
 
         # Clear reference to subprocess object
         self.__p = None

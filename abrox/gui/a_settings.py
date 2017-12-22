@@ -16,7 +16,7 @@ class ASettingsWindow(QFrame):
 
         self._internalModel = internalModel
         self._console = console
-        self._compSettingsFrame = AComputationSettingsFrame(internalModel, console)
+        self._compSettingsFrame = AComputationSettingsFrame(internalModel, console, outputConsole)
         self._runFrame = ARunFrame(internalModel, console, outputConsole)
         self._configureLayout(QHBoxLayout())
 
@@ -40,13 +40,14 @@ class ASettingsWindow(QFrame):
 class AComputationSettingsFrame(QScrollArea):
     """Main container for settings and run."""
 
-    def __init__(self, internalModel, console, parent=None):
+    def __init__(self, internalModel, console, outputConsole, parent=None):
         super(AComputationSettingsFrame, self).__init__(parent)
 
         # Private attributes
         self._internalModel = internalModel
         self._console = console
-        self._output = AOuputDir(internalModel)
+        self._outputConsole = outputConsole
+        self._output = AOutputDir(internalModel, self._outputConsole)
         self._comboWidget = QWidget()
         self._settingEntries = dict()
 
@@ -227,6 +228,7 @@ class AComputationSettingsFrame(QScrollArea):
             self._methodButtons["buttons"]["mcmc"].setEnabled(True)
             self._internalModel.addObjective('inference')
         tracksave.saved = False
+        self._outputConsole.write('Objective changed to {}.'.format(button.text()))
 
     def _onMethod(self, button):
         """
@@ -235,13 +237,19 @@ class AComputationSettingsFrame(QScrollArea):
         """
 
         if button.text() == "Rejection":
-            dialog = ARejectionSettingsDialog(self._internalModel, self.nativeParentWidget())
+            dialog = ARejectionSettingsDialog(self._internalModel,
+                                              self._outputConsole,
+                                              self.nativeParentWidget())
             dialog.exec_()
         elif button.text() == "Random Forest":
-            dialog = ARandomForestSettingsDialog(self._internalModel, self.nativeParentWidget())
+            dialog = ARandomForestSettingsDialog(self._internalModel,
+                                                 self._outputConsole,
+                                                 self.nativeParentWidget())
             dialog.exec_()
         elif button.text() == "MCMC":
-            dialog = AMCMCSettingsDialog(self._internalModel, self.nativeParentWidget())
+            dialog = AMCMCSettingsDialog(self._internalModel,
+                                         self._outputConsole,
+                                         self.nativeParentWidget())
             dialog.exec_()
 
         # Make sure selected is current, even if user has
@@ -270,7 +278,7 @@ class AComputationSettingsFrame(QScrollArea):
             text = 'Project should contain at least one model.'
             msg.critical(self, 'Error fixing parameter...', text)
         else:
-            dialog = AFixParameterDialog(self._internalModel, self.nativeParentWidget())
+            dialog = AFixParameterDialog(self._internalModel, self._outputConsole, self.nativeParentWidget())
             dialog.exec_()
 
     def sizeHint(self):
@@ -280,12 +288,13 @@ class AComputationSettingsFrame(QScrollArea):
         return QSize(int(screenWidth/3), self.height())
 
 
-class AOuputDir(QWidget):
+class AOutputDir(QWidget):
     """Main output dir widget for specifying output location."""
-    def __init__(self, internalModel, parent=None):
-        super(AOuputDir, self).__init__(parent)
+    def __init__(self, internalModel, console, parent=None):
+        super(AOutputDir, self).__init__(parent)
 
         self._internalModel = internalModel
+        self._outputConsole = console
         self._configureLayout(QHBoxLayout())
 
     def _configureLayout(self, layout):
@@ -317,11 +326,10 @@ class AOuputDir(QWidget):
 
         # If user has selected something
         if dirPath:
-            # Update entry
             self._path.setText(dirPath)
             self._internalModel.changeSetting('outputdir', dirPath)
-            # Modify save flag
             tracksave.saved = False
+            self._outputConsole.write('Output directory changed to {}.'.format(dirPath))
 
     def _onEdit(self, text):
         """Triggered when user types into dir edit."""
@@ -388,14 +396,14 @@ class ARunFrame(QScrollArea):
 
             # Create an executable python script in the output dir
             scriptCreator = AScriptCreator(self._internalModel)
-
             try:
                 scriptName = scriptCreator.createScript()
+                self._outputConsole.write('Creating script ' + scriptName + '...')
                 if not ARunFrame.DEBUG:
                     # Start a python process in e separate thread
                     self._processManager.startAbc(scriptName)
             except (TypeError, IOError, IndexError, FileNotFoundError) as e:
-                self._outputConsole.writeError('ERROR during ABC execution!')
+                self._outputConsole.writeError('ERROR during ABC execution.')
                 self._outputConsole.writeError(traceback.format_exc())
 
     def _onStop(self):
@@ -448,7 +456,6 @@ class ARunFrame(QScrollArea):
         # Unpickle
         try:
             unpickled = pickle.load(open(name, 'rb+'))
-
             # Push to console and write to output console
             self._console.addResults(unpickled)
             self._outputConsole.write('You can access your results by typing '

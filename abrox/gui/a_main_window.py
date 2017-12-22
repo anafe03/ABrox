@@ -198,7 +198,7 @@ class AMainWindow(QMainWindow):
                     # Update tree
                     self._tree.updateProject()
                     # Modify save flag
-                    self._outputConsole.write('Loaded project {}'.format(loadName[0]))
+                    self._outputConsole.write('Loaded project "{}".'.format(loadName[0]))
                     tracksave.saved = True
                 else:
                     QMessageBox.critical(self, 'Error loading file',
@@ -221,12 +221,14 @@ class AMainWindow(QMainWindow):
                     outfile.write('[ABrox Project File]\n')
                     # Write json model
                     json.dump(projectAsDict, outfile, indent=4)
+                    tracksave.saved = True
+                    self._outputConsole.write('Saved project as "{}".'.format(saveName[0]))
             except IOError as e:
                 QMessageBox.critical(self, 'Error saving file',
                                      'Could not save file due to: '.format(str(e)),
                                      QMessageBox.Ok)
 
-            tracksave.saved = True
+
 
     def _stacked(self):
         """Activated when user clicks the stacked menu button."""
@@ -339,7 +341,7 @@ class ATabController(QTabWidget):
         """Used to make run button visible by shrinking console pane to 1/3.5 of display height."""
 
         screenHeight = QApplication.desktop().screenGeometry().height()
-        return QSize(self.width(), screenHeight/3.5)
+        return QSize(self.width(), int(screenHeight / 3.5))
 
 
 class AMdiArea(QMdiArea):

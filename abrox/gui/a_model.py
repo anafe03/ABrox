@@ -234,8 +234,7 @@ class AInternalModel:
         """
 
         if os.path.isdir(self._project['Analysis']['settings']['outputdir']):
-            return self._fileWithPathName(os.path.join(self._project['Analysis']['settings']['outputdir'],
-                                                       'analysis.py'))
+            return self._fileWithPathName(self._project['Analysis']['settings']['outputdir'] + '/analysis.py')
 
     def _fileWithPathName(self, pathToFile):
         """A recursive helper method to not overwrite analysis files."""

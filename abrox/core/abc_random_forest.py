@@ -15,10 +15,7 @@ class ABCRandomForest:
     def run(self):
         """Runs according to settings (these must be specified by user.)"""
 
-        # Create a classifier
-        # TODO according to user-specified settings
-        # TODO 2: Implement random forest without sklearn dependency
-        rf = RandomForestClassifier(n_estimators=100)
+        rf = RandomForestClassifier(**self._settings['specs'])
 
         # Extract sum stats and model indices from ref table
         indices = toArray(self._refTable, 'idx').flatten()
@@ -26,8 +23,6 @@ class ABCRandomForest:
 
         # Do a 5-fold cross-validation
         accuracies = self._cross_val(sumStat, indices, rf, 5)
-        print("Random forest cross-val accuracies: ")
-        print(accuracies)
 
         # Fit on summary statistics (the more the better)
         rf.fit(sumStat, indices)

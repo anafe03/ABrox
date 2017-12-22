@@ -33,7 +33,7 @@ class AConsoleWindow(QTextEdit):
 
 class AOutputConsole(QWidget):
 
-    greeting = '<font color="#dce582"> {} Welcome to ABrox! {}</font><br>'.\
+    greeting = '<font color="#dce582" style="text-transform:uppercase;"> {} Welcome to ABrox! {}</font><br>'.\
                                     format('*'*5, '*'*5)
     defaultColor = QColor(239, 240, 241)
     warningColor = QColor(244, 241, 41)
@@ -118,4 +118,4 @@ class AOutputConsole(QWidget):
         """Used to make run button visible by shrinking console to 1/5 of display height."""
 
         screenHeight = QApplication.desktop().screenGeometry().height()
-        return QSize(self.width(), screenHeight/5)
+        return QSize(self.width(), screenHeight // 5)

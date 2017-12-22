@@ -103,10 +103,11 @@ class AFixParameterDialog(QDialog):
     Assumes that a model index is available in the internal model.
     """
 
-    def __init__(self, internalModel, parent=None):
+    def __init__(self, internalModel, outputConsole, parent=None):
         super(AFixParameterDialog, self).__init__(parent)
 
         self._internalModel = internalModel
+        self._outputConsole = outputConsole
         self._spinBoxes = []
         self._initDialog(QVBoxLayout())
 
@@ -173,16 +174,18 @@ class AFixParameterDialog(QDialog):
     def _onOk(self):
         """Add fixed parameters to internal model and close."""
 
-        # Get an list of 2-tuples (key, value) of checkboxes
+        # Get a list of 2-tuples (key, value) of checkboxes
         fixedParams = [spin.keyValue() for spin in self._spinBoxes]
         self._internalModel.addFixedParameters(fixedParams)
         tracksave.saved = False
-        # Close dialog
+        self._outputConsole.write('Following parameters of model <strong>{}</strong> fixed:'
+                                  .format(self._internalModel.selectedModelForTest().name))
+        [self._outputConsole.write('Parameter <strong>{}</strong> set to <strong>{}</strong>'
+                                   .format(k, v)) for k, v in fixedParams]
         self.close()
 
     def _onCancel(self):
         """Called when user presses cancel. Accepted stays False."""
-
         self.close()
 
     def _onReset(self):
@@ -221,10 +224,11 @@ class ASettingsDialog(QDialog):
     should implement the two abstract methods specified below.
     """
 
-    def __init__(self, internalModel, parent=None):
+    def __init__(self, internalModel, outputConsole, parent=None):
         super(ASettingsDialog, self).__init__(parent)
 
         self._internalModel = internalModel
+        self._outputConsole = outputConsole
         self._refTableWidget = ARefTableDir(internalModel)
         self._simEntry = [
             QLabel('Number of simulations:'),
@@ -296,6 +300,7 @@ class ASettingsDialog(QDialog):
         self._internalModel.addMethod(method)
         self._internalModel.addRefTable(ref)
         tracksave.saved = False
+        self._outputConsole.write('Method changed to {}.'.format(self._name))
         self.close()
 
     def _onCancel(self):
@@ -350,10 +355,11 @@ class ARejectionSettingsDialog(ASettingsDialog):
     of the rejection algorithm.
     """
 
-    def __init__(self, internalModel, parent=None):
-        super(ARejectionSettingsDialog, self).__init__(internalModel, parent)
+    def __init__(self, internalModel, outputConsole, parent=None):
+        super(ARejectionSettingsDialog, self).__init__(internalModel, outputConsole, parent)
 
-        self.setWindowTitle('Rejection Settings')
+        self._name = 'Rejection'
+        self.setWindowTitle(self._name + ' Settings')
         self._settingsEntries = {
             'keep': (QLabel('Keep:'), ASettingEntry(self._internalModel, 'keep', True)),
             'threshold': (QLabel('Threshold:'), ASettingEntry(self._internalModel, 'threshold')),
@@ -429,10 +435,11 @@ class AMCMCSettingsDialog(ASettingsDialog):
     of the MCMC algorithm.
     """
 
-    def __init__(self, internalModel, parent=None):
-        super(AMCMCSettingsDialog, self).__init__(internalModel, parent)
+    def __init__(self, internalModel, outputConsole, parent=None):
+        super(AMCMCSettingsDialog, self).__init__(internalModel, outputConsole, parent)
 
-        self.setWindowTitle('MCMC Settings')
+        self._name = 'MCMC'
+        self.setWindowTitle(self._name + ' Settings')
         self._settingsEntries = {
             'keep': (QLabel('Keep:'), ASettingEntry(self._internalModel, 'keep', True)),
             'threshold': (QLabel('Threshold:'), ASettingEntry(self._internalModel, 'threshold')),
@@ -533,10 +540,11 @@ class ARandomForestSettingsDialog(ASettingsDialog):
     of the Random Forest ABC algorithm.
     """
 
-    def __init__(self, internalModel, parent=None):
-        super(ARandomForestSettingsDialog, self).__init__(internalModel, parent)
+    def __init__(self, internalModel, outputConsole, parent=None):
+        super(ARandomForestSettingsDialog, self).__init__(internalModel, outputConsole, parent)
 
-        self.setWindowTitle('Random Forest Settings')
+        self._name = 'Random Forest'
+        self.setWindowTitle(self._name + ' Settings')
         self._settingsEntries = {
             'n_estimators': (QLabel('Number of Trees:'),
                              ASettingEntry(self._internalModel, 'ntree', True)),

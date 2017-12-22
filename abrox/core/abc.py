@@ -74,52 +74,33 @@ class Abc:
         # Create a rejecter instance, responsible for filtering
         # the reference table according to the specified number 'keep'
         # of rows to retain (retains those with smallest distance)
-        if settings['alg'] != 'randomforest':
-            rejecter = ABCRejection(refTable, settings['specs']['keep'])
-            subset, threshold = rejecter.reject()
+        # only use for rejection and MCMC
 
         # According to the specified algorithm, run the abc
         if settings['alg'] == "rejection":
-
+            subset, threshold = ABCRejection(refTable, settings['specs']['keep']).reject()
             if settings['specs']['cv'] is not None:
-                print("Running cross validation for",settings['obj'], "...")
-                print("A visualisation of the results will be stored as pdf-file inside your working directory")
-
                 crossval = ABCCv(refTable, settings['specs']['keep'],
                                            settings['obj'],
                                            settings['specs']['cv'],
                                            modelNames)
                 output = crossval.report(settings['outputdir'])
             else:
-                print("Starting the rejection algorithm for",settings['obj'], "...")
-                if settings['obj'] == "comparison":
-                    print("Calculating a matrix containing the approximate Bayes factors...")
-                else:
-                    print("Calculating the posterior samples of the parameter(s)...")
-
-                # =====================================================
                 reporter = ABCReporter(subset, modelNames,
                                                settings['pnames'],
                                                settings['obj'])
                 output = reporter.report()
-                # =====================================================
 
         elif settings['alg'] == "mcmc":
-
-            print("Running the MCMC algorithm ...")
-            print("Calculating the posterior samples of the parameter(s)...")
-
+            subset, threshold = ABCRejection(refTable, settings['specs']['keep']).reject()
             mcmc = MCMC(pp, subset, threshold, settings)
             samples, accepted = mcmc.run()
-
             plotter = Plotter(samples, settings['pnames'])
             plotter.plot()
 
             output = samples
 
         else:
-            print("Running the Random Forest algorithm ...\n")
-            print("Calculating the posterior model probabilities...")
             rf = ABCRandomForest(refTable, pp, settings)
             output = rf.run()
 
