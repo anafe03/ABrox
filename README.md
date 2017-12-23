@@ -80,7 +80,6 @@ Currently, we provide:
 
 * Two-sample t-test
 * Levene-Test
-* Multinomial Processing tree (comparison)
 
 ### Contributors
 
