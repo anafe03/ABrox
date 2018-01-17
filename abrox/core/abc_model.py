@@ -1,10 +1,10 @@
 from collections import OrderedDict
-import sys
+import numpy as np
 
 class ABCModel:
     """Defines a model in a format suitable for ABC."""
 
-    def __init__(self, name, priors, simulate):
+    def __init__(self, name, priors, simulate, n):
         """
         Constructor requires following information:
         :param name: string - the internal name of the model
@@ -12,16 +12,45 @@ class ABCModel:
         :param simulate: function - the simulate function defined by the user
         """
         self.name = name
-        self.currentParam = OrderedDict()
+        self._priorSet = OrderedDict()
+        self._called = -1
         self._priors = priors
         self._simulateFunc = simulate
+        self._priorSamples = self.draw(n)
+
+    def draw(self, n):
+        """
+        Draw n prior samples and store in OrderedDict
+        :param n: number of samples to draw
+        :return: an ordered dict with keys corresponding to parameter names
+        and values are np arrays containing the samples.
+        """
+        currentParam = OrderedDict()
+
+        for priorDict in self._priors:
+
+            for name, priorInfo in priorDict.items():
+                if all(isinstance(val, (float, int)) for val in priorInfo['params'].values()):
+                    currentParam[name] = priorInfo['dist'](**priorInfo['params']).rvs(size=n)
+                else:
+                    currentParam[name] = None
+
+        for priorDict in self._priors:
+            for name, priorInfo in priorDict.items():
+                if currentParam[name] is None:
+                    for paramName, val in priorInfo['params'].items():
+                        if isinstance(val, str):
+                            priorInfo['params'][paramName] = currentParam[val]
+                    currentParam[name] = priorInfo['dist'](**priorInfo['params']).rvs()
+
+        return currentParam
 
     def drawParameter(self):
-        """Draw a value from each prior distribution"""
-        for priorDict in self._priors:
-            for name, dist in priorDict.items():
-                self.currentParam[name] = dist.rvs()
-        return self.currentParam
+        self._called += 1
+        """Draw a value from the prior samples"""
+        for name, samples in self._priorSamples.items():
+            self._priorSet[name] = np.random.choice(samples)
+        return self._priorSet
 
     def getPriors(self):
         """Returns the list with model priors."""

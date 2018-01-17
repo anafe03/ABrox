@@ -31,7 +31,7 @@ class ABCInitializer:
         """
         self.model = []
         for i, modelDict in enumerate(self.config['models']):
-            self.model.append(ABCModel(**modelDict))
+            self.model.append(ABCModel(**modelDict,n=self.config['settings']['reftable']['simulations']))
         modelNames = [model['name'] for model in self.config['models']]
 
         return self.model, modelNames

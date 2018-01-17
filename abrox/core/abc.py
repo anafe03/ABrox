@@ -11,6 +11,7 @@ from abrox.core.abc_preprocess import ABCPreProcessor
 from abrox.core.abc_report import ABCReporter
 from abrox.core.abc_mcmc import MCMC
 from abrox.core.abc_random_forest import ABCRandomForest
+from abrox.core.abc_neural_net import ABCNeuralNet
 
 
 class Abc:
@@ -100,9 +101,13 @@ class Abc:
 
             output = samples
 
-        else:
+        elif settings['alg'] == 'randomforest':
             rf = ABCRandomForest(refTable, pp, settings)
             output = rf.run()
+
+        elif settings['alg'] == 'nn':
+            nn = ABCNeuralNet(refTable,pp,settings['obj'])
+            output = nn.run()
 
         pickle_results(output, settings['outputdir'])
         return output

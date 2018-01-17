@@ -33,7 +33,7 @@ CONFIG = {
         {
             "name": "Model1",
             "priors": [
-                {"d": stats.cauchy(loc=0.0, scale=0.7)},
+                {"d": {"dist": stats.cauchy, 'params': {'loc': 0, 'scale': 0.7}}},
         ],
             "simulate": simulate_Model1
         },
