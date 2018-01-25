@@ -1,8 +1,13 @@
 import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense
-from sklearn.neural_network import MLPClassifier
 from abrox.core.abc_utils import toArray, cross_val
+from keras.layers.core import Lambda
+from keras import backend as K
+from sklearn import preprocessing
+
+
+
 
 
 class ABCNeuralNet:
@@ -14,7 +19,7 @@ class ABCNeuralNet:
         self._pp = preprocessor
         self.objective = objective
 
-    def run(self):
+    def run(self,rawData):
         """Runs according to settings (these must be specified by user.)"""
 
         if self.objective == 'comparison':
@@ -59,18 +64,67 @@ class ABCNeuralNet:
             print(X.shape)
             print(y.shape)
 
-            # Create a classifier
-            # TODO according to user-specified settings
-            # TODO 2: Implement random forest without sklearn dependency
+            X_val = X[:5000]
+            X_train = X[5000:]
+
+            y_val = y[:5000]
+            y_train = y[5000:]
+
+            print('Normalizing...')
+            scaler = preprocessing.StandardScaler().fit(X_train)
+
+            X_train = scaler.transform(X_train)
+            X_val = scaler.transform(X_val)
+
+            features = X.shape[1]
+            outputs = y.shape[1]
+            print("Running model on {} features".format(features))
+            print("Prediction {} parameters".format(outputs))
 
             model = Sequential()
-            model.add(Dense(10, input_dim=X.shape[1], activation='relu'))
-            model.add(Dense(10, activation='relu'))
+            model.add(Dense(features, input_shape=(features,), activation='relu'))
+            #model.add(Lambda(lambda x: K.dropout(x, level=0.1)))
+            model.add(Dense(features, activation='relu'))
+            model.add(Lambda(lambda x: K.dropout(x, level=0.1)))
+            model.add(Dense(features, activation='relu'))
+            model.add(Lambda(lambda x: K.dropout(x, level=0.1)))
             model.add(Dense(y.shape[1], activation='linear'))
             # Compile model
             model.compile(loss='mean_squared_error', optimizer='adam')
 
+            # print(model.summary())
 
-            model.fit(x=X, y=y, batch_size=64, epochs=2, shuffle=True, validation_split=0.1)
+            history = model.fit(x=X_train, y=y_train,
+                                batch_size=32,
+                                epochs=20,
+                                shuffle=True,
+                                validation_data=(X_val,y_val),
+                                verbose=False)
 
-            return model
+            print("Finished fitting")
+
+            sumStatTest = np.array(self._pp.scaledSumStatObsData).reshape(1, -1)
+            sumStatTest = scaler.transform(sumStatTest)
+
+            N = 1000
+            posteriorSamples = np.empty(shape=(N,outputs))
+            for i in range(N):
+                posteriorSamples[i,] = model.predict(sumStatTest)
+
+            loss = history.history['loss']
+            val_loss = history.history['val_loss']
+
+            return rawData, loss, val_loss, posteriorSamples
+
+
+
+# convModel = models.Sequential()
+# convModel.add(layers.Conv1D(32,160,strides=12,activation='relu',input_shape=(48,1)))
+# convModel.add(layers.MaxPooling1D(pool_size=2))
+# convModel.add(layers.Conv1D(32,40,strides=8,activation='relu'))
+# convModel.add(layers.MaxPooling1D(pool_size=2))
+# convModel.add(layers.Conv1D(64,80,strides=2,activation='relu'))
+# convModel.add(layers.MaxPooling1D(pool_size=2))
+# convModel.add(layers.Flatten())
+# convModel.add(layers.Dense(64,activation='relu'))
+# convModel.add(layers.Dense(2,activation='linear'))
