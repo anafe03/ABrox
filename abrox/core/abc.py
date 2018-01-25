@@ -107,7 +107,7 @@ class Abc:
 
         elif settings['alg'] == 'nn':
             nn = ABCNeuralNet(refTable,pp,settings['obj'])
-            output = nn.run()
+            output = nn.run(obsData)
 
         pickle_results(output, settings['outputdir'])
         return output
