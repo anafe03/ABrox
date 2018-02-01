@@ -86,14 +86,21 @@ class AScriptCreator:
     def _writeConfig(self, outfile, projectDict, simulateDict):
             """Creates the config file in a nice format. Pretty nasty."""
 
+
             # Write var name
             outfile.write('CONFIG = {\n')
             # Write data file and delimiter
             outfile.write('{}"data": {{\n'.format(self.tab()))
-            outfile.write('{}"datafile": {},\n'.format(self.tab(2),
+            if projectDict['data']['datafile']:
+                outfile.write('{}"datafile": "{}",\n'.format(self.tab(2),
                                                         projectDict['data']['datafile']))
-            outfile.write('{}"delimiter": {}\n'.format(self.tab(2),
+                outfile.write('{}"delimiter": "{}"\n'.format(self.tab(2),
                                                         projectDict['data']['delimiter']))
+            else:
+                outfile.write('{}"datafile": {},\n'.format(self.tab(2),
+                                                             projectDict['data']['datafile']))
+                outfile.write('{}"delimiter": {}\n'.format(self.tab(2),
+                                                             projectDict['data']['delimiter']))
             outfile.write('{}}},\n'.format(self.tab()))
 
             # Write models

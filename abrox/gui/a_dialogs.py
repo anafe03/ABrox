@@ -406,8 +406,8 @@ class ARejectionSettingsDialog(ASettingsDialog):
         cvCheck = QCheckBox()
         cvCheck.setText('No CV')
         if specs['cv'] is None:
-            autoCheck.setChecked(True)
-            self._toggleSetting(False, 'cv')
+            cvCheck.setChecked(True)
+            self._toggleSetting(True, 'cv')
 
         cvCheck.toggled.connect(self._onCv)
         rejectionBoxLayout.addWidget(cvCheck, keys.index('cv'), 2)

@@ -66,7 +66,7 @@ class AProcessManager:
 
     def _onAbcAborted(self):
 
-        self._outputConsole.writeWarning('ABC aborted bu user.')
+        self._outputConsole.writeWarning('ABC aborted by user.')
         self._parent.signalAbcAborted()
 
     def _onConsoleLog(self, text, error):
