@@ -60,7 +60,7 @@ class AInternalModel:
                        'specs': OrderedDict([
                            ('keep', 100),
                            ('threshold', None),
-                           ('cv', 100)])
+                           ('cv', None)])
                        },
             'randomforest': {'algorithm': 'randomforest',
                        'specs': OrderedDict([
