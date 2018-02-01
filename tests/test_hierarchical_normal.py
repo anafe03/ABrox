@@ -4,19 +4,22 @@ import matplotlib.pyplot as plt
 from itertools import combinations
 from abrox.core.abc import Abc
 
+from keras.models import load_model
+from abrox.core.abc_utils import plotLosses
+
 
 def summary(data):
-    mean = np.mean(data)
-    variance = np.var(data)
-    mad = np.median(np.absolute(data - np.median(data)))
-    raw = np.array([mean,variance,mad])
-    all2sum = np.array([np.sum(tup) for tup in combinations(raw, 2)])
-    all2prod = np.array([np.prod(tup) for tup in combinations(raw, 2)])
-    all3sum = np.reshape(np.sum(raw),1)
-    all3prod = np.reshape(np.prod(raw),1)
-    noise = np.random.uniform(size=50)
-    return np.concatenate((raw,all2sum,all2prod,all3sum,all3prod,noise))
-    # return data
+    # mean = np.mean(data)
+    # variance = np.var(data)
+    # mad = np.median(np.absolute(data - np.median(data)))
+    # raw = np.array([mean,variance,mad])
+    # all2sum = np.array([np.sum(tup) for tup in combinations(raw, 2)])
+    # all2prod = np.array([np.prod(tup) for tup in combinations(raw, 2)])
+    # all3sum = np.reshape(np.sum(raw),1)
+    # all3prod = np.reshape(np.prod(raw),1)
+    # noise = np.random.uniform(size=50)
+    # return np.concatenate((raw,all2sum,all2prod,all3sum,all3prod,noise))
+    return np.sort(data)
 
 
 def simulate_Model1(params):
@@ -54,47 +57,73 @@ CONFIG = {
 }
 
 
+def samplesFromTruePosterior(data):
+    """ Draw samples from true posterior distribution"""
+    rawMean = data.mean()
+    s2 = np.sum((data - rawMean) ** 2)
+    N = len(data)
+    truePosteriorMean = stats.t(df=N + 8, loc=(N * rawMean) / (N + 1), scale=(s2 + 6) / ((N + 1) * (N + 8)))
+    truePosteriorVariance = stats.invgamma(a=54, scale=(N / 2) * (s2 / N) + 3)
+
+    m = truePosteriorMean.mean() #truePosteriorMean.rvs(size=10000)
+    mv = truePosteriorMean.var()
+    v = truePosteriorVariance.mean() #truePosteriorVariance.rvs(size=10000)
+    vv = truePosteriorVariance.var()
+
+    return m, mv, v, vv
+
+
 if __name__ == "__main__":
 
+    keras_model = load_model('/Users/ulf.mertens/Desktop/nndl/my_model.h5')
+
     abc = Abc(CONFIG)
-    raw, loss,val_loss, ps = abc.run()
-
-    epochs = range(1,len(loss)+1)
-    plt.plot(epochs,loss,'bo',label="Training loss")
-    plt.plot(epochs, val_loss, 'b', label="Validation loss")
-    plt.xlabel('Epochs')
-    plt.ylabel('Loss')
-    plt.legend()
-    plt.savefig('/Users/ulf.mertens/Desktop/nndl/losses.png', bbox_inches='tight')
-    plt.clf()
-
-    rawMean = raw.mean()
-    s2 = np.sum((raw - rawMean) ** 2)
-    s = np.sum(raw - rawMean)
-    N = 100
-    truePosteriorMean = stats.t(df=N + 8, loc=(N*raw.mean())/(N+1), scale=(s2 + 6) / ((N + 1) * (N + 8)))
-    samplesPostMean = truePosteriorMean.rvs(size=10000)
-    plt.hist(samplesPostMean,normed=True)
-    truePosteriorVariance = stats.invgamma(a=54, scale=(N / 2) * (s2 / N) + 3)
-    samplesPostVar = truePosteriorVariance.rvs(size=10000)
-
-    #plt.plot(xsd, fitSD, '-')
-    plt.hist(ps[:,0],normed=True)
-    plt.savefig('/Users/ulf.mertens/Desktop/nndl/mean.png', bbox_inches='tight')
-    plt.clf()
-
-    plt.hist(samplesPostVar,normed=True)
-    plt.hist(ps[:, 1], normed=True)
-    plt.savefig('/Users/ulf.mertens/Desktop/nndl/sigma.png', bbox_inches='tight')
-    plt.clf()
-
-    print("True mean: ", stats.describe(samplesPostMean))
-    print("True sd: ", stats.describe(samplesPostVar))
-
-    print("Est mean: ",stats.describe(ps[:,0]))
-    print("Est sd: ",stats.describe(ps[:,1]))
-    #plt.xlim(0,2)
+    raw, loss, val_loss, ps = abc.run(keras_model)
 
 
-    #plt.hist(ps[:,1])
-    #plt.show()
+
+    PATH = '/Users/ulf.mertens/Desktop/nndl/'
+
+    sim = 100
+
+    final = np.empty(shape=(sim,8))
+
+    keras_model = load_model('/Users/ulf.mertens/Desktop/nndl/my_model.h5')
+
+    for i in range(sim):
+        CONFIG['settings']['test']['fixed']['sigma'] = stats.invgamma(a=4,scale=3).rvs()
+        CONFIG['settings']['test']['fixed']['mu'] = stats.norm(loc=0,scale=CONFIG['settings']['test']['fixed']['sigma']).rvs()
+
+        abc = Abc(CONFIG)
+        raw, loss,val_loss, ps = abc.run(keras_model)
+
+        #plotLosses(loss,val_loss,PATH)
+
+        expMean, expMeanVar, expVar, expVarVar = samplesFromTruePosterior(raw)
+
+        print("Running simulation {}/{}".format(i+1,sim))
+
+        final[i,0] = expMean #raw.mean()
+        final[i,1] = ps[:,0].mean()
+        final[i,2] = expVar #raw.var()
+        final[i,3] = ps[:,1].mean()
+        final[i,4] = expMeanVar
+        final[i,5] = ps[:,0].var()
+        final[i,6] = expVarVar
+        final[i,7] = ps[:, 1].var()
+
+        ## Mean hist
+
+        # plt.hist(samplesMean, normed=True)
+        # plt.hist(ps[:,0],normed=True)
+        # plt.savefig('/Users/ulf.mertens/Desktop/nndl/mean.png', bbox_inches='tight')
+        # plt.clf()
+
+        ## VAR hist
+
+        # plt.hist(samplesVar,normed=True)
+        # plt.hist(ps[:, 1], normed=True)
+        # plt.savefig('/Users/ulf.mertens/Desktop/nndl/sigma.png', bbox_inches='tight')
+        # plt.clf()
+
+    np.savetxt(PATH + 'results.csv',final)

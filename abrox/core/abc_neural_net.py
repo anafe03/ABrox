@@ -7,9 +7,6 @@ from keras import backend as K
 from sklearn import preprocessing
 
 
-
-
-
 class ABCNeuralNet:
     """Implements a random forest for ABC model selection."""
 
@@ -19,7 +16,7 @@ class ABCNeuralNet:
         self._pp = preprocessor
         self.objective = objective
 
-    def run(self,rawData):
+    def run(self,rawData,model):
         """Runs according to settings (these must be specified by user.)"""
 
         if self.objective == 'comparison':
@@ -81,38 +78,51 @@ class ABCNeuralNet:
             print("Running model on {} features".format(features))
             print("Prediction {} parameters".format(outputs))
 
-            model = Sequential()
-            model.add(Dense(features, input_shape=(features,), activation='relu'))
-            #model.add(Lambda(lambda x: K.dropout(x, level=0.1)))
-            model.add(Dense(features, activation='relu'))
-            model.add(Lambda(lambda x: K.dropout(x, level=0.1)))
-            model.add(Dense(features, activation='relu'))
-            model.add(Lambda(lambda x: K.dropout(x, level=0.1)))
-            model.add(Dense(y.shape[1], activation='linear'))
-            # Compile model
-            model.compile(loss='mean_squared_error', optimizer='adam')
+            load = True
+            if load:
+                wkrt = 1 # nonesense
 
-            # print(model.summary())
+            else:
 
-            history = model.fit(x=X_train, y=y_train,
-                                batch_size=32,
-                                epochs=20,
-                                shuffle=True,
-                                validation_data=(X_val,y_val),
-                                verbose=False)
+                model = Sequential()
+                model.add(Dense(features, input_shape=(features,), activation='relu'))
+                model.add(Lambda(lambda x: K.dropout(x, level=0.1)))
+                model.add(Dense(features, activation='relu'))
+                model.add(Lambda(lambda x: K.dropout(x, level=0.1)))
+                model.add(Dense(features, activation='relu'))
+                model.add(Lambda(lambda x: K.dropout(x, level=0.1)))
+                model.add(Dense(y.shape[1], activation='linear'))
 
-            print("Finished fitting")
+                # Compile model
+                model.compile(loss='mean_squared_error', optimizer='adam')
+
+                # Fit model
+                history = model.fit(x=X_train, y=y_train,
+                                    batch_size=32,
+                                    epochs=20,
+                                    shuffle=True,
+                                    validation_data=(X_val,y_val),
+                                    verbose=True)
+
+                # Save model
+                model.save('/Users/ulf.mertens/Desktop/nndl/my_model.h5')
+
+                print("Finished fitting")
 
             sumStatTest = np.array(self._pp.scaledSumStatObsData).reshape(1, -1)
             sumStatTest = scaler.transform(sumStatTest)
 
-            N = 1000
+            print('Prediction with dropout...')
+
+            N = 100
             posteriorSamples = np.empty(shape=(N,outputs))
             for i in range(N):
                 posteriorSamples[i,] = model.predict(sumStatTest)
 
-            loss = history.history['loss']
-            val_loss = history.history['val_loss']
+            print('Finished predicting...')
+
+            loss = None #history.history['loss']
+            val_loss = None  #history.history['val_loss']
 
             return rawData, loss, val_loss, posteriorSamples
 

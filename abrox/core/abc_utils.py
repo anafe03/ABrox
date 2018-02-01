@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import pickle
+import matplotlib.pyplot as plt
+
 
 # ABC utility functions
 
@@ -111,3 +113,15 @@ def pickle_results(output, outputdir):
 
     with open(outputdir + '/_results.p', 'wb+') as outfile:
         pickle.dump(output, outfile, pickle.HIGHEST_PROTOCOL)
+
+
+def plotLosses(loss, val_loss, path):
+    """Plot training loss versus validation loss."""
+    epochs = range(1, len(loss) + 1)
+    plt.plot(epochs, loss, 'bo', label="Training loss")
+    plt.plot(epochs, val_loss, 'b', label="Validation loss")
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.savefig(path + 'losses.png', bbox_inches='tight')
+    plt.clf()

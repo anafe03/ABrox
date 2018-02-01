@@ -31,7 +31,7 @@ class Abc:
         tester = ConfigTester(self.config)
         tester.checkForErrors()
 
-    def run(self):
+    def run(self, keras_model):
         """
         The only interface method of the class, responsible for handling
         all pre-processing and computation steps.
@@ -107,7 +107,7 @@ class Abc:
 
         elif settings['alg'] == 'nn':
             nn = ABCNeuralNet(refTable,pp,settings['obj'])
-            output = nn.run(obsData)
+            output = nn.run(obsData,keras_model)
 
         pickle_results(output, settings['outputdir'])
-        return output
+        return output, refTable

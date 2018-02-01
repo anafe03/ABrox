@@ -22,7 +22,7 @@ def main(args=None):
     #               SET APP ID SO ICON IS VISIBLE                     #
     # =============================================================== #
     if sys.platform == "win32":
-        myappid = "heidelberg.university.bprox.0.0.1"
+        myappid = "heidelberg.university.abrox.0.0.1"
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
     # =============================================================== #
