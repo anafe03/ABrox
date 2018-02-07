@@ -16,6 +16,8 @@
 
 ## Installation
 
+Note that `ABrox`only works with Python 3.
+
 `ABrox` can be installed via pip. Simply open a terminal and type:
 
 ```bash
@@ -36,15 +38,25 @@ python3.5 main.py
 
 ### Windows
 
-Assuming Python is already installed, first install Visual Studio Build Tools from:
+Unfortunately, the installation under Windows is a bit cumbersome. We explain the relevant steps below.
+
+If not already done, install a Python3 version from [here](https://www.python.org/).
+
+Check the version of Python that is installed by typing `python` into the console.
+
+![Python on Windows](abrox/gui/icons/python_windows2.png)
+
+Now, install Visual Studio Build Tools from:
 
 1. [here](http://landinghub.visualstudio.com/visual-cpp-build-tools)
 
-Now visit the following page to install the Scipy wheel:
+Now visit the following page to install the Scipy wheel. Choose the link that fits
+your Python version (see picture above). `cp` should be followed by the actual version (e.g. `cp36`) while
+the last part of the link should match the bit-version (e.g. `win32`).  
 
 2. [here](http://www.lfd.uci.edu/~gohlke/pythonlibs/#scipy)
 
-After the installation, open a console in the download directory and type:
+After the installation, open a console in the directory the wheel has been downloaded into and type:
 
 ```bash
 python -m pip install #name_of_the_whl_file
@@ -53,7 +65,6 @@ python -m pip install #name_of_the_whl_file
 Repeat the same steps for the Numpy wheel:
 
 3. [here](http://www.lfd.uci.edu/~gohlke/pythonlibs/#numpy)
-
 
 Now, open a terminal and type:
 
