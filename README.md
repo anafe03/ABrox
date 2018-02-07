@@ -66,7 +66,6 @@ Repeat the same steps for the Numpy wheel:
 
 3. [here](http://www.lfd.uci.edu/~gohlke/pythonlibs/#numpy)
 
-
 Now, open a terminal and type:
 
 ```bash
