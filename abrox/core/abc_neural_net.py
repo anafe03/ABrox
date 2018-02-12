@@ -156,13 +156,14 @@ class ABCNeuralNet:
         scaler = self.normalize()
 
         if self._nnSettings['load_model'] is not None:
+            print("Loading pretrained model...")
             model = load_model(self.outputdir + self._nnSettings['load_model'])
-
-        model = self.build_keras_model()
+        else:
+            model = self.build_keras_model()
 
 
         #plot_model(model, to_file=self.outputdir + 'model.png')
-        model.summary()
+        # model.summary()
 
         model.compile(loss=heteroscedastic_loss, optimizer=self._nnSettings['optimizer'])
 
@@ -175,7 +176,8 @@ class ABCNeuralNet:
                             verbose=False)
 
         # Save model
-        model.save(self.outputdir + 'keras_model.h5')
+        if self._nnSettings['load_model'] is None:
+            model.save(self.outputdir + 'keras_model.h5')
 
         # self.storeDropoutRates(model)
 

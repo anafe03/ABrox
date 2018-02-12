@@ -86,56 +86,63 @@ if __name__ == "__main__":
 
     # keras_model = load_model('/Users/ulf.mertens/Desktop/nndl/my_model.h5')
 
-    abc = Abc(CONFIG)
-    raw, loss, val_loss, relevant = abc.run()
+    #abc = Abc(CONFIG)
+    #raw, loss, val_loss, relevant = abc.run()
 
     PATH = '/Users/ulf.mertens/Desktop/nndl/'
 
-    # sim = 100
-    #
-    # final = np.empty(shape=(sim,8))
-    #
-    # keras_model = load_model('/Users/ulf.mertens/Desktop/nndl/my_model.h5')
-    #
-    # for i in range(sim):
-    #     CONFIG['settings']['test']['fixed']['sigma'] = stats.invgamma(a=4,scale=3).rvs()
-    #     CONFIG['settings']['test']['fixed']['mu'] = stats.norm(loc=0,scale=CONFIG['settings']['test']['fixed']['sigma']).rvs()
-    #
-    #     abc = Abc(CONFIG)
-    #     raw, loss,val_loss, ps = abc.run(keras_model)
-    #
-    #     #plotLosses(loss,val_loss,PATH)
-    #
-    #     expMean, expMeanVar, expVar, expVarVar = samplesFromTruePosterior(raw)
-    #
-    #     print("Running simulation {}/{}".format(i+1,sim))
-    #
-    #     final[i,0] = expMean #raw.mean()
-    #     final[i,1] = ps[:,0].mean()
-    #     final[i,2] = expVar #raw.var()
-    #     final[i,3] = ps[:,1].mean()
-    #     final[i,4] = expMeanVar
-    #     final[i,5] = ps[:,0].var()
-    #     final[i,6] = expVarVar
-    #     final[i,7] = ps[:, 1].var()
+    sim = 100
 
-    plotLosses(loss, val_loss, PATH)
+    final = np.empty(shape=(sim,12))
 
-    expMean, expMeanVar, expVar, expVarVar = samplesFromTruePosterior(raw)
+    for i in range(sim):
+        CONFIG['settings']['test']['fixed']['sigma'] = stats.invgamma(a=4,scale=3).rvs()
+        CONFIG['settings']['test']['fixed']['mu'] = stats.norm(loc=0,scale=CONFIG['settings']['test']['fixed']['sigma']).rvs()
 
-    m1, m2, epi1, epi2, al1, al2 = relevant
+        abc = Abc(CONFIG)
+        raw, loss, val_loss, relevant = abc.run()
 
-    posteriorMean = np.random.normal(loc=m1,scale=np.sqrt(al1),size=1000)
-    plt.hist(posteriorMean)
-    plt.axvline(expMean, color='b', linestyle='dashed', linewidth=2)
-    plt.savefig(PATH + 'mean.png', bbox_inches='tight')
-    plt.clf()
+        m1, m2, epi1, epi2, al1, al2 = relevant
 
-    # VAR hist
-    posteriorVariance = np.random.normal(loc=m2, scale=np.sqrt(al2), size=1000)
-    plt.hist(posteriorVariance)
-    plt.axvline(expVar, color='b', linestyle='dashed', linewidth=2)
-    plt.savefig(PATH + 'sigma.png', bbox_inches='tight')
-    plt.clf()
+        #plotLosses(loss,val_loss,PATH)
 
-    #np.savetxt(PATH + 'results.csv',final)
+        expMean, expMeanVar, expVar, expVarVar = samplesFromTruePosterior(raw)
+
+        print("Running simulation {}/{}".format(i+1,sim))
+
+        final[i,0] = expMean #raw.mean()
+        final[i,1] = m1
+        final[i,2] = expVar #raw.var()
+        final[i,3] = epi1 + al1
+        final[i,4] = expMeanVar
+        final[i,5] = m2
+        final[i,6] = expVarVar
+        final[i,7] = epi2 + al2
+        final[i,8] = epi1
+        final[i,9] = al1
+        final[i,10] = epi2
+        final[i,11] = al2
+
+    # plotLosses(loss, val_loss, PATH)
+    #
+    # expMean, expMeanVar, expVar, expVarVar = samplesFromTruePosterior(raw)
+    #
+    # m1, m2, epi1, epi2, al1, al2 = relevant
+    #
+    # var1 = epi1 + al1
+    # var2 = epi2 + al2
+    #
+    # posteriorMean = np.random.normal(loc=m1,scale=np.sqrt(var1),size=1000)
+    # plt.hist(posteriorMean)
+    # plt.axvline(expMean, color='b', linestyle='dashed', linewidth=2)
+    # plt.savefig(PATH + 'mean.png', bbox_inches='tight')
+    # plt.clf()
+    #
+    # # VAR hist
+    # posteriorVariance = np.random.normal(loc=m2, scale=np.sqrt(var2), size=1000)
+    # plt.hist(posteriorVariance)
+    # plt.axvline(expVar, color='b', linestyle='dashed', linewidth=2)
+    # plt.savefig(PATH + 'sigma.png', bbox_inches='tight')
+    # plt.clf()
+
+    np.savetxt(PATH + 'results.csv', final)
