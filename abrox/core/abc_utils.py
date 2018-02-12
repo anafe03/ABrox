@@ -2,9 +2,21 @@ import numpy as np
 import pandas as pd
 import pickle
 import matplotlib.pyplot as plt
+from keras import backend as K
 
 
 # ABC utility functions
+
+def heteroscedastic_loss(true, pred):
+    """
+    Heteroskedastic loss function as described in
+    Concrete Dropout paper.
+    """
+    params = pred.shape[1]//2
+    mean = pred[:, :params]
+    log_var = pred[:, params:]
+    precision = K.exp(-log_var)
+    return K.sum(precision * (true - mean) ** 2. + log_var, -1)
 
 
 # Euclidean distance
