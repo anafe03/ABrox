@@ -2,7 +2,7 @@ import numpy as np
 from keras.models import Sequential, Model
 from keras import layers
 from keras import Input
-from abrox.core.abc_utils import toArray, cross_val
+from abrox.core.abc_utils import toArray, heteroscedastic_loss
 from keras import backend as K
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
@@ -27,7 +27,8 @@ class ABCNeuralNet:
         self.X_val = None
         self.y_val = None
         self.dropout = None
-        self.hyperParams = None
+        self.wd = None
+        self.dd = None
 
     def constructTrainAndValSet(self):
         """
@@ -55,9 +56,8 @@ class ABCNeuralNet:
         :return:
         """
         l = 1e-4
-        wd = l ** 2. / (self.X_train.shape[0])
-        dd = 2. / (self.X_train.shape[0])
-        self.hyperParams = wd, dd
+        self.wd = l ** 2. / (self.X_train.shape[0])
+        self.dd = 2. / (self.X_train.shape[0])
 
     def add_layers(self, size, prev_tensor):
         """
@@ -66,10 +66,9 @@ class ABCNeuralNet:
         :param prev_tensor: the previous tensor
         :return: the final layer
         """
-        wd, dd = self.hyperParams
         return ConcreteDropout(
             layers.Dense(size, activation=self._nnSettings['activation']),
-            weight_regularizer=wd, dropout_regularizer=dd)(prev_tensor)
+            weight_regularizer=self.wd, dropout_regularizer=self.dd)(prev_tensor)
 
     def build_keras_model(self):
         """
@@ -85,7 +84,14 @@ class ABCNeuralNet:
             units = int(self._nnSettings['hidden_layer_sizes'][i] * features)
             x = self.add_layers(units, x)
 
-        output_tensor = layers.Dense(outputs, activation='linear')(x)
+        mean = ConcreteDropout(layers.Dense(outputs),
+                               weight_regularizer=self.wd,
+                               dropout_regularizer=self.dd)(x)
+        log_var = ConcreteDropout(layers.Dense(outputs),
+                                  weight_regularizer=self.wd,
+                                  dropout_regularizer=self.dd)(x)
+
+        output_tensor = layers.merge([mean, log_var], mode='concat')
 
         return Model(input_tensor, output_tensor)
 
@@ -105,7 +111,7 @@ class ABCNeuralNet:
         Predict at observed data using Dropout at test-time.
         :param model: keras model
         :param scaler: the scaler used to scale training set
-        :param outputs: number of output units
+        :param outputs: number of output units (times 2)
         :param N: predictions
         :return: the samples from the posterior predictive.
         """
@@ -113,11 +119,20 @@ class ABCNeuralNet:
         sumStatTest = np.array(self._pp.scaledSumStatObsData).reshape(1, -1)
         sumStatTest = scaler.transform(sumStatTest)
 
-        posteriorSamples = np.empty(shape=(N, outputs))
+        posteriorSamples = np.empty(shape=(N, outputs*2))
         for i in range(N):
             posteriorSamples[i,] = model.predict(sumStatTest)
 
-        return posteriorSamples
+        means = np.mean(posteriorSamples,axis=0)
+        vars = np.var(posteriorSamples,axis=0)
+
+        mean1 = means[0]
+        mean2 = means[1]
+        epi1 = vars[0] # model uncertainty
+        epi2 = vars[1] # model uncertainty
+        alea1 = np.exp(means[2]) # data uncertainty
+        alea2 = np.exp(means[3]) # data uncertainty
+        return mean1, mean2, epi1, epi2, alea1, alea2
 
     def run(self,rawData):
         """
@@ -149,7 +164,7 @@ class ABCNeuralNet:
         #plot_model(model, to_file=self.outputdir + 'model.png')
         model.summary()
 
-        model.compile(loss=self._nnSettings['loss'], optimizer=self._nnSettings['optimizer'])
+        model.compile(loss=heteroscedastic_loss, optimizer=self._nnSettings['optimizer'])
 
         # Fit model
         history = model.fit(x=self.X_train,
@@ -164,9 +179,9 @@ class ABCNeuralNet:
 
         # self.storeDropoutRates(model)
 
-        posteriorSamples = self.makePredictions(model,scaler,outputs)
+        relevantOutputs = self.makePredictions(model,scaler,outputs)
 
         loss = history.history['loss']
         val_loss = history.history['val_loss']
 
-        return rawData, loss, val_loss, posteriorSamples
+        return rawData, loss, val_loss, relevantOutputs
