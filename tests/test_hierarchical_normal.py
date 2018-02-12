@@ -23,7 +23,7 @@ def summary(data):
 
 
 def simulate_Model1(params):
-    n = 100
+    n = 10
     return np.random.normal(params['mu'],np.sqrt(params['sigma']),size=n)
 
 
@@ -72,7 +72,7 @@ def samplesFromTruePosterior(data):
     N = len(data)
     print("N: ", N)
     truePosteriorMean = stats.t(df=N + 8, loc=(N * rawMean) / (N + 1), scale=(s2 + 6) / ((N + 1) * (N + 8)))
-    truePosteriorVariance = stats.invgamma(a=54, scale=(N / 2) * (s2 / N) + 3)
+    truePosteriorVariance = stats.invgamma(a=(N/2)+4, scale=(N / 2) * (s2 / N) + 3)
 
     m = truePosteriorMean.mean() #truePosteriorMean.rvs(size=10000)
     mv = truePosteriorMean.var()
@@ -87,7 +87,7 @@ if __name__ == "__main__":
     # keras_model = load_model('/Users/ulf.mertens/Desktop/nndl/my_model.h5')
 
     abc = Abc(CONFIG)
-    raw, loss, val_loss, ps = abc.run()
+    raw, loss, val_loss, relevant = abc.run()
 
     PATH = '/Users/ulf.mertens/Desktop/nndl/'
 
@@ -123,20 +123,17 @@ if __name__ == "__main__":
 
     expMean, expMeanVar, expVar, expVarVar = samplesFromTruePosterior(raw)
 
-    print("actual mean: ", raw.mean())
-    print("actual var: ", raw.var())
+    m1, m2, epi1, epi2, al1, al2 = relevant
 
-    print("True var mean: ", np.array(expMeanVar))
-    print("Est. var mean: ", ps[:,0].var)
-
-    plt.hist(ps[:,0])
+    posteriorMean = np.random.normal(loc=m1,scale=np.sqrt(al1),size=1000)
+    plt.hist(posteriorMean)
     plt.axvline(expMean, color='b', linestyle='dashed', linewidth=2)
     plt.savefig(PATH + 'mean.png', bbox_inches='tight')
     plt.clf()
 
     # VAR hist
-
-    plt.hist(ps[:, 1])
+    posteriorVariance = np.random.normal(loc=m2, scale=np.sqrt(al2), size=1000)
+    plt.hist(posteriorVariance)
     plt.axvline(expVar, color='b', linestyle='dashed', linewidth=2)
     plt.savefig(PATH + 'sigma.png', bbox_inches='tight')
     plt.clf()
