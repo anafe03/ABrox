@@ -91,7 +91,7 @@ class ABCNeuralNet:
                                   weight_regularizer=self.wd,
                                   dropout_regularizer=self.dd)(x)
 
-        output_tensor = layers.merge([mean, log_var], mode='concat')
+        output_tensor = layers.concatenate([mean, log_var])
 
         return Model(input_tensor, output_tensor)
 
@@ -163,7 +163,7 @@ class ABCNeuralNet:
 
 
         #plot_model(model, to_file=self.outputdir + 'model.png')
-        # model.summary()
+        model.summary()
 
         model.compile(loss=heteroscedastic_loss, optimizer=self._nnSettings['optimizer'])
 

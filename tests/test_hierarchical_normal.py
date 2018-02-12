@@ -91,7 +91,7 @@ if __name__ == "__main__":
 
     PATH = '/Users/ulf.mertens/Desktop/nndl/'
 
-    sim = 100
+    sim = 1
 
     final = np.empty(shape=(sim,12))
 
