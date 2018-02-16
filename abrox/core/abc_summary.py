@@ -8,4 +8,4 @@ class ABCSummary:
     def summarize(self, data):
         """Compute and return summary statistics from data."""
 
-        return self.summary(data)
+        return self.summary(data).flatten()
