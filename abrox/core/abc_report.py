@@ -13,7 +13,7 @@ class ABCReporter:
         self.modelNames = modelNames
         self.paramNames = paramNames
         self.objective = objective
-        self.wd = wd
+        self._wd = wd
 
     def initParamTable(self):
         """ Initialise the parameter table."""
@@ -64,6 +64,6 @@ class ABCReporter:
 
         if self.objective == "inference":
             paramTable =  self.initParamTable()
-            paramTable.to_csv(self.wd + '/posteriorSamples.csv')
+            paramTable.to_csv(self._wd + '/posteriorSamples_rej.csv')
             return paramTable.describe()
 
