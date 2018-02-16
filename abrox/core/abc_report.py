@@ -8,11 +8,12 @@ from abrox.core.abc_utils import toArray
 
 class ABCReporter:
 
-    def __init__(self, table, modelNames, paramNames, objective):
+    def __init__(self, table, modelNames, paramNames, objective, wd):
         self.table = table
         self.modelNames = modelNames
         self.paramNames = paramNames
         self.objective = objective
+        self._wd = wd
 
     def initParamTable(self):
         """ Initialise the parameter table."""
@@ -62,5 +63,7 @@ class ABCReporter:
             return self.bayesFactor()
 
         if self.objective == "inference":
-            return self.initParamTable()
+            paramTable = self.initParamTable()
+            paramTable.to_csv(self._wd + '/posteriorSamples_rej.csv')
+            return paramTable.describe()
 

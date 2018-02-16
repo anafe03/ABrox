@@ -45,7 +45,9 @@ class MCMC:
 
         df = pd.DataFrame(samples[burn:, :], columns=self._settings['pnames'])
 
-        return df, accepted
+        df.to_csv(self._settings['outputdir'] + '/posteriorSamples_mcmc.csv')
+
+        return df, df.describe(), accepted
 
     def _initWegmann(self):
         """

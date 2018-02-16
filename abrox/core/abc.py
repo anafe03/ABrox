@@ -88,17 +88,16 @@ class Abc:
             else:
                 reporter = ABCReporter(subset, modelNames,
                                                settings['pnames'],
-                                               settings['obj'])
+                                               settings['obj'],
+                                               settings['outputdir'])
                 output = reporter.report()
 
         elif settings['alg'] == "mcmc":
             subset, threshold = ABCRejection(refTable, settings['specs']['keep']).reject()
             mcmc = MCMC(pp, subset, threshold, settings)
-            samples, accepted = mcmc.run()
+            samples, output, accepted = mcmc.run()
             plotter = Plotter(samples, settings['pnames'])
             plotter.plot()
-
-            output = samples
 
         else:
             rf = ABCRandomForest(refTable, pp, settings)
