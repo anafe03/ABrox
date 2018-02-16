@@ -23,7 +23,7 @@ def summary(data):
 
 
 def simulate_Model1(params):
-    n = 10
+    n = 100
     return np.random.normal(params['mu'],np.sqrt(params['sigma']),size=n)
 
 
@@ -86,49 +86,43 @@ if __name__ == "__main__":
 
     # keras_model = load_model('/Users/ulf.mertens/Desktop/nndl/my_model.h5')
 
-    #abc = Abc(CONFIG)
-    #raw, loss, val_loss, relevant = abc.run()
+    abc = Abc(CONFIG)
+    raw, loss, val_loss, relevant = abc.run()
 
     PATH = '/Users/ulf.mertens/Desktop/nndl/'
 
-    sim = 1
+    plotLosses(loss, val_loss, PATH)
 
-    final = np.empty(shape=(sim,12))
+    expMean, expMeanVar, expVar, expVarVar = samplesFromTruePosterior(raw)
 
-    for i in range(sim):
-        CONFIG['settings']['test']['fixed']['sigma'] = stats.invgamma(a=4,scale=3).rvs()
-        CONFIG['settings']['test']['fixed']['mu'] = stats.norm(loc=0,scale=CONFIG['settings']['test']['fixed']['sigma']).rvs()
-
-        abc = Abc(CONFIG)
-        raw, loss, val_loss, relevant = abc.run()
-
-        m1, m2, epi1, epi2, al1, al2 = relevant
-
-        #plotLosses(loss,val_loss,PATH)
-
-        expMean, expMeanVar, expVar, expVarVar = samplesFromTruePosterior(raw)
-
-        print("Running simulation {}/{}".format(i+1,sim))
-
-        final[i,0] = expMean #raw.mean()
-        final[i,1] = m1
-        final[i,2] = expVar #raw.var()
-        final[i,3] = epi1 + al1
-        final[i,4] = expMeanVar
-        final[i,5] = m2
-        final[i,6] = expVarVar
-        final[i,7] = epi2 + al2
-        final[i,8] = epi1
-        final[i,9] = al1
-        final[i,10] = epi2
-        final[i,11] = al2
-
-    # plotLosses(loss, val_loss, PATH)
-    #
-    # expMean, expMeanVar, expVar, expVarVar = samplesFromTruePosterior(raw)
-    #
     # m1, m2, epi1, epi2, al1, al2 = relevant
-    #
+    means, vars, trueMeans, trueVars = relevant
+
+    mean1 = means[:,0]
+    mean2 = means[:,1]
+    epi1 = vars[:,0]  # model uncertainty
+    epi2 = vars[:,1]  # model uncertainty
+    alea1 = np.exp(means[:,2])  # data uncertainty
+    alea2 = np.exp(means[:,3])  # data uncertainty
+
+    final = np.empty(shape=(5000,12))
+    for i in range(5000):
+        final[i, 0] = trueMeans[i]
+        final[i, 1] = mean1[i]
+        final[i, 2] = trueVars[i]
+        final[i, 3] = mean2[i]
+        final[i, 4] = expMeanVar
+        final[i, 5] = epi1[i] + alea1[i]
+        final[i, 6] = expVarVar
+        final[i, 7] = epi2[i] + alea2[i]
+        final[i, 8] = epi1[i]
+        final[i, 9] = alea1[i]
+        final[i, 10] = epi2[i]
+        final[i, 11] = alea2[i]
+
+    np.savetxt(PATH + 'val_results2.csv', final)
+
+
     # var1 = epi1 + al1
     # var2 = epi2 + al2
     #
@@ -144,5 +138,3 @@ if __name__ == "__main__":
     # plt.axvline(expVar, color='b', linestyle='dashed', linewidth=2)
     # plt.savefig(PATH + 'sigma.png', bbox_inches='tight')
     # plt.clf()
-
-    np.savetxt(PATH + 'results.csv', final)

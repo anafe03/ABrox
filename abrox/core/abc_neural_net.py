@@ -106,7 +106,7 @@ class ABCNeuralNet:
             dropoutProbs.append(K.eval(K.exp(model.layers[i].weights[2])))
         self.dropout = dropoutProbs
 
-    def makePredictions(self, model, scaler, outputs, N=500):
+    def predictObserved(self, model, scaler, outputs, N=500):
         """
         Predict at observed data using Dropout at test-time.
         :param model: keras model
@@ -133,6 +133,30 @@ class ABCNeuralNet:
         alea1 = np.exp(means[2]) # data uncertainty
         alea2 = np.exp(means[3]) # data uncertainty
         return mean1, mean2, epi1, epi2, alea1, alea2
+
+    def predictOnVal(self, model, outputs, N=500):
+        """
+        Predict at validation set.
+        :param model: keras model
+        :param scaler: the scaler used to scale training set
+        :param outputs: number of output units (times 2)
+        :param N: predictions
+        :return: the samples from the posterior predictive.
+        """
+
+        valSize = self.X_val.shape[0]
+        posteriorSamples = np.empty(shape=(N, valSize, outputs*2))
+
+        for i in range(N):
+            posteriorSamples[i,] = model.predict(self.X_val)
+
+        means = np.mean(posteriorSamples,axis=0)
+        vars = np.var(posteriorSamples,axis=0)
+
+        trueMean = self.y_val[:,0]
+        trueVar = self.y_val[:,1]
+
+        return means, vars, trueMean, trueVar
 
     def run(self,rawData):
         """
@@ -181,7 +205,10 @@ class ABCNeuralNet:
 
         # self.storeDropoutRates(model)
 
-        relevantOutputs = self.makePredictions(model,scaler,outputs)
+        print("Shape = ", model.predict(self.X_val).shape)
+
+        # relevantOutputs = self.predictObserved(model, scaler, outputs)
+        relevantOutputs = self.predictOnVal(model,outputs)
 
         loss = history.history['loss']
         val_loss = history.history['val_loss']
