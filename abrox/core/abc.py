@@ -100,7 +100,7 @@ class Abc:
             plotter.plot()
 
         else:
-            rf = ABCRandomForest(refTable, pp, settings)
+            rf = ABCRandomForest(refTable, pp, settings, modelNames)
             output = rf.run()
 
         pickle_results(output, settings['outputdir'])

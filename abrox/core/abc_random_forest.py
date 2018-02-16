@@ -6,11 +6,12 @@ from abrox.core.abc_utils import toArray
 class ABCRandomForest:
     """Implements a random forest for ABC model selection."""
 
-    def __init__(self, refTable, preprocessor, settings):
+    def __init__(self, refTable, preprocessor, settings, modelNames):
 
         self._refTable = refTable
         self._pp = preprocessor
         self._settings = settings
+        self._modelNames = modelNames
 
     def run(self):
         """Runs according to settings (these must be specified by user.)"""
@@ -31,7 +32,7 @@ class ABCRandomForest:
         sumStatTest = np.array(self._pp.scaledSumStatObsData).reshape(1, -1)
         pred = rf.predict_proba(sumStatTest)
 
-        return pred
+        return {mod : np.round(pred[0,i],3) for i, mod in enumerate(self._modelNames)}
 
     def _cross_val(self, X, y, classifier, nfolds=10):
         """
