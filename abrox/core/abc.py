@@ -101,7 +101,7 @@ class Abc:
             plotter.plot()
 
         elif settings['alg'] == 'randomforest':
-            rf = ABCRandomForest(refTable, pp, settings)
+            rf = ABCRandomForest(refTable, pp, settings,modelNames)
             output = rf.run()
 
         elif settings['alg'] == 'nn':

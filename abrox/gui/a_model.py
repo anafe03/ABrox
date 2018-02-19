@@ -3,6 +3,7 @@ import copy
 import re
 import os
 from collections import OrderedDict
+from datetime import datetime
 
 
 class AInternalModel:
@@ -234,16 +235,8 @@ class AInternalModel:
         """
 
         if os.path.isdir(self._project['Analysis']['settings']['outputdir']):
-            return self._fileWithPathName(self._project['Analysis']['settings']['outputdir'] + '/analysis.py')
-
-    def _fileWithPathName(self, pathToFile):
-        """A recursive helper method to not overwrite analysis files."""
-
-        if not os.path.exists(pathToFile):
-            return pathToFile
-        else:
-            # Replace file name with a new one (_1 attached)
-            return self._fileWithPathName(pathToFile.replace('.py', '_1.py'))
+            return self._project['Analysis']['settings']['outputdir'] + \
+                   '/analysis_' + datetime.now().strftime('%Y-%m-%d-%H-%M-%S') + '.py'
 
     def deletePriorFromModel(self, idx, modelName):
         """Interface function to delete a prior fom a given model's priors list."""
