@@ -29,7 +29,7 @@ class ABCRandomForest:
         rf.fit(sumStat, indices)
 
         # Predict probabilities of models on summary obs
-        sumStatTest = np.array(self._pp.scaledSumStatObsData).reshape(1, -1)
+        sumStatTest = np.array(self._pp.sumStatObsData).reshape(1, -1)
         pred = rf.predict_proba(sumStatTest)
 
         return {mod : np.round(pred[0,i],3) for i, mod in enumerate(self._modelNames)}

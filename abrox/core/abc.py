@@ -1,7 +1,7 @@
 import sys
 
 from abrox.core.abc_summary import ABCSummary
-from abrox.core.abc_utils import read_external, pickle_results
+from abrox.core.abc_utils import read_external, pickle_results, toArray
 from abrox.core.abc_config_check import ConfigTester
 from abrox.core.abc_initializer import ABCInitializer
 from abrox.core.abc_rejection import ABCRejection
@@ -70,7 +70,7 @@ class Abc:
         if settings['extref']:
             refTable = read_external(settings['extref'])
         else:
-            refTable = pp.preprocess(settings['nsim'], parallel=True, jobs=4)
+            refTable = pp.preprocess(settings['nsim'], parallel=True, jobs=4, normalize=False)
 
         # Create a rejecter instance, responsible for filtering
         # the reference table according to the specified number 'keep'
@@ -106,7 +106,7 @@ class Abc:
 
         elif settings['alg'] == 'nn':
             nn = ABCNeuralNet(refTable,pp,settings)
-            output = nn.run(obsData)
+            output = nn.run()
 
         pickle_results(output, settings['outputdir'])
-        return output
+        return output, toArray(refTable,'sumstat')[95000:,:]

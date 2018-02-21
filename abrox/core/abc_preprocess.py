@@ -20,7 +20,7 @@ class ABCPreProcessor:
         self.summarizer = summarizer
         self.scaler = ABCScaler()
         self.sumStatObsData = sumStatObsData
-        self.scaledSumStatObsData = None
+        #self.scaledSumStatObsData = None
 
     def _generateSample(self, _, modelindex):
         """
@@ -71,7 +71,7 @@ class ABCPreProcessor:
 
         return self._refTableWrapper.getColumn('sumstat')
 
-    def preprocess(self, simulations, parallel=True, jobs=2):
+    def preprocess(self, simulations, parallel=True, jobs=2, normalize=True):
         """
         Generate the complete ABC reference table.
         :param sumStatObsData: summary statistics of observed data
@@ -84,17 +84,17 @@ class ABCPreProcessor:
         # Pre-fill table and return unscaled summary statistics
         sumStatTable = self.fillTable(simulations, parallel, jobs)
 
-        # Scale summary statistics and store MAD
-        scaledSumStatTable = self.scaler.fit_transform(sumStatTable)
-
-        # Override unscaled with scaled summary statistics
-        self._refTableWrapper.fillColumn(scaledSumStatTable, 'sumstat')
-
-        # Scale observed summary statistics with MAD calculated above
-        self.scaledSumStatObsData = self.scaler.transform(self.sumStatObsData)
+        if normalize:
+            # Scale summary statistics and store MAD
+            sumStatTable = self.scaler.fit_transform(sumStatTable)
+            # Scale observed summary statistics with MAD calculated above
+            self.sumStatObsData = self.scaler.transform(self.sumStatObsData)
 
         # Compute distance
-        distance = euclideanDistance(scaledSumStatTable, self.scaledSumStatObsData)
+        distance = euclideanDistance(sumStatTable, self.sumStatObsData)
+
+        # Override unscaled with scaled summary statistics
+        self._refTableWrapper.fillColumn(sumStatTable, 'sumstat')
 
         # Store distance in table
         self._refTableWrapper.fillColumn(distance, 'distance')

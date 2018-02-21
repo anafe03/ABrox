@@ -38,7 +38,7 @@ class ABCNeuralNet:
         X = toArray(self._refTable, 'sumstat')
         y = toArray(self._refTable, 'param')
         self.X_train, self.X_val, self.y_train, self.y_val = \
-            train_test_split(X, y, test_size=self._nnSettings['val_size'])
+            train_test_split(X, y, test_size=self._nnSettings['val_size'], shuffle=False)
 
     def normalize(self):
         """
@@ -70,7 +70,7 @@ class ABCNeuralNet:
             layers.Dense(size, activation=self._nnSettings['activation']),
             weight_regularizer=self.wd, dropout_regularizer=self.dd)(prev_tensor)
 
-    def build_keras_model(self):
+    def build_keras_model(self,concat=False):
         """
         Build a simple Keras model.
         :return: the model
@@ -84,14 +84,32 @@ class ABCNeuralNet:
             units = int(self._nnSettings['hidden_layer_sizes'][i] * features)
             x = self.add_layers(units, x)
 
-        mean = ConcreteDropout(layers.Dense(outputs),
+        if concat:
+            m1 = ConcreteDropout(layers.Dense(1),
+                                   weight_regularizer=self.wd,
+                                   dropout_regularizer=self.dd)(x)
+            m2 = ConcreteDropout(layers.Dense(1),
+                                 weight_regularizer=self.wd,
+                                 dropout_regularizer=self.dd)(x)
+            log_var1 = ConcreteDropout(layers.Dense(1),
+                                      weight_regularizer=self.wd,
+                                      dropout_regularizer=self.dd)(x)
+            log_var2 = ConcreteDropout(layers.Dense(1),
+                                       weight_regularizer=self.wd,
+                                       dropout_regularizer=self.dd)(x)
+
+            output_tensor = layers.concatenate([m1, m2, log_var1, log_var2])
+
+        else:
+
+            mean = ConcreteDropout(layers.Dense(outputs),
                                weight_regularizer=self.wd,
                                dropout_regularizer=self.dd)(x)
-        log_var = ConcreteDropout(layers.Dense(outputs),
+            log_var = ConcreteDropout(layers.Dense(outputs),
                                   weight_regularizer=self.wd,
                                   dropout_regularizer=self.dd)(x)
 
-        output_tensor = layers.concatenate([mean, log_var])
+            output_tensor = layers.concatenate([mean, log_var])
 
         return Model(input_tensor, output_tensor)
 
@@ -116,7 +134,7 @@ class ABCNeuralNet:
         :return: the samples from the posterior predictive.
         """
 
-        sumStatTest = np.array(self._pp.scaledSumStatObsData).reshape(1, -1)
+        sumStatTest = np.array(self._pp.sumStatObsData).reshape(1, -1)
         sumStatTest = scaler.transform(sumStatTest)
 
         posteriorSamples = np.empty(shape=(N, outputs*2))
@@ -134,7 +152,7 @@ class ABCNeuralNet:
         alea2 = np.exp(means[3]) # data uncertainty
         return mean1, mean2, epi1, epi2, alea1, alea2
 
-    def predictOnVal(self, model, outputs, N=500):
+    def predictOnVal(self, model, outputs, N=100):
         """
         Predict at validation set.
         :param model: keras model
@@ -153,12 +171,14 @@ class ABCNeuralNet:
         means = np.mean(posteriorSamples,axis=0)
         vars = np.var(posteriorSamples,axis=0)
 
+        print("Means[0] ", means[0])
+
         trueMean = self.y_val[:,0]
         trueVar = self.y_val[:,1]
 
         return means, vars, trueMean, trueVar
 
-    def run(self,rawData):
+    def run(self):
         """
         Run the whole procedure and return the predictions with uncertainty.
         :param rawData:
@@ -183,7 +203,7 @@ class ABCNeuralNet:
             print("Loading pretrained model...")
             model = load_model(self.outputdir + self._nnSettings['load_model'])
         else:
-            model = self.build_keras_model()
+            model = self.build_keras_model(concat=True)
 
 
         #plot_model(model, to_file=self.outputdir + 'model.png')
@@ -206,6 +226,7 @@ class ABCNeuralNet:
         # self.storeDropoutRates(model)
 
         print("Shape = ", model.predict(self.X_val).shape)
+        print("First row: ", model.predict(self.X_val)[0,:])
 
         # relevantOutputs = self.predictObserved(model, scaler, outputs)
         relevantOutputs = self.predictOnVal(model,outputs)
@@ -213,4 +234,4 @@ class ABCNeuralNet:
         loss = history.history['loss']
         val_loss = history.history['val_loss']
 
-        return rawData, loss, val_loss, relevantOutputs
+        return self.X_val, loss, val_loss, relevantOutputs

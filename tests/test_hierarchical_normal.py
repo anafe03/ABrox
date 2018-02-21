@@ -9,17 +9,17 @@ from abrox.core.abc_utils import plotLosses
 
 
 def summary(data):
-    mean = np.mean(data)
-    variance = np.var(data)
-    mad = np.median(np.absolute(data - np.median(data)))
-    raw = np.array([mean,variance,mad])
-    all2sum = np.array([np.sum(tup) for tup in combinations(raw, 2)])
-    all2prod = np.array([np.prod(tup) for tup in combinations(raw, 2)])
-    all3sum = np.reshape(np.sum(raw),1)
-    all3prod = np.reshape(np.prod(raw),1)
-    noise = np.random.uniform(size=50)
-    return np.concatenate((raw,all2sum,all2prod,all3sum,all3prod,noise))
-    # return np.sort(data)
+    # mean = np.mean(data)
+    # variance = np.var(data)
+    # mad = np.median(np.absolute(data - np.median(data)))
+    # raw = np.array([mean,variance,mad])
+    # all2sum = np.array([np.sum(tup) for tup in combinations(raw, 2)])
+    # all2prod = np.array([np.prod(tup) for tup in combinations(raw, 2)])
+    # all3sum = np.reshape(np.sum(raw),1)
+    # all3prod = np.reshape(np.prod(raw),1)
+    # noise = np.random.uniform(size=50)
+    # return np.concatenate((raw,all2sum,all2prod,all3sum,all3prod,noise))
+    return np.sort(data)
 
 
 def simulate_Model1(params):
@@ -81,19 +81,45 @@ def samplesFromTruePosterior(data):
 
     return m, mv, v, vv
 
+def samplesFromTruePosterior(refData):
+    """ Draw samples from true posterior distribution"""
+    rawMean = refData.mean(axis=1)
+
+    N = refData.shape[1]
+    print("N: ", N)
+
+    m = np.empty(refData.shape[0])
+    mv = np.empty(refData.shape[0])
+    v = np.empty(refData.shape[0])
+    vv = np.empty(refData.shape[0])
+
+    for i in range(refData.shape[0]):
+        s2 = np.sum((refData[i,:] - rawMean[i]) ** 2)
+        truePosteriorMean = stats.t(df=N + 8, loc=(N * rawMean[i]) / (N + 1), scale=(s2 + 6) / ((N + 1) * (N + 8)))
+        truePosteriorVariance = stats.invgamma(a=(N/2)+4, scale=(N / 2) * (s2 / N) + 3)
+        m[i] = truePosteriorMean.mean()  # truePosteriorMean.rvs(size=10000)
+        mv[i] = truePosteriorMean.var()
+        v[i] = truePosteriorVariance.mean()  # truePosteriorVariance.rvs(size=10000)
+        vv[i] = truePosteriorVariance.var()
+
+    return m, mv, v, vv
+
 
 if __name__ == "__main__":
 
     # keras_model = load_model('/Users/ulf.mertens/Desktop/nndl/my_model.h5')
 
     abc = Abc(CONFIG)
-    raw, loss, val_loss, relevant = abc.run()
+    (rawData, loss, val_loss, relevant), refData = abc.run()
+
+    print("Refdata shape = ", refData.shape)
 
     PATH = '/Users/ulf.mertens/Desktop/nndl/'
 
     plotLosses(loss, val_loss, PATH)
+    #expMean, expMeanVar, expVar, expVarVar = samplesFromTruePosterior(raw)
 
-    expMean, expMeanVar, expVar, expVarVar = samplesFromTruePosterior(raw)
+    expMean, expMeanVar, expVar, expVarVar = samplesFromTruePosterior(refData)
 
     # m1, m2, epi1, epi2, al1, al2 = relevant
     means, vars, trueMeans, trueVars = relevant
@@ -105,22 +131,27 @@ if __name__ == "__main__":
     alea1 = np.exp(means[:,2])  # data uncertainty
     alea2 = np.exp(means[:,3])  # data uncertainty
 
+    print("True Mean: ", trueMeans[0])
+    print("post. Mean: ", expMean[0])
+    print("True Var: ", trueVars[0])
+    print("post. Var: ", expVar[0])
+
     final = np.empty(shape=(5000,12))
     for i in range(5000):
-        final[i, 0] = trueMeans[i]
+        final[i, 0] = expMean[i]
         final[i, 1] = mean1[i]
-        final[i, 2] = trueVars[i]
+        final[i, 2] = expVar[i]
         final[i, 3] = mean2[i]
-        final[i, 4] = expMeanVar
+        final[i, 4] = expMeanVar[i]
         final[i, 5] = epi1[i] + alea1[i]
-        final[i, 6] = expVarVar
+        final[i, 6] = expVarVar[i]
         final[i, 7] = epi2[i] + alea2[i]
         final[i, 8] = epi1[i]
         final[i, 9] = alea1[i]
         final[i, 10] = epi2[i]
         final[i, 11] = alea2[i]
 
-    np.savetxt(PATH + 'val_results2.csv', final)
+    np.savetxt(PATH + 'val_results3.csv', final)
 
 
     # var1 = epi1 + al1
