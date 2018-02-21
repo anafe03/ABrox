@@ -203,7 +203,7 @@ class ABCNeuralNet:
             print("Loading pretrained model...")
             model = load_model(self.outputdir + self._nnSettings['load_model'])
         else:
-            model = self.build_keras_model(concat=True)
+            model = self.build_keras_model(concat=False)
 
 
         #plot_model(model, to_file=self.outputdir + 'model.png')
