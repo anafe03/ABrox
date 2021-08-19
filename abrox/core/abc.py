@@ -35,7 +35,7 @@ class Abc:
         The only interface method of the class, responsible for handling
         all pre-processing and computation steps.
         """
-
+        print('run')
         # Create an initializer instance, responsible for
         # importing/generating data, building the models,
         # and extracting relevant infos from config dict
